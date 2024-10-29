@@ -3,9 +3,8 @@ from pprint import pprint
 from ..build_package import build_package
 from pytest import approx
 
-
 # Import objects from pyomo package 
-from pyomo.environ import ConcreteModel, SolverFactory, value, units
+from pyomo.environ import ConcreteModel, value
 
 # Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
 from idaes.core import FlowsheetBlock
@@ -15,16 +14,29 @@ from pyomo.util.check_units import assert_units_consistent
 
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from pyomo.environ import  check_optimal_termination, ConcreteModel, Objective
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 import idaes.core.util.scaling as iscale
-
-
-from numpy import logspace
 
 solver = get_solver(solver="ipopt")
 
 import idaes.logger as idaeslog
 SOUT = idaeslog.INFO
+
+"""
+Test Suite Sourced From IDAES
+
+URL: https://github.com/IDAES/idaes-pse/blob/41bb3c9728ea227fa8bb0fa1bf35b8deec467783/idaes/models/
+properties/modular_properties/examples/tests/test_BT_PR.py
+"""
+
+"""
+---------------------------------------------
+Goal for absolute error margins
+---------------------------------------------
+- temp, pressure, specific volume : 0.5%
+- compositional things : 2% (mole frac, flow, etc)
+- thermodynamic values: 5% (entr, enth)
+---------------------------------------------
+"""
 
 def get_m():
   m = ConcreteModel()
@@ -44,52 +56,50 @@ def test_T_sweep():
   m.fs.state[1].temperature.setub(600)
 
   for logP in [9.5, 10, 10.5, 11, 11.5, 12]:
-    m.fs.obj.deactivate()
+      m.fs.obj.deactivate()
 
-    m.fs.state[1].flow_mol.fix(100)
-    m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
-    m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
-    m.fs.state[1].temperature.fix(300)
-    m.fs.state[1].pressure.fix(10 ** (0.5 * logP))
+      m.fs.state[1].flow_mol.fix(100)
+      m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
+      m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
+      m.fs.state[1].temperature.fix(300)
+      m.fs.state[1].pressure.fix(10 ** (0.5 * logP))
 
-    m.fs.state.initialize()
+      m.fs.state.initialize()
 
-    m.fs.state[1].temperature.unfix()
-    m.fs.obj.activate()
+      m.fs.state[1].temperature.unfix()
+      m.fs.obj.activate()
 
-    results = solver.solve(m)
+      results = solver.solve(m)
 
-    assert check_optimal_termination(results)
-    assert m.fs.state[1].flow_mol_phase["Liq"].value <= 1e-5
+      assert check_optimal_termination(results)
+      assert m.fs.state[1].flow_mol_phase["Liq"].value <= 1e-5
 
 def test_P_sweep():
-
   m = get_m()
 
   for T in range(370, 500, 25):
-    m.fs.state[1].flow_mol.fix(100)
-    m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
-    m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
-    m.fs.state[1].temperature.fix(T)
-    m.fs.state[1].pressure.fix(1e5)
+      m.fs.state[1].flow_mol.fix(100)
+      m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
+      m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
+      m.fs.state[1].temperature.fix(T)
+      m.fs.state[1].pressure.fix(1e5)
 
-    m.fs.state.initialize()
+      m.fs.state.initialize()
 
-    results = solver.solve(m)
+      results = solver.solve(m)
 
-    assert check_optimal_termination(results)
+      assert check_optimal_termination(results)
 
-    while m.fs.state[1].pressure.value <= 1e6:
+      while m.fs.state[1].pressure.value <= 1e6:
 
-        results = solver.solve(m)
-        assert check_optimal_termination(results)
+          results = solver.solve(m)
+          assert check_optimal_termination(results)
 
-        m.fs.state[1].pressure.value = m.fs.state[1].pressure.value + 1e5
+          m.fs.state[1].pressure.value = m.fs.state[1].pressure.value + 1e5
 
 def test_T350_P1_x5():
-
   m = get_m()
-
+  
   m.fs.state[1].flow_mol.fix(100)
   m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
   m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
@@ -163,7 +173,6 @@ def test_T350_P1_x5():
       )
       == 0.29416
   )
-
   assert (
       approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-5) == 38942.8
   )
@@ -179,6 +188,7 @@ def test_T350_P1_x5():
 
 def test_T350_P5_x5():
   m = get_m()
+  
   m.fs.state[1].flow_mol.fix(100)
   m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
   m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
@@ -270,6 +280,7 @@ def test_T350_P5_x5():
 
 def test_T450_P1_x5():
   m = get_m()
+  
   m.fs.state[1].flow_mol.fix(100)
   m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
   m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
@@ -359,6 +370,7 @@ def test_T450_P1_x5():
 
 def test_T450_P5_x5():
   m = get_m()
+  
   m.fs.state[1].flow_mol.fix(100)
   m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
   m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
@@ -448,6 +460,7 @@ def test_T450_P5_x5():
 
 def test_T368_P1_x5():
   m = get_m()
+  
   m.fs.state[1].flow_mol.fix(100)
   m.fs.state[1].mole_frac_comp["Benzene"].fix(0.5)
   m.fs.state[1].mole_frac_comp["Toluene"].fix(0.5)
@@ -541,6 +554,7 @@ def test_T368_P1_x5():
 
 def test_T376_P1_x2():
   m = get_m()
+  
   m.fs.state[1].flow_mol.fix(100)
   m.fs.state[1].mole_frac_comp["Benzene"].fix(0.2)
   m.fs.state[1].mole_frac_comp["Toluene"].fix(0.8)
@@ -630,6 +644,7 @@ def test_T376_P1_x2():
 
 def test_basic_scaling():
   m = get_m()
+  
   assert len(m.fs.state[1].scaling_factor) == 23
   assert m.fs.state[1].scaling_factor[m.fs.state[1].flow_mol] == 1e-2
   assert m.fs.state[1].scaling_factor[m.fs.state[1].flow_mol_phase["Liq"]] == 1e-2
