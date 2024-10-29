@@ -1,7 +1,6 @@
 
 from compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
-from compounds import Compound
 from typing import List
 
 """

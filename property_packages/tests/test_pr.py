@@ -22,7 +22,6 @@ from pyomo.environ import  check_optimal_termination, ConcreteModel, Objective, 
 from ..modular.template_builder import build_config
 from compounds.CompoundDB import get_compound
 import idaes.core.util.scaling as iscale
-from compounds.Compound import Compound
 from idaes.core.util.model_statistics import degrees_of_freedom
 
 from numpy import logspace

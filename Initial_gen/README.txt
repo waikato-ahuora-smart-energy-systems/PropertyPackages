@@ -1,0 +1,1 @@
+Depricated initial property package configuration generator version
