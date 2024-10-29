@@ -1,4 +1,5 @@
 
+from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
 from typing import List
@@ -41,4 +42,4 @@ def build_config(property_package_name, compound_names: List[str]) -> dict[str,a
 
   # Building property package and returning
 
-  return template
+  return GenericParameterBlock(**template)

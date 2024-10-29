@@ -88,9 +88,9 @@ class components_parser(BuildBase):
             if compound["AntoineVaporPressure"] is not None:
                 config["pressure_sat_comp"] = ChemSep
                 config["parameter_data"].update({"pressure_sat_comp_coeff": {
-                    "A": (compound["VaporPressure"]["A"], None),
-                    "B": (compound["VaporPressure"]["B"], pyunits.K),
-                    "C": (compound["VaporPressure"]["C"], pyunits.K),
+                    "A": (compound["AntoineVaporPressure"]["A"], None),
+                    "B": (compound["AntoineVaporPressure"]["B"], pyunits.K),
+                    "C": (compound["AntoineVaporPressure"]["C"], pyunits.K),
                 }})
 
             # Liquid Density
