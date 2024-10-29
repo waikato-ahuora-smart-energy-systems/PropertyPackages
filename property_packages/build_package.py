@@ -12,7 +12,7 @@ def build_package(package_name: PackageName, compound_list: List[str]):
         case "helmholtz":
             return build_helmholtz_package(compound_list)
         case "nrtl":
-            pass # TODO: Implement build_package for nrtl. It's probably another generic/modular package using the same template system.
+            pass # TODO: Implement build_package for nrtl.
         case _:
             raise ValueError(f"Invalid package name {package_name}. Expected a valid property package type, e.g helmholtz")
         

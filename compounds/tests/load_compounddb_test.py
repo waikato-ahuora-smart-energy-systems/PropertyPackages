@@ -7,6 +7,6 @@
 
 def test_load_compounds():
     from compounds import CompoundDB as db
-    assert "benzene" in db.get_compound_names()
-    benzene = db.get_compound("benzene")
+    assert "Benzene" in db.get_compound_names()
+    benzene = db.get_compound("Benzene")
     assert benzene["AbsEntropy"].value == 269300

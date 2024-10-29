@@ -29,7 +29,7 @@ def test_gen():
 
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
-  m.fs.props = build_package("peng-robinson", ["benzene", "toluene"])
+  m.fs.props = build_package("peng-robinson", ["Benzene", "Toluene"])
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
 
   iscale.calculate_scaling_factors(m.fs.props)
