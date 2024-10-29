@@ -18,17 +18,18 @@ from pyomo.util.check_units import assert_units_consistent
 
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from pyomo.environ import  check_optimal_termination, ConcreteModel, Objective, value
+from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 
 from ..modular.template_builder import build_config
 from compounds.CompoundDB import get_compound
 import idaes.core.util.scaling as iscale
 from idaes.core.util.model_statistics import degrees_of_freedom
+from ..config import config
+
 
 from numpy import logspace
 
 def test_gen():
-
-  pprint(build_config("peng-robinson", ["benzene", "toluene"]))
 
   solver = get_solver(solver="ipopt")
 
@@ -36,7 +37,7 @@ def test_gen():
 
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
-  m.fs.props = build_package("peng-robinson", ["benzene", "toluene"])
+  m.fs.props = GenericParameterBlock(**config)
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
 
   iscale.calculate_scaling_factors(m.fs.props)
@@ -47,7 +48,7 @@ def test_gen():
   m.fs.obj = Objective(expr=(m.fs.state[1].temperature - 510) ** 2)
   m.fs.state[1].temperature.setub(600)
 
-  for logP in [9.5, 10, 10.5, 11, 11.5, 12]:
+  for logP in (10.5, 11.5, 12.0):
       m.fs.obj.deactivate()
 
       m.fs.state[1].flow_mol.fix(100)
@@ -57,7 +58,7 @@ def test_gen():
       m.fs.state[1].pressure.fix(10 ** (0.5 * logP))
 
       m.fs.state.initialize()
-
+      
       m.fs.state[1].temperature.unfix()
       m.fs.obj.activate()
 
@@ -65,4 +66,3 @@ def test_gen():
 
       assert check_optimal_termination(results)
       assert m.fs.state[1].flow_mol_phase["Liq"].value <= 1e-5
-

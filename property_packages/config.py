@@ -43,9 +43,9 @@ config = {
                 'omega': 0.209,
                 'pressure_crit': (4895000.0, pyunits.Pa),
                 'pressure_sat_comp_coeff': {
-                    'A': (88.368, None),
-                    'B': (-6712.9, pyunits.K),
-                    'C': (-10.022, pyunits.K)
+                    'A': (21.075, None),
+                    'B': (2977.3, pyunits.K),
+                    'C': (-41.505, pyunits.K)
                 },
                 'temperature_crit': (562.05, pyunits.K)
             },
@@ -77,9 +77,9 @@ config = {
                 'omega': 0.264,
                 'pressure_crit': (4108000.0, pyunits.Pa),
                 'pressure_sat_comp_coeff': {
-                    'A': (32.89891, None),
-                    'B': (-5013.81, pyunits.K),
-                    'C': (-1.348918, pyunits.K)
+                    'A': (20.864, None),
+                    'B': (3019.2, pyunits.K),
+                    'C': (-60.13, pyunits.K)
                 },
                 'temperature_crit': (591.75, pyunits.K)
             },

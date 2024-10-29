@@ -11,6 +11,13 @@ from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
 from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
 from property_packages.modular.builder.data.chem_sep import ChemSep
 
+"""
+
+TODO: Need to double check all equation numbers to throw errors if mis-matched or not found
+
+"""
+
+
 class base_units_parser(BuildBase):
 
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
@@ -78,7 +85,7 @@ class components_parser(BuildBase):
                     }})
 
             # Saturation Pressure (Vapor)
-            if compound["VaporPressure"] is not None:
+            if compound["AntoineVaporPressure"] is not None:
                 config["pressure_sat_comp"] = ChemSep
                 config["parameter_data"].update({"pressure_sat_comp_coeff": {
                     "A": (compound["VaporPressure"]["A"], None),
