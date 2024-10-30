@@ -1,7 +1,7 @@
 To install this:
 
 ```sh
-pip install "git+ssh://git@github.com/Mahaki-Leach/Property-Package.git@package_builder"
+pip install git+https://github.com/waikato-ahuora-smart-energy-systems/PropertyPackages.git
 ```
 
 To use
