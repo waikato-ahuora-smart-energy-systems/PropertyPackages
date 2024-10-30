@@ -5,7 +5,7 @@ import os
 import json
 from pydantic import BaseModel
 
-def convert_string_to_float(string: str) -> float:
+def convert_string_to_float(string: str) -> float | str:
     try:
         return float(string)
     except:
@@ -24,7 +24,7 @@ def parse_element(elem: ET.Element):
     except:
         return None
 
-Coefficients = Dict[str, float]
+Coefficients = Dict[str, float | str]
 def parse_coeff(element: ET.Element) -> Coefficients:
     self = {}
     for child in element:
