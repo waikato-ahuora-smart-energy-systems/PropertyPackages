@@ -1,12 +1,13 @@
 from typing import List, Dict
-from compounds.Compound import Compound
+from compounds.Compound import load_compound
 
 class BuildBase:
 
   def __init__(self) -> None:
     pass
-
-  def serialise(compounds: List[Compound]) -> Dict:
+  
+  @staticmethod
+  def serialise( compounds: List[Dict]) -> Dict:
     """
     accepts
     - List of compounds

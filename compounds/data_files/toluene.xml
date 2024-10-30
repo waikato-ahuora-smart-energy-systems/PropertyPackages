@@ -1,6 +1,6 @@
 <compound>
 <LibraryIndex name="Index"  value="502" />
-<CompoundID name="Name"  value="Toluene" />
+<CompoundID name="Name"  value="toluene" />
 <StructureFormula name="Structure"  value="(C6H5)CH3" />
 <Family name="Family"  value="16" />
 <CriticalTemperature name="Critical temperature"  units="K"  value="591.75" />

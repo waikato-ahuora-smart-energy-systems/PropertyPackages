@@ -1,4 +1,5 @@
-from .Compound import Compound
+from .Compound import load_compound
+from typing import Dict
 import os
 
 # Loads all the compounds, and enables some basic queries for/on the compounds.
@@ -14,9 +15,10 @@ all_compounds = {}
 for file in os.listdir(os.path.dirname(__file__) + "/data_files"):
     if file.endswith(".xml"):
         compound_name = file[:-4]
-        all_compounds[compound_name] = Compound(compound_name)
+        compound = load_compound(compound_name)
+        all_compounds[compound_name] = compound
 
-def get_compound(compound_name: str) -> Compound:
+def get_compound(compound_name: str) -> Dict:
     """
     Returns a Compound object for the given compound name.
 
@@ -26,7 +28,7 @@ def get_compound(compound_name: str) -> Compound:
     Returns:
         Compound: The Compound object.
     """
-    return all_compounds[compound_name]
+    return all_compounds[compound_name.lower()]
 
 def get_compound_names() -> list:
     """

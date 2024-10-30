@@ -27092,7 +27092,7 @@ edited to remove two compounds (duplicated in chemsep2):
 
 <compound>
 <LibraryIndex name="Index"  value="501" />
-<CompoundID name="Name"  value="Benzene" />
+<CompoundID name="Name"  value="benzene" />
 <StructureFormula name="Structure"  value="-CHCHCHCHCHCH-" />
 <Family name="Family"  value="16" />
 <CriticalTemperature name="Critical temperature"  units="K"  value="562.05" />
@@ -30481,7 +30481,7 @@ edited to remove two compounds (duplicated in chemsep2):
 
 <compound>
 <LibraryIndex name="Index"  value="502" />
-<CompoundID name="Name"  value="Toluene" />
+<CompoundID name="Name"  value="toluene" />
 <StructureFormula name="Structure"  value="(C6H5)CH3" />
 <Family name="Family"  value="16" />
 <CriticalTemperature name="Critical temperature"  units="K"  value="591.75" />

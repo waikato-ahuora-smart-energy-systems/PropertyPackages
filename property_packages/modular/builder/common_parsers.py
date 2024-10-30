@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 from .base_parser import BuildBase
-from compounds.Compound import Compound
+from compounds.Compound import load_compound,Compound
 from pyomo.environ import units as pyunits
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
@@ -19,7 +19,7 @@ TODO: Need to double check all equation numbers to throw errors if mis-matched o
 
 
 class base_units_parser(BuildBase):
-
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return {
             'time': pyunits.s,
@@ -30,11 +30,12 @@ class base_units_parser(BuildBase):
         }
 
 class bubble_dew_method_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return LogBubbleDew
 
 class components_parser(BuildBase):
-
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
     
         def serialise_component(compound: Compound) -> Dict[str, Any]:
@@ -136,10 +137,12 @@ class components_parser(BuildBase):
         return components_output
 
 class phase_equilibrium_state_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return {("Vap", "Liq"): SmoothVLE} # TODO: Update to Smooth VLE_v2 https://github.com/IDAES/idaes-pse/blob/main/idaes/models/properties/modular_properties/phase_equil/smooth_VLE_2.py
 
 class phases_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return {
             "Liq": {
@@ -155,14 +158,17 @@ class phases_parser(BuildBase):
         }
 
 class phases_in_equilibrium_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return [("Vap", "Liq")]
 
 class pressure_ref_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return (101325, pyunits.Pa)
 
 class state_bounds_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return {
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
@@ -171,15 +177,18 @@ class state_bounds_parser(BuildBase):
         }
 
 class state_definition_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> str:
         return FTPx
 
 class temperature_ref_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return (298.15, pyunits.K)
 
 
 class pr_kappa_parser(BuildBase):
+    @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         kappa_parameters = {}
         for i, compound1 in enumerate(compounds):

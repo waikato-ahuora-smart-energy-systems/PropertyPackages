@@ -1,1 +1,1 @@
-from .Compound import Compound
+from .Compound import load_compound
