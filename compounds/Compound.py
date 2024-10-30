@@ -2,6 +2,7 @@ from pprint import pprint
 import xml.etree.ElementTree as ET
 from typing import Dict
 import os
+import json
 
         
 class Coefficients:
@@ -24,6 +25,16 @@ class UnitValuePair:
         self.name = name
         self.value = convert_string_to_float(value)
         self.unit = unit
+
+    def to_dict(self) -> Dict[str, any]:
+        return {
+            'name': self.name,
+            'value': self.value,
+            'unit': self.unit
+        }
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict())
 
 # Helper functions
 def parse_element(elem: ET.Element):
