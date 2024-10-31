@@ -2,7 +2,6 @@
 from ..build_package import build_package
 from pytest import approx
 
-
 # Import objects from pyomo package 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
@@ -21,7 +20,7 @@ def test_helmholtz():
     m.fs.state.heat_duty.fix(0)
     m.fs.state.inlet.flow_mol.fix(1)
     m.fs.state.inlet.vapor_frac.fix(0)
-    m.fs.state.inlet.temperature.fix(298)# room temperature in K
+    m.fs.state.inlet.temperature.fix(298) # room temperature in K
     m.fs.state.inlet.pressure.fix(101325)
     assert degrees_of_freedom(m) == 0
     solver = SolverFactory('ipopt')

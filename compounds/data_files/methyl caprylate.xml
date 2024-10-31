@@ -1,0 +1,81 @@
+<compound>
+<LibraryIndex name="Index" value="3325" />
+<CompoundID name="Name" value="methyl caprylate" />
+<StructureFormula name="Structure" value="CH3(CH2)6COOCH3" />
+<Family name="Family" value="58" />
+<CriticalTemperature name="Critical temperature" units="K" value="645.142" />
+<CriticalPressure name="Critical pressure" units="Pa" value="2351750" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="0.56415" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.247341" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="467.7" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="236.5" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="158.238" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="0.18171" />
+<AcentricityFactor name="Acentric factor" units="_" value="0.554059" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-5.4637E+08" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="-3.398931E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="556338.8" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-5.349895E+09" />
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="100237.7" />
+  <B value="-500" />
+  <C value="13.35168" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<SurfaceTension name="Surface tension" units="N/m">
+  <eqno value="116" />
+  <A value="0" />
+  <B value="0" />
+  <C value="0" />
+  <D value="0.0277903" />
+  <E value="0.0277903" />
+  <Tmin units="K" value="236.5" />
+  <Tmax units="K" value="645.142" />
+  </SurfaceTension>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="21.40206" />
+  <B value="3779.285" />
+  <C value="-85.0253" />
+  <Tmin units="K" value="280.62" />
+  <Tmax units="K" value="645.142" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="196.9" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.073763" />
+<SpecificGravity name="Specific gravity" units="_" value="0.874" />
+<Charge name="Charge" units="_" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="6.8506" />
+<UniquacQ name="UNIQUAC q" units="_" value="5.816" />
+<UnifacVLE name="UNIFAC">
+  <group id="1" value="1" />
+  <group id="2" value="6" />
+  <group id="22" value="1" />
+  </UnifacVLE>
+<UnifacLLE name="UNIFAC-LLE">
+  <group id="1" value="1" />
+  <group id="2" value="6" />
+  <group id="25" value="1" />
+  </UnifacLLE>
+<Asog name="ASOG">
+  <group id="1" value="2" />
+  <group id="2" value="6" />
+  <group id="22" value="1" />
+  </Asog>
+<Umr name="UMR">
+  <group id="1" value="1" />
+  <group id="2" value="6" />
+  <group id="22" value="1" />
+  </Umr>
+<ModifiedUnifac name="Modified UNIFAC">
+  <group id="1" value="1" />
+  <group id="2" value="6" />
+  <group id="21" value="1" />
+  </ModifiedUnifac>
+<CAS name="CAS number" value="111-11-5" />
+<Smiles name="SMILES" value="CCCCCCCC(=O)OC" />
+</compound>
+

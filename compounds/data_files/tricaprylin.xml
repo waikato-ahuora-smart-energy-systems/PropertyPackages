@@ -1,0 +1,111 @@
+<compound>
+<LibraryIndex name="Index" value="3334" />
+<CompoundID name="Name" value="tricaprylin" />
+<StructureFormula name="Structure" value="C27H50O6" />
+<Family name="Family" value="58" />
+<CriticalTemperature name="Critical temperature" units="K" value="850.7" />
+<CriticalPressure name="Critical pressure" units="Pa" value="593200" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="2.21" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.185346" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="737.5" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="283.05" />
+<TriplePointTemperature name="Triple point temperature" units="K" value="283.05" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="470.6823" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="0.48362" />
+<AcentricityFactor name="Acentric factor" units="_" value="1.21743" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-1.55773E+09" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="-9.147006E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="1347672" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-1.539029E+10" />
+<LiquidDensity name="Liquid density" units="kmol/m3">
+  <eqno value="105" />
+  <A value="0.083867" />
+  <B value="0.18563" />
+  <C value="850.7" />
+  <D value="0.27299" />
+  <E value="0" />
+  <Tmin units="K" value="283.05" />
+  <Tmax units="K" value="850.7" />
+  </LiquidDensity>
+<VaporPressure name="Vapour pressure" units="Pa">
+  <eqno value="101" />
+  <A value="138.469" />
+  <B value="-19769.8" />
+  <C value="-15.2062" />
+  <D value="1.7032E-18" />
+  <E value="6" />
+  <Tmin units="K" value="283" />
+  <Tmax units="K" value="850" />
+  </VaporPressure>
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="281981.1" />
+  <B value="-500" />
+  <C value="14.43252" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<LiquidViscosity name="Liquid viscosity" units="Pa.s">
+  <eqno value="101" />
+  <A value="-50.498" />
+  <B value="4703" />
+  <C value="5.4078" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="277" />
+  <Tmax units="K" value="737.5" />
+  </LiquidViscosity>
+<SurfaceTension name="Surface tension" units="N/m">
+  <eqno value="116" />
+  <A value="0" />
+  <B value="0" />
+  <C value="0" />
+  <D value="0.0264974" />
+  <E value="0.0264974" />
+  <Tmin units="K" value="283.05" />
+  <Tmax units="K" value="850.7" />
+  </SurfaceTension>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="24.08983" />
+  <B value="8163.574" />
+  <C value="-86.48725" />
+  <Tmin units="K" value="283" />
+  <Tmax units="K" value="850" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="563.16" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.210264" />
+<SpecificGravity name="Specific gravity" units="_" value="0.950105" />
+<Charge name="Charge" units="_" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="19.6442" />
+<UniquacQ name="UNIQUAC q" units="_" value="16.212" />
+<UnifacVLE name="UNIFAC">
+  <group id="1" value="3" />
+  <group id="2" value="17" />
+  <group id="3" value="1" />
+  <group id="23" value="3" />
+  </UnifacVLE>
+<UnifacLLE name="UNIFAC-LLE">
+  <group id="1" value="3" />
+  <group id="2" value="17" />
+  <group id="3" value="1" />
+  <group id="26" value="3" />
+  </UnifacLLE>
+<Umr name="UMR">
+  <group id="1" value="3" />
+  <group id="2" value="17" />
+  <group id="3" value="1" />
+  <group id="23" value="3" />
+  </Umr>
+<ModifiedUnifac name="Modified UNIFAC">
+  <group id="1" value="3" />
+  <group id="2" value="17" />
+  <group id="3" value="1" />
+  <group id="22" value="3" />
+  </ModifiedUnifac>
+<CAS name="CAS number" value="538-23-8" />
+<Smiles name="SMILES" value="CCCCCCCC(=O)OCC(COC(=O)CCCCCCC)OC(=O)CCCCCCC" />
+</compound>
+

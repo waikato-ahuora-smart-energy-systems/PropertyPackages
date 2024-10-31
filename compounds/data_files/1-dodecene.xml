@@ -1,0 +1,207 @@
+<compound>
+<LibraryIndex name="Index" value="262" />
+<CompoundID name="Name" value="1-dodecene" />
+<StructureFormula name="Structure" value="CH3(CH2)9CHCH2" />
+<Family name="Family" value="9" />
+<CriticalTemperature name="Critical temperature" units="K" value="657.1" />
+<CriticalPressure name="Critical pressure" units="Pa" value="1888000" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="0.725" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.251" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="486.15" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="237.95" />
+<TriplePointTemperature name="Triple point temperature" units="K" value="237.95" />
+<TriplePointPressure name="Triple point pressure" units="Pa" value="0.05" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="168.319" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="0.2228" />
+<AcentricityFactor name="Acentric factor" units="_" value="0.561971" />
+<RadiusOfGyration name="Radius of gyration" units="m" value="5.747E-10" />
+<SolubilityParameter name="Solubility parameter" units="J0.5/m1.5" value="15859.2" />
+<DipoleMoment name="Dipole moment" units="Coulomb.m" value="1.73E-30" />
+<VanDerWaalsVolume name="Van der Waals volume" units="m3/kmol" value="0.12615" />
+<VanDerWaalsArea name="Van der Waals area" units="m2/kmol" value="1.721E+09" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-1.654E+08" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="1.361E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="618500" />
+<HeatOfFusionAtMeltingPoint name="Heat of fusion at melting point" units="J/kmol" value="1.991E+07" />
+<MatthiasCopemanC1 name="Mathias-Copeman C1" units="_" value="1.292363" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-7.398E+09" />
+<SolidDensity name="Solid density" units="kmol/m3">
+  <eqno value="100" />
+  <A value="6.0604" />
+  <B value="-0.0031837" />
+  <C value="0" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="95.18" />
+  <Tmax units="K" value="237.95" />
+  </SolidDensity>
+<LiquidDensity name="Liquid density" units="kmol/m3">
+  <eqno value="105" />
+  <A value="0.3393" />
+  <B value="0.246" />
+  <C value="657.1" />
+  <D value="0.28571" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="657.1" />
+  </LiquidDensity>
+<VaporPressure name="Vapour pressure" units="Pa">
+  <eqno value="101" />
+  <A value="82.022" />
+  <B value="-9485.6" />
+  <C value="-8.2517" />
+  <D value="4.9813E-18" />
+  <E value="6" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="657.1" />
+  </VaporPressure>
+<HeatOfVaporization name="Heat of vaporization" units="J/kmol">
+  <eqno value="106" />
+  <A value="7.9393E+07" />
+  <B value="0.67288" />
+  <C value="-0.44972" />
+  <D value="0.17322" />
+  <E value="0.001" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="657.1" />
+  </HeatOfVaporization>
+<SolidHeatCapacityCp name="Solid heat capacity" units="J/kmol/K">
+  <eqno value="100" />
+  <A value="8319600" />
+  <B value="-74219" />
+  <C value="172.55" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="213.72" />
+  <Tmax units="K" value="230.1" />
+  </SolidHeatCapacityCp>
+<LiquidHeatCapacityCp name="Liquid heat capacity" units="J/kmol/K">
+  <eqno value="100" />
+  <A value="1131200" />
+  <B value="-9238.7" />
+  <C value="38.019" />
+  <D value="-0.065523" />
+  <E value="0.00004309" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="526" />
+  </LiquidHeatCapacityCp>
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="158385.2" />
+  <B value="-580.7091" />
+  <C value="13.57606" />
+  <D value="0.0000429289" />
+  <E value="-2.497856E-08" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<SecondVirialCoefficient name="Second virial coefficient" units="m3/kmol">
+  <eqno value="104" />
+  <A value="0.40405" />
+  <B value="-495.15" />
+  <C value="-165.66" />
+  <D value="-90657" />
+  <E value="153980" />
+  <Tmin units="K" value="328.55" />
+  <Tmax units="K" value="1500" />
+  </SecondVirialCoefficient>
+<LiquidViscosity name="Liquid viscosity" units="Pa.s">
+  <eqno value="101" />
+  <A value="-11.499" />
+  <B value="1443.1" />
+  <C value="0" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="237.9" />
+  <Tmax units="K" value="525.68" />
+  </LiquidViscosity>
+<VaporViscosity name="Vapour viscosity" units="Pa.s">
+  <eqno value="102" />
+  <A value="2.7581E-07" />
+  <B value="0.62078" />
+  <C value="296.47" />
+  <D value="0" />
+  <Tmin units="K" value="237.9" />
+  <Tmax units="K" value="1000" />
+  </VaporViscosity>
+<LiquidThermalConductivity name="Liquid thermal conductivity" units="W/m/K">
+  <eqno value="100" />
+  <A value="0.19838" />
+  <B value="-0.000213" />
+  <C value="0" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="486.15" />
+  </LiquidThermalConductivity>
+<VaporThermalConductivity name="Vapour thermal conductivity" units="W/m/K">
+  <eqno value="102" />
+  <A value="0.000044488" />
+  <B value="1.1855" />
+  <C value="861.36" />
+  <D value="73093" />
+  <Tmin units="K" value="486.15" />
+  <Tmax units="K" value="1000" />
+  </VaporThermalConductivity>
+<SurfaceTension name="Surface tension" units="N/m">
+  <eqno value="106" />
+  <A value="0.055016" />
+  <B value="1.2918" />
+  <C value="0" />
+  <D value="0" />
+  <E value="0.0000001" />
+  <Tmin units="K" value="237.95" />
+  <Tmax units="K" value="657.1" />
+  </SurfaceTension>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="22.75908" />
+  <B value="4928.903" />
+  <C value="-45.1092" />
+  <Tmin units="K" value="300" />
+  <Tmax units="K" value="550" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="246.24" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.0884506" />
+<SpecificGravity name="Specific gravity" units="_" value="0.762896" />
+<Charge name="Charge" units="_" value="0" />
+<CostaldAcentricFactor name="SRK acentric factor" units="_" value="0.561971" />
+<WilsonVolume name="Wilson volume" units="m3/kmol" value="0.2228" />
+<UniquacR name="UNIQUAC r" units="_" value="8.3161" />
+<UniquacQ name="UNIQUAC q" units="_" value="6.884" />
+<ChaoSeaderAcentricFactor name="Chao-Seader acentric factor" units="_" value="0.561971" />
+<ChaoSeaderSolubilityParameter name="Chao-Seader solubility parameter" units="J0.5/m1.5" value="15859.2" />
+<ChaoSeaderLiquidVolume name="Chao-Seader liquid volume" units="m3/kmol" value="0.2228" />
+<UnifacVLE name="UNIFAC">
+  <group id="1" value="1" />
+  <group id="2" value="9" />
+  <group id="5" value="1" />
+  </UnifacVLE>
+<UnifacLLE name="UNIFAC-LLE">
+  <group id="1" value="1" />
+  <group id="2" value="9" />
+  <group id="5" value="1" />
+  </UnifacLLE>
+<Asog name="ASOG">
+  <group id="1" value="1" />
+  <group id="2" value="9" />
+  <group id="5" value="1" />
+  </Asog>
+<GCmethod name="PPR78">
+  <group id="1" value="1" />
+  <group id="2" value="10" />
+  <group id="18" value="1" />
+  </GCmethod>
+<Umr name="UMR">
+  <group id="1" value="1" />
+  <group id="2" value="9" />
+  <group id="5" value="1" />
+  </Umr>
+<ModifiedUnifac name="Modified UNIFAC">
+  <group id="1" value="1" />
+  <group id="2" value="9" />
+  <group id="5" value="1" />
+  </ModifiedUnifac>
+<CAS name="CAS number" value="112-41-4" />
+<Smiles name="SMILES" value="C=CCCCCCCCCCC" />
+</compound>
+
