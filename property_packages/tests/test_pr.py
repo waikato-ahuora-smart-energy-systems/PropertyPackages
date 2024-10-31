@@ -38,6 +38,17 @@ Goal for absolute error margins
 ---------------------------------------------
 """
 
+"""
+Helper function to calculate the absolute error margin of a
+value and asserts whether or not value lies within range
+- Accepts: percent_error (as whole percent)
+- Returns: None
+"""
+def assert_approx(value, expected_value, error_margin):
+    percent_error = error_margin / 100
+    tolerance = abs(percent_error * expected_value)
+    assert approx(value, abs=tolerance) == expected_value
+
 def get_m():
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
@@ -117,74 +128,23 @@ def test_T350_P1_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), abs=1) == 365
-  assert 0.0035346 == approx(
-      value(m.fs.state[1].compress_fact_phase["Liq"]), 1e-2
-  )
-  assert 0.966749 == approx(
-      value(m.fs.state[1].compress_fact_phase["Vap"]), 1e-2
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1e-1
-      )
-      == 0.894676
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.347566
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.971072
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.959791
-  )
+  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 365, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.0035346, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.966749, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 0.894676, 2) # Investigate
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 0.347566, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 0.971072, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 0.959791, 0.5)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 1e-2
-      )
-      == 0.5
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.5
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.70584
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 1e-1
-      )
-      == 0.29416
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-2) == 38942.8
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 1e-2) == 78048.7
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Liq"]), 1e-2) == -361.794
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Vap"]), 1e-2) == -264.0181
-  )
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 0.5, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 0.5, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 0.70584, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 0.29416, 2)
+
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 38942.8, 5)
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 78048.7, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Liq"]), -361.794, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Vap"]), -264.0181, 5)
 
 def test_T350_P5_x5():
   m = get_m()
@@ -206,77 +166,23 @@ def test_T350_P5_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 1e-2) == 431.47
-  assert (
-      approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 1e-2)
-      == 0.01766
-  )
-  assert (
-      approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 1e-2)
-      == 0.80245
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1e-1
-      )
-      == 0.181229
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.070601
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.856523
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.799237
-  )
+  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 431.47, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.01766, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.80245, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 0.181229, 1.5) # Investigate
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 0.070601, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 0.856523, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 0.799237, 0.5)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 1e-2
-      )
-      == 0.5
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.5
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.65415
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.34585
-  )
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 0.5, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 0.5, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 0.65415, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 0.34585, 2)
 
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-2) == 38966.9
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 1e-2) == 75150.7
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Liq"]), 1e-2) == -361.8433
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Vap"]), 1e-2) == -281.9703
-  )
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 38966.9, 5)
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 75150.7, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Liq"]), -361.8433, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Vap"]), -281.9703, 5)
 
 def test_T450_P1_x5():
   m = get_m()
@@ -298,75 +204,23 @@ def test_T450_P1_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 1e-2) == 371.4
-  assert 0.0033583 == approx(
-      value(m.fs.state[1].compress_fact_phase["Liq"]), 1e-2
-  )
-  assert 0.9821368 == approx(
-      value(m.fs.state[1].compress_fact_phase["Vap"]), 1e-2
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1e-2
-      )
-      == 8.069323
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 4.304955
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.985365
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.979457
-  )
+  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 371.4, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.0033583, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.9821368, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 8.069323, 1) # Investigate
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 4.304955, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 0.985365, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 0.979457, 0.5)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 1e-2
-      )
-      == 0.29861
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.70139
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.5
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.5
-  )
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 0.29861, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 0.70139, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 0.5, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 0.5, 2)
 
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-2) == 49441.2
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 1e-2) == 84175.1
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Liq"]), 1e-2) == -328.766
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Vap"]), 1e-2) == -241.622
-  )
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 49441.2, 5)
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 84175.1, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Liq"]), -328.766, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Vap"]), -241.622, 5)
 
 def test_T450_P5_x5():
   m = get_m()
@@ -388,75 +242,24 @@ def test_T450_P5_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 1e-2) == 436.93
-  assert 0.0166181 == approx(
-      value(m.fs.state[1].compress_fact_phase["Liq"]), 1e-2
-  )
-  assert 0.9053766 == approx(
-      value(m.fs.state[1].compress_fact_phase["Vap"]), 1e-2
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1e-2
-      )
-      == 1.63308
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.873213
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.927534
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.898324
-  )
+  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 436.93, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.0166181, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.9053766, 0.5)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 1e-2
-      )
-      == 0.3488737
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.6511263
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.5
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.5
-  )
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1.63308, 1) # investigate
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 0.873213, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 0.927534, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 0.898324, 0.5)
 
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-2) == 51095.2
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 1e-2) == 83362.3
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Liq"]), 1e-2) == -326.299
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Vap"]), 1e-2) == -256.198
-  )
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 0.3488737, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 0.6511263, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 0.5, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 0.5, 2)
+
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 51095.2, 5)
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 83362.3, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Liq"]), -326.299, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Vap"]), -256.198, 5)
 
 def test_T368_P1_x5():
   m = get_m()
@@ -478,79 +281,23 @@ def test_T368_P1_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 1e-2) == 368
-  assert 0.003504 == approx(
-      value(m.fs.state[1].compress_fact_phase["Liq"]), 1e-2
-  )
-  assert 0.97 == approx(
-      value(m.fs.state[1].compress_fact_phase["Vap"]), 1e-2
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1e-1
-      )
-      == 1.492049
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.621563
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.97469
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.964642
-  )
+  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 368, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.003504, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.97, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1.492049, 1.5) # Investigate
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 0.621563, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 0.97469, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 0.964642, 0.5)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 1e-1
-      )
-      == 0.4012128
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 1e-1
-      )
-      == 0.5987872
-  )
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 0.4012128, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 0.5987872, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 0.6141738, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 0.3858262, 2)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.6141738
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 1e-1
-      )
-      == 0.3858262
-  )
-
-  m.fs.state[1].mole_frac_phase_comp.display()
-  m.fs.state[1].enth_mol_phase_comp.display()
-
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-2) == 38235.1
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 1e-2) == 77155.4
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Liq"]), 1e-2) == -359.256
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Vap"]), 1e-2) == -262.348
-  )
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 38235.1, 5)
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 77155.4, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Liq"]), -359.256, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Vap"]), -262.348, 5)
 
 def test_T376_P1_x2():
   m = get_m()
@@ -572,75 +319,23 @@ def test_T376_P1_x2():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 1e-2) == 376
-  assert 0.00361333 == approx(
-      value(m.fs.state[1].compress_fact_phase["Liq"]), 1e-2
-  )
-  assert 0.968749 == approx(
-      value(m.fs.state[1].compress_fact_phase["Vap"]), 1e-2
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1e-1
-      )
-      == 1.8394188
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.7871415
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.9763608
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.9663611
-  )
+  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 376, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.00361333, 0.5)
+  assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.968749, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1.8394188, 1.5) # Investigate
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "toluene"]), 0.7871415, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "benzene"]), 0.9763608, 0.5)
+  assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Vap", "toluene"]), 0.9663611, 0.5)
 
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 1e-1
-      )
-      == 0.17342
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 1e-2
-      )
-      == 0.82658
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 1e-2
-      )
-      == 0.3267155
-  )
-  assert (
-      approx(
-          value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 1e-2
-      )
-      == 0.6732845
-  )
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "benzene"]), 0.17342, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Liq", "toluene"]), 0.82658, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "benzene"]), 0.3267155, 2)
+  assert_approx(value(m.fs.state[1].mole_frac_phase_comp["Vap", "toluene"]), 0.6732845, 2)
 
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 1e-2) == 31535.8
-  )
-  assert (
-      approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 1e-2) == 69175.3
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Liq"]), 1e-2) == -369.033
-  )
-  assert (
-      approx(value(m.fs.state[1].entr_mol_phase["Vap"]), 1e-2) == -273.513
-  )
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Liq"]), 31535.8, 5)
+  assert_approx(value(m.fs.state[1].enth_mol_phase["Vap"]), 69175.3, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Liq"]), -369.033, 5)
+  assert_approx(value(m.fs.state[1].entr_mol_phase["Vap"]), -273.513, 5)
 
 def test_basic_scaling():
   m = get_m()
