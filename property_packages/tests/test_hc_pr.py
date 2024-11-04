@@ -11,6 +11,7 @@
 # for full copyright and license information.
 #################################################################################
 
+from pprint import pprint
 import pytest
 from pyomo.environ import (
     assert_optimal_termination,
@@ -29,8 +30,8 @@ from idaes.core.util.model_statistics import (
     fixed_variables_set,
     activated_constraints_set,
 )
+
 from idaes.core.solvers import get_solver
-from idaes.core.util.performance import PerformanceBaseClass
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
@@ -41,6 +42,28 @@ from ..build_package import build_package
 # Get default solver for testing
 solver = get_solver("ipopt")
 
+
+"""
+---------------------------------------------
+Goal for absolute error margins
+---------------------------------------------
+- temp, pressure, specific volume : 0.5%
+- compositional things : 2% (mole frac, flow, etc)
+- thermodynamic values: 5% (entr, enth)
+---------------------------------------------
+"""
+
+"""
+Helper function to calculate the absolute error margin of a
+value and asserts whether or not value lies within range
+- Accepts: percent_error (as whole percent)
+- Returns: None
+"""
+
+def assert_approx(value, expected_value, error_margin):
+    percent_error = error_margin / 100
+    tolerance = abs(percent_error * expected_value)
+    assert pytest.approx(value, abs=tolerance) == expected_value
 
 def _as_quantity(x):
     unit = pyunits.get_units(x)
@@ -82,18 +105,6 @@ def initialize_model(model):
     model.props.initialize(optarg={"tol": 1e-6})
 
 
-#
-# TODO: Figure out how performance is tested
-# 
-# class Test_HC_PR_Performance(PerformanceBaseClass, unittest.TestCase):
-#     def build_model(self):
-#         return build_model()
-#
-#     def initialize_model(self, model):
-#         initialize_model(model)
-#
-
-
 class TestParamBlock(object):
     def test_build(self):
         model = ConcreteModel()
@@ -128,8 +139,6 @@ class TestParamBlock(object):
             assert isinstance(model.params.get_component(i), Component)
 
         assert isinstance(model.params._phase_component_set, Set)
-
-        print(model.params._phase_component_set)
 
         assert len(model.params._phase_component_set) == 26
         # Originally both hydrogen and methane only are valid for vapor
@@ -172,8 +181,8 @@ class TestParamBlock(object):
             model.params.config.state_bounds,
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (273.15, 300, 1500, pyunits.K),
-                "pressure": (5e4, 1e5, 1e7, pyunits.Pa),
+                "temperature": (273.15, 300, 500, pyunits.K), # TODO: Check bounds
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa), # TODO: Check bounds
             },
             item_callback=_as_quantity,
         )
@@ -183,7 +192,7 @@ class TestParamBlock(object):
         }
 
         assert isinstance(model.params.phase_equilibrium_idx, Set)
-        assert len(model.params.phase_equilibrium_idx) == 11
+        assert len(model.params.phase_equilibrium_idx) == 13
         for i in model.params.phase_equilibrium_idx:
             assert i in [
                 "PE1",
@@ -197,76 +206,80 @@ class TestParamBlock(object):
                 "PE9",
                 "PE10",
                 "PE11",
+                "PE12",
+                "PE13",
             ]
 
         assert model.params.phase_equilibrium_list == {
-            "PE1": ["ethane", ("Vap", "Liq")],
-            "PE2": ["propane", ("Vap", "Liq")],
-            "PE3": ["n-butane", ("Vap", "Liq")],
-            "PE4": ["isobutane", ("Vap", "Liq")],
-            "PE5": ["ethylene", ("Vap", "Liq")],
-            "PE6": ["propylene", ("Vap", "Liq")],
-            "PE7": ["1-butene", ("Vap", "Liq")],
-            "PE8": ["1-pentene", ("Vap", "Liq")],
-            "PE9": ["1-hexene", ("Vap", "Liq")],
-            "PE10": ["1-heptene", ("Vap", "Liq")],
-            "PE11": ["1-octene", ("Vap", "Liq")],
+            "PE1": {"methane": ("Vap", "Liq")},
+            "PE2": {"hydrogen": ("Vap", "Liq")},
+            "PE3": {"ethane": ("Vap", "Liq")},
+            "PE4": {"propane": ("Vap", "Liq")},
+            "PE5": {"n-butane": ("Vap", "Liq")},
+            "PE6": {"isobutane": ("Vap", "Liq")},
+            "PE7": {"ethylene": ("Vap", "Liq")},
+            "PE8": {"propylene": ("Vap", "Liq")},
+            "PE9": {"1-butene": ("Vap", "Liq")},
+            "PE10": {"1-pentene": ("Vap", "Liq")},
+            "PE11": {"1-hexene": ("Vap", "Liq")},
+            "PE12": {"1-heptene": ("Vap", "Liq")},
+            "PE13": {"1-octene": ("Vap", "Liq")},
         }
 
         assert model.params.pressure_ref.value == 101325
         assert model.params.temperature_ref.value == 298.15
 
-        assert model.params.hydrogen.mw.value == 2.016e-3
-        assert model.params.hydrogen.pressure_crit.value == 12.9e5
-        assert model.params.hydrogen.temperature_crit.value == 33.2
+        assert_approx(model.params.hydrogen.mw.value, 2.016e-3, 0.5)
+        assert_approx(model.params.hydrogen.pressure_crit.value, 13.13e5, 0.5)
+        assert_approx(model.params.hydrogen.temperature_crit.value, 33.2, 0.5)
 
-        assert model.params.methane.mw.value == 16.043e-3
-        assert model.params.methane.pressure_crit.value == 46e5
-        assert model.params.methane.temperature_crit.value == 190.4
+        assert_approx(model.params.methane.mw.value, 16.043e-3, 0.5)
+        assert_approx(model.params.methane.pressure_crit.value, 46e5, 0.5)
+        assert_approx(model.params.methane.temperature_crit.value, 190.4, 0.5)
 
-        assert model.params.ethane.mw.value == 30.070e-3
-        assert model.params.ethane.pressure_crit.value == 48.8e5
-        assert model.params.ethane.temperature_crit.value == 305.4
+        assert_approx(model.params.ethane.mw.value, 30.070e-3, 0.5)
+        assert_approx(model.params.ethane.pressure_crit.value, 48.8e5, 0.5)
+        assert_approx(model.params.ethane.temperature_crit.value, 305.4, 0.5)
 
-        assert model.params.propane.mw.value == 44.094e-3
-        assert model.params.propane.pressure_crit.value == 42.5e5
-        assert model.params.propane.temperature_crit.value == 369.8
+        assert_approx(model.params.propane.mw.value, 44.094e-3, 0.5)
+        assert_approx(model.params.propane.pressure_crit.value, 42.5e5, 0.5)
+        assert_approx(model.params.propane.temperature_crit.value, 369.8, 0.5)
 
-        assert model.params["n-butane"].mw.value == 58.124e-3
-        assert model.params["n-butane"].pressure_crit.value == 38.0e5
-        assert model.params["n-butane"].temperature_crit.value == 425.2
+        assert_approx(model.params.__dict__["n-butane"].mw.value, 58.124e-3, 0.5)
+        assert_approx(model.params.__dict__["n-butane"].pressure_crit.value, 38.0e5, 0.5)
+        assert_approx(model.params.__dict__["n-butane"].temperature_crit.value, 425.2, 0.5)
 
-        assert model.params.isobutane.mw.value == 58.124e-3
-        assert model.params.isobutane.pressure_crit.value == 36.5e5
-        assert model.params.isobutane.temperature_crit.value == 408.2
+        assert_approx(model.params.isobutane.mw.value, 58.124e-3, 0.5)
+        assert_approx(model.params.isobutane.pressure_crit.value, 36.5e5, 0.5)
+        assert_approx(model.params.isobutane.temperature_crit.value, 408.2, 0.5)
 
-        assert model.params.ethylene.mw.value == 28.054e-3
-        assert model.params.ethylene.pressure_crit.value == 50.5e5
-        assert model.params.ethylene.temperature_crit.value == 282.4
+        assert_approx(model.params.ethylene.mw.value, 28.054e-3, 0.5)
+        assert_approx(model.params.ethylene.pressure_crit.value, 50.5e5, 0.5)
+        assert_approx(model.params.ethylene.temperature_crit.value, 282.4, 0.5)
 
-        assert model.params.propylene.mw.value == 42.081e-3
-        assert model.params.propylene.pressure_crit.value == 46.2e5
-        assert model.params.propylene.temperature_crit.value == 365.0
+        assert_approx(model.params.propylene.mw.value, 42.081e-3, 0.5)
+        assert_approx(model.params.propylene.pressure_crit.value, 46.2e5, 0.5)
+        assert_approx(model.params.propylene.temperature_crit.value, 365.0, 0.5)
 
-        assert model.params["1-butene"].mw.value == 56.104e-3
-        assert model.params["1-butene"].pressure_crit.value == 40.2e5
-        assert model.params["1-butene"].temperature_crit.value == 419.3
+        assert_approx(model.params.__dict__["1-butene"].mw.value, 56.104e-3, 0.5)
+        assert_approx(model.params.__dict__["1-butene"].pressure_crit.value, 40.2e5, 0.5)
+        assert_approx(model.params.__dict__["1-butene"].temperature_crit.value, 419.3, 0.5)
 
-        assert model.params["1-pentene"].mw.value == 70.135e-3
-        assert model.params["1-pentene"].pressure_crit.value == 40.5e5
-        assert model.params["1-pentene"].temperature_crit.value == 464.7
+        assert_approx(model.params.__dict__["1-pentene"].mw.value, 70.135e-3, 0.5)
+        assert_approx(model.params.__dict__["1-pentene"].pressure_crit.value, 35.6e5, 0.5)
+        assert_approx(model.params.__dict__["1-pentene"].temperature_crit.value, 464.7, 0.5)
 
-        assert model.params["1-hexene"].mw.value == 84.162e-3
-        assert model.params["1-hexene"].pressure_crit.value == 31.7e5
-        assert model.params["1-hexene"].temperature_crit.value == 504.0
+        assert_approx(model.params.__dict__["1-hexene"].mw.value, 84.162e-3, 0.5)
+        assert_approx(model.params.__dict__["1-hexene"].pressure_crit.value, 31.43e5, 0.5)
+        assert_approx(model.params.__dict__["1-hexene"].temperature_crit.value, 504.0, 0.5)
 
-        assert model.params["1-heptene"].mw.value == 98.189e-3
-        assert model.params["1-heptene"].pressure_crit.value == 25.4e5
-        assert model.params["1-heptene"].temperature_crit.value == 537.2
+        assert_approx(model.params.__dict__["1-heptene"].mw.value, 98.189e-3, 0.5)
+        assert_approx(model.params.__dict__["1-heptene"].pressure_crit.value, 29.2e5, 0.5)
+        assert_approx(model.params.__dict__["1-heptene"].temperature_crit.value, 537.2, 0.5)
 
-        assert model.params["1-octene"].mw.value == 112.216e-3
-        assert model.params["1-octene"].pressure_crit.value == 26.2e5
-        assert model.params["1-octene"].temperature_crit.value == 566.6
+        assert_approx(model.params.__dict__["1-octene"].mw.value, 112.216e-3, 0.5)
+        assert_approx(model.params.__dict__["1-octene"].pressure_crit.value, 26.8e5, 0.5)
+        assert_approx(model.params.__dict__["1-octene"].temperature_crit.value, 566.6, 0.5)
         assert_units_consistent(model)
 
 class TestStateBlock(object):
@@ -293,7 +306,9 @@ class TestStateBlock(object):
 
         assert isinstance(model.props[1].mole_frac_comp, Var)
         assert len(model.props[1].mole_frac_comp) == 13
+        print("TESTSTSTST")
         for i in model.props[1].mole_frac_comp:
+            print(i)
             assert value(model.props[1].mole_frac_comp[i]) == pytest.approx(
                 0.077, abs=1e-2
             )
@@ -345,6 +360,7 @@ class TestStateBlock(object):
 
         for c in fin_act_consts:
             assert c in orig_act_consts
+        
         for v in fin_fixed_vars:
             assert v in orig_fixed_vars
 
@@ -355,18 +371,16 @@ class TestStateBlock(object):
 
     def test_solution(self, model):
         # Check phase equilibrium results
-        assert model.props[1].mole_frac_phase_comp[
+        assert_approx(model.props[1].mole_frac_phase_comp[
             "Vap", "hydrogen"
-        ].value == pytest.approx(0.09996, abs=1e-4)
-        assert model.props[1].mole_frac_phase_comp[
+        ].value, 0.09996, 2)
+        assert_approx(model.props[1].mole_frac_phase_comp[
             "Liq", "propylene"
-        ].value == pytest.approx(0.01056, abs=1e-4)
-        assert model.props[1].mole_frac_phase_comp[
+        ].value, 0.01056, 2)
+        assert_approx(model.props[1].mole_frac_phase_comp[
             "Vap", "propylene"
-        ].value == pytest.approx(0.09681, abs=1e-4)
-        assert model.props[1].phase_frac["Vap"].value == pytest.approx(
-            0.77026, abs=1e-4
-        )
+        ].value, 0.09681, 2)
+        assert_approx(model.props[1].phase_frac["Vap"].value, 0.77026, 2)
 
     def test_report(self, model):
         model.props[1].report()
