@@ -20,6 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "typing-validation",
+    "pydantic"
 ]
 
 [project.optional-dependencies]
