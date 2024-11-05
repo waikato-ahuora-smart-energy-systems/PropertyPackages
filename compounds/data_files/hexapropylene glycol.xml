@@ -1,0 +1,52 @@
+<compound>
+<LibraryIndex name="Index" value="12986" />
+<CompoundID name="Name" value="hexapropylene glycol" />
+<StructureFormula name="Structure" value="C18H38O7" />
+<Family name="Family" value="49" />
+<CriticalTemperature name="Critical temperature" units="K" value="700.8411" />
+<CriticalPressure name="Critical pressure" units="Pa" value="1404698" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="0.84635" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.204023" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="652.8116" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="366.4901" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="0.28313" />
+<AcentricityFactor name="Acentric factor" units="_" value="0.812373" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-1.507077E+08" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="-1.71385E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="3371206" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-1.153533E+10" />
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="219884.2" />
+  <B value="-500" />
+  <C value="14.14496" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="21.21997" />
+  <B value="4795.334" />
+  <C value="-158.1351" />
+  <Tmin units="K" value="400" />
+  <Tmax units="K" value="700.8411" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="416.75" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.137105" />
+<Charge name="Charge" units="_" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="14.4139" />
+<UniquacQ name="UNIQUAC q" units="_" value="12.064" />
+<UnifacVLE name="UNIFAC">
+  <group id="1" value="6" />
+  <group id="2" value="5" />
+  <group id="3" value="1" />
+  <group id="15" value="1" />
+  <group id="27" value="4" />
+  <group id="101" value="1" />
+  </UnifacVLE>
+<CAS name="CAS number" value="74388-92-4" />
+<Smiles name="SMILES" value="CC(CO)OCC(C)OCC(C)OCC(C)OCC(C)OCC(C)O" />
+</compound>
+

@@ -1,0 +1,50 @@
+<compound>
+<LibraryIndex name="Index" value="20053" />
+<CompoundID name="Name" value="hexaethylene glycol" />
+<StructureFormula name="Structure" value="C12H26O7" />
+<Family name="Family" value="49" />
+<CriticalTemperature name="Critical temperature" units="K" value="773.6415" />
+<CriticalPressure name="Critical pressure" units="Pa" value="1746241" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="0.82811" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.224811" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="618.2494" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="274.45" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="282.3306" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="0.24557" />
+<AcentricityFactor name="Acentric factor" units="_" value="0.554173" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-4.691101E+08" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="-1.614262E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="1451457" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-7.40225E+09" />
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="165505.9" />
+  <B value="-500" />
+  <C value="13.80507" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="20.77" />
+  <B value="5200" />
+  <C value="-150" />
+  <Tmin units="K" value="390" />
+  <Tmax units="K" value="500" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="293.63" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.0923994" />
+<SpecificGravity name="Specific gravity" units="_" value="1.127" />
+<Charge name="Charge" units="_" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="10.3721" />
+<UniquacQ name="UNIQUAC q" units="_" value="8.848" />
+<UnifacVLE name="UNIFAC">
+  <group id="2" value="5" />
+  <group id="26" value="3" />
+  <group id="100" value="2" />
+  </UnifacVLE>
+<CAS name="CAS number" value="2615-15-8" />
+</compound>
+

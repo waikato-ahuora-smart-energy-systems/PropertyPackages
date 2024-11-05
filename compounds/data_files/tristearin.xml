@@ -1,0 +1,105 @@
+<compound>
+<LibraryIndex name="Index" value="3324" />
+<CompoundID name="Name" value="tristearin" />
+<StructureFormula name="Structure" value="C57H110O6" />
+<Family name="Family" value="58" />
+<CriticalTemperature name="Critical temperature" units="K" value="936" />
+<CriticalPressure name="Critical pressure" units="Pa" value="197700" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="5.71" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.145055" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="898.3" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="346" />
+<TriplePointTemperature name="Triple point temperature" units="K" value="345.94" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="891.4797" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="1.027" />
+<AcentricityFactor name="Acentric factor" units="_" value="2.0894" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-2.17693E+09" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="-6.575854E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="2511499" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-3.384362E+10" />
+<LiquidDensity name="Liquid density" units="kmol/m3">
+  <eqno value="105" />
+  <A value="0.025404" />
+  <B value="0.14493" />
+  <C value="936" />
+  <D value="0.25816" />
+  <E value="0" />
+  <Tmin units="K" value="340" />
+  <Tmax units="K" value="936" />
+  </LiquidDensity>
+<VaporPressure name="Vapour pressure" units="Pa">
+  <eqno value="101" />
+  <A value="225.789" />
+  <B value="-33906.9" />
+  <C value="-26.0721" />
+  <D value="1.49642E-18" />
+  <E value="6" />
+  <Tmin units="K" value="346" />
+  <Tmax units="K" value="936" />
+  </VaporPressure>
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="553040.4" />
+  <B value="-500" />
+  <C value="15.16577" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<LiquidViscosity name="Liquid viscosity" units="Pa.s">
+  <eqno value="101" />
+  <A value="-58.526" />
+  <B value="5528.9" />
+  <C value="6.5801" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="345.94" />
+  <Tmax units="K" value="898.3" />
+  </LiquidViscosity>
+<SurfaceTension name="Surface tension" units="N/m">
+  <eqno value="116" />
+  <A value="0" />
+  <B value="0" />
+  <C value="0" />
+  <D value="0.0211731" />
+  <E value="0.0211731" />
+  <Tmin units="K" value="346" />
+  <Tmax units="K" value="936" />
+  </SurfaceTension>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="26.52417" />
+  <B value="11541.89" />
+  <C value="-121.648" />
+  <Tmin units="K" value="346" />
+  <Tmax units="K" value="936" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="1197.06" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.423657" />
+<SpecificGravity name="Specific gravity" units="_" value="0.8559" />
+<Charge name="Charge" units="_" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="39.8762" />
+<UniquacQ name="UNIQUAC q" units="_" value="32.412" />
+<UnifacVLE name="UNIFAC">
+  <group id="1" value="3" />
+  <group id="2" value="47" />
+  <group id="3" value="1" />
+  <group id="23" value="3" />
+  </UnifacVLE>
+<UnifacLLE name="UNIFAC-LLE">
+  <group id="1" value="3" />
+  <group id="2" value="47" />
+  <group id="3" value="1" />
+  <group id="26" value="3" />
+  </UnifacLLE>
+<Umr name="UMR">
+  <group id="1" value="3" />
+  <group id="2" value="47" />
+  <group id="3" value="1" />
+  <group id="23" value="3" />
+  </Umr>
+<CAS name="CAS number" value="555-43-1" />
+<Smiles name="SMILES" value="CCCCCCCCCCCCCCCCCC(=O)OCC(COC(=O)CCCCCCCCCCCCCCCCC)OC(=O)CCCCCCCCCCCCCCCCC" />
+</compound>
+

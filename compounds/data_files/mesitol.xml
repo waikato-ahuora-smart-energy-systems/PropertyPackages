@@ -1,0 +1,69 @@
+<compound>
+<LibraryIndex name="Index" value="29515" />
+<CompoundID name="Name" value="mesitol" />
+<StructureFormula name="Structure" value="C9H12O" />
+<Family name="Family" value="48" />
+<CriticalTemperature name="Critical temperature" units="K" value="735.5251" />
+<CriticalPressure name="Critical pressure" units="Pa" value="3768649" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="0.42249" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.260357" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="493.2" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="344" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="136.191" />
+<AcentricityFactor name="Acentric factor" units="_" value="0.359154" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="0" />
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="80894.02" />
+  <B value="-500" />
+  <C value="13.10387" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="20.98478" />
+  <B value="3779.094" />
+  <C value="-93.66345" />
+  <Tmin units="K" value="394.56" />
+  <Tmax units="K" value="735.5251" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="158.63" />
+<WilsonVolume name="Wilson volume" units="m3/kmol" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="5.7567" />
+<UniquacQ name="UNIQUAC q" units="_" value="4.384" />
+<UnifacVLE name="UNIFAC">
+  <group id="10" value="2" />
+  <group id="12" value="3" />
+  <group id="18" value="1" />
+  </UnifacVLE>
+<UnifacLLE name="UNIFAC-LLE">
+  <group id="9" value="2" />
+  <group id="11" value="3" />
+  <group id="18" value="1" />
+  </UnifacLLE>
+<Asog name="ASOG">
+  <group id="10" value="2" />
+  <group id="11" value="3" />
+  <group id="16" value="1" />
+  </Asog>
+<GCmethod name="PPR78">
+  <group id="7" value="2" />
+  <group id="8" value="3" />
+  </GCmethod>
+<Umr name="UMR">
+  <group id="10" value="2" />
+  <group id="12" value="3" />
+  <group id="18" value="1" />
+  </Umr>
+<ModifiedUnifac name="Modified UNIFAC">
+  <group id="9" value="2" />
+  <group id="11" value="3" />
+  <group id="17" value="1" />
+  </ModifiedUnifac>
+<CAS name="CAS number" value="527-60-6" />
+<Smiles name="SMILES" value="Cc1cc(c(c(c1)C)O)C" />
+</compound>
+

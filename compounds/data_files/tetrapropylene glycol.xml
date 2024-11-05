@@ -1,0 +1,61 @@
+<compound>
+<LibraryIndex name="Index" value="1208" />
+<CompoundID name="Name" value="tetrapropylene glycol" />
+<StructureFormula name="Structure" value="CH3CHOHCH2OCH(CH3)CH2OCH(CH3)CH2OCH(CH3)CH2OH" />
+<Family name="Family" value="49" />
+<CriticalTemperature name="Critical temperature" units="K" value="736" />
+<CriticalPressure name="Critical pressure" units="Pa" value="1695000" />
+<CriticalVolume name="Critical volume" units="m3/kmol" value="0.875" />
+<CriticalCompressibility name="Critical compressibility factor" units="_" value="0.242362" />
+<NormalBoilingPointTemperature name="Normal boiling point" units="K" value="582.2" />
+<NormalMeltingPointTemperature name="Melting point" units="K" value="265.9" />
+<TriplePointTemperature name="Triple point temperature" units="K" value="265.9" />
+<TriplePointPressure name="Triple point pressure" units="Pa" value="0.000346" />
+<MolecularWeight name="Molecular weight" units="kg/kmol" value="250.3318" />
+<LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="0.2453" />
+<AcentricityFactor name="Acentric factor" units="_" value="1.0125" />
+<RadiusOfGyration name="Radius of gyration" units="m" value="7.224E-10" />
+<SolubilityParameter name="Solubility parameter" units="J0.5/m1.5" value="18440" />
+<DipoleMoment name="Dipole moment" units="Coulomb.m" value="6.17E-30" />
+<VanDerWaalsVolume name="Van der Waals volume" units="m3/kmol" value="0.1499" />
+<VanDerWaalsArea name="Van der Waals area" units="m2/kmol" value="2.088E+09" />
+<HeatOfFormation name="IG heat of formation" units="J/kmol" value="-1.033E+09" />
+<GibbsEnergyOfFormation name="IG Gibbs energy of formation" units="J/kmol" value="-5.929E+08" />
+<AbsEntropy name="IG absolute entropy" units="J/kmol/K" value="625600" />
+<HeatOfCombustion name="Standard net heat of combustion LHV" units="J/kmol" value="-6.741E+09" />
+<IdealGasHeatCapacityCp name="Ideal gas heat capacity" units="J/kmol/K">
+  <eqno value="16" />
+  <A value="151960.6" />
+  <B value="-500" />
+  <C value="13.75421" />
+  <D value="0" />
+  <E value="0" />
+  <Tmin units="K" value="255" />
+  <Tmax units="K" value="1500" />
+  </IdealGasHeatCapacityCp>
+<AntoineVaporPressure name="Antoine" units="Pa">
+  <eqno value="10" />
+  <A value="22.96353" />
+  <B value="5202.172" />
+  <C value="-127.363" />
+  <Tmin units="K" value="349.32" />
+  <Tmax units="K" value="736" />
+  </AntoineVaporPressure>
+<FullerVolume name="Fuller et al. diffusion volume" units="_" value="281.41" />
+<Parachor name="Parachor" units="kg0.25.m3/s0.5/kmol" value="0.10154" />
+<SpecificGravity name="Specific gravity" units="_" value="1" />
+<Charge name="Charge" units="_" value="0" />
+<UniquacR name="UNIQUAC r" units="_" value="9.8813" />
+<UniquacQ name="UNIQUAC q" units="_" value="8.352" />
+<UnifacVLE name="UNIFAC">
+  <group id="1" value="4" />
+  <group id="2" value="3" />
+  <group id="3" value="1" />
+  <group id="15" value="1" />
+  <group id="27" value="2" />
+  <group id="101" value="1" />
+  </UnifacVLE>
+<CAS name="CAS number" value="24800-25-7" />
+<Smiles name="SMILES" value="CC(CO)OCC(C)OCC(C)OCC(C)O" />
+</compound>
+
