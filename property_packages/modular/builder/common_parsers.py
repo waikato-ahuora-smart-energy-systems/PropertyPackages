@@ -4,7 +4,7 @@ from compounds.Compound import load_compound,Compound
 from pyomo.environ import units as pyunits
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
-from idaes.core import LiquidPhase, VaporPhase, Component
+from idaes.core import LiquidPhase, VaporPhase, Component, PhaseType as PT
 from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE)
 from idaes.models.properties.modular_properties.phase_equil.forms import log_fugacity
 from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
@@ -57,10 +57,14 @@ class components_parser(BuildBase):
                 config["parameter_data"].update({
                     "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol)
                 })
+            else:
+                raise ValueError("No Heat of Formation Data")
             if compound["AbsEntropy"] is not None:
                 config["parameter_data"].update({
                     "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K)
                 })
+            else:
+                raise ValueError("No Absolute Entropy Data")
 
             # Ideal Gas Molar Calculations
             # All three properties intrinsically linked together
@@ -74,7 +78,7 @@ class components_parser(BuildBase):
                         "C": (float(compound["RPPHeatCapacityCp"]["C"]), pyunits.J / pyunits.kilomol / pyunits.K**3),
                         "D": (float(compound["RPPHeatCapacityCp"]["D"]), pyunits.J / pyunits.kilomol / pyunits.K**4),
                     }})
-                elif compound["RPPHeatCapacityCp"]["eqno"] == 100:
+                elif compound["RPPHeatCapacityCp"]["eqno"] == 100 or compound["RPPHeatCapacityCp"]["eqno"] == 5:
                     config["enth_mol_ig_comp"] = ChemSep
                     config["entr_mol_ig_comp"] = ChemSep
                     config["parameter_data"].update({"cp_mol_ig_comp_coeff": {
@@ -84,15 +88,24 @@ class components_parser(BuildBase):
                         "D": (compound["RPPHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
                         "E": (compound["RPPHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
                     }})
+                else:
+                    raise ValueError(f"Invalid equation number for heat capacity {compound['RPPHeatCapacityCp']['eqno']}")
+            else:
+                raise ValueError("No Heat Capacity Data")
 
             # Saturation Pressure (Vapor)
             if compound["AntoineVaporPressure"] is not None:
-                config["pressure_sat_comp"] = ChemSep
-                config["parameter_data"].update({"pressure_sat_comp_coeff": {
-                    "A": (compound["AntoineVaporPressure"]["A"], None),
-                    "B": (compound["AntoineVaporPressure"]["B"], pyunits.K),
-                    "C": (compound["AntoineVaporPressure"]["C"], pyunits.K),
-                }})
+                if compound["AntoineVaporPressure"]["eqno"] == 10:
+                    config["pressure_sat_comp"] = ChemSep
+                    config["parameter_data"].update({"pressure_sat_comp_coeff": {
+                        "A": (compound["AntoineVaporPressure"]["A"], None),
+                        "B": (compound["AntoineVaporPressure"]["B"], pyunits.K),
+                        "C": (compound["AntoineVaporPressure"]["C"], pyunits.K),
+                    }})
+                else:
+                    raise ValueError("No Antoine Vapor Pressure Equation Data")
+            else:
+                raise ValueError("No Antoine Vapor Pressure Data")
 
             # Liquid Density
             if compound["LiquidDensity"] is not None:
@@ -105,6 +118,10 @@ class components_parser(BuildBase):
                         "3": (compound["LiquidDensity"]["C"], pyunits.K),
                         "4": (compound["LiquidDensity"]["D"], None),
                     }})
+                else:
+                    raise ValueError("No Liquid Density Equation Data")
+            else:
+                raise ValueError("No Liquid Density Data")
 
             # Liquid Heat Capacity & Entropy / Enthalpy
             if compound["LiquidHeatCapacityCp"] is not None:
@@ -127,7 +144,14 @@ class components_parser(BuildBase):
 
                     config["parameter_data"].update({
                         "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
-                    })  
+                    }) 
+                elif compound["LiquidHeatCapacityCp"]["eqno"] == 16:
+                    pass #TODO: Implement this
+                else:
+                    raise ValueError(f"No Liquid Heat Capacity Equation Data {compound['LiquidHeatCapacityCp']['eqno']}")
+            else: 
+                # Compound only exists in vapor phase
+                config["parameter_data"].update({"valid_phase_types": PT.vaporphase})
 
             return config
         

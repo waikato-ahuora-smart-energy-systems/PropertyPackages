@@ -8,6 +8,7 @@ IDAES naming conventions followed for compatibility with modular property packag
 
 from pyomo.environ import log, exp, units as pyunits
 from idaes.core.util.misc import set_param_from_config
+from pyomo.environ import units as u
 from pyomo.environ import Var, value
 
 class ChemSep(object):
@@ -163,6 +164,10 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T, dT=False):
+
+            print("Calculating pressure saturation pressure")
+            print("at the specified temperature", value(T), u.get_units(T))
+
             psat = (
                     exp(
                         cobj.pressure_sat_comp_coeff_A - cobj.pressure_sat_comp_coeff_B /
@@ -171,3 +176,15 @@ class ChemSep(object):
 
             units = b.params.get_metadata().derived_units
             return pyunits.convert(psat, to_units=units.PRESSURE)
+        
+    # What needs to be supported
+    # dens_mol_liq_comp: chem_sep <- have equation
+    # enth_mol_liq_comp: chem_sep <- need equation
+    # entr_mol_liq_comp: chem_sep <- need equation
+        # cp_mol_liq_comp_coeff: <- have
+        # dens_mol_liq_comp_coeff <- have
+        # enth_mol_form_liq_comp_ref <- have
+        # entr_mol_form_liq_comp_ref <- have 
+
+    # 
+    
