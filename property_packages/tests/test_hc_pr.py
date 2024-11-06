@@ -38,10 +38,12 @@ from idaes.core.solvers import get_solver
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
+from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 
 from ..build_package import build_package
 from idaes.core import FlowsheetBlock
 import idaes.core.util.scaling as iscale
+from .test_config import configuration
 
 # -----------------------------------------------------------------------------
 # Get default solver for testing
@@ -79,10 +81,8 @@ def _as_quantity(x):
 def test_build_model():
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
-  m.fs.props = build_package("peng-robinson", 
-                             ["methane", "hydrogen", "ethane", "propane", "n-butane", 
-                              "isobutane", "ethylene", "propylene", "1-butene", "1-pentene", 
-                              "1-hexene", "1-heptene", "1-octene"])
+  #m.fs.props = GenericParameterBlock(**configuration)
+  m.fs.props = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", "n-butane", "isobutane", "ethylene", "propylene", "1-butene", "1-pentene", "1-hexene", "1-heptene", "1-octene"])
 
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
 
@@ -105,6 +105,19 @@ def test_build_model():
   m.fs.state[1].mole_frac_comp["1-hexene"].fix(0.077)
   m.fs.state[1].mole_frac_comp["1-heptene"].fix(0.077)
   m.fs.state[1].mole_frac_comp["1-octene"].fix(0.076)
+#   m.fs.state[1].mole_frac_comp["hydrogen"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["methane"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["ethane"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["propane"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["nbutane"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["ibutane"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["ethylene"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["propene"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["butene"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["pentene"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["hexene"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["heptene"].fix(0.077)
+#   m.fs.state[1].mole_frac_comp["octene"].fix(0.076)
   m.fs.state[1].temperature.fix(350)
   m.fs.state[1].pressure.fix(1e5)
 

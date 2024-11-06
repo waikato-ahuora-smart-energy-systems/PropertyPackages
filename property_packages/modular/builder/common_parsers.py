@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 from .base_parser import BuildBase
-from compounds.Compound import load_compound,Compound
+from compounds.Compound import Compound
 from pyomo.environ import units as pyunits
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
@@ -13,7 +13,8 @@ from property_packages.modular.builder.data.chem_sep import ChemSep
 
 """
 
-TODO: Need to double check all equation numbers to throw errors if mis-matched or not found
+    TODO: Need to double check all equation numbers 
+    to throw errors if mis-matched or not found
 
 """
 
@@ -59,6 +60,7 @@ class components_parser(BuildBase):
                 })
             else:
                 raise ValueError("No Heat of Formation Data")
+
             if compound["AbsEntropy"] is not None:
                 config["parameter_data"].update({
                     "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K)
@@ -146,7 +148,25 @@ class components_parser(BuildBase):
                         "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
                     }) 
                 elif compound["LiquidHeatCapacityCp"]["eqno"] == 16:
-                    pass #TODO: Implement this
+                    # Uses correct equations to calculate
+                    config["enth_mol_liq_comp"] = ChemSep
+                    config["entr_mol_liq_comp"] = ChemSep
+                    config["parameter_data"].update({"cp_mol_liq_comp_coeff": {
+                        "A": (compound["LiquidHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K**1),
+                        "B": (compound["LiquidHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
+                        "C": (compound["LiquidHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
+                        "D": (compound["LiquidHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
+                        "E": (compound["LiquidHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
+                    }})
+
+                    # ASSUMPTION: Molar heat of formation, liq is zero - given the semi-okay by Ben
+                    config["parameter_data"].update({
+                        "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol)
+                    })
+
+                    config["parameter_data"].update({
+                        "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
+                    }) 
                 else:
                     raise ValueError(f"No Liquid Heat Capacity Equation Data {compound['LiquidHeatCapacityCp']['eqno']}")
             else: 
@@ -209,7 +229,6 @@ class temperature_ref_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return (298.15, pyunits.K)
-
 
 class pr_kappa_parser(BuildBase):
     @staticmethod
