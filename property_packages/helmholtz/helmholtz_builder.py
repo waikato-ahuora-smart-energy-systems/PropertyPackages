@@ -19,10 +19,29 @@ def build_helmholtz_package(compound_list: List[str]):
     elif(len(compound_list) > 1):
         raise ValueError("Helmholtz EOS only supports single component systems")
     else:
-        component = compound_list[0]
+        component = map_component_to_helmholtz(compound_list[0])
         if component in registered_components():
             # Build and return a helmholtz property package for this compound
             return HelmholtzParameterBlock(pure_component=component,
                                             phase_presentation=PhaseType.MIX,
                                             state_vars=StateVars.PH,
                                             amount_basis=AmountBasis.MOLE)
+
+compound_map = {
+    "water": "h2o",
+    "carbon dioxide":"co2",
+    # TODO: Figure out what these compounds are in our list of compounds (or add them to the list)
+    #"":"r227ea",
+    #"":"r1234ze",
+    #"":"r125",
+    #"":"r32",
+    #"":"r134a",
+    "propane":"propane"
+}
+
+def map_component_to_helmholtz(compound:str) -> str:
+    if compound in compound_map:
+        return compound_map[compound]
+    else:
+        return compound # helmholtz will error if the compound is not supported.
+    
