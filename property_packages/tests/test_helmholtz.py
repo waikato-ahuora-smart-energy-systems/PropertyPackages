@@ -16,7 +16,7 @@ from idaes.core.util.tables import _get_state_from_port
 def test_helmholtz():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False) 
-    m.fs.properties = build_package("helmholtz", ["h2o"])
+    m.fs.properties = build_package("helmholtz", ["water"])
     
     m.fs.heater = Heater(property_package=m.fs.properties)
     m.fs.heater.heat_duty.fix(0)
