@@ -1,3 +1,5 @@
+from math import floor
+from pprint import pprint
 from typing import Any, Dict, List
 from .base_parser import BuildBase
 from compounds.Compound import Compound
@@ -10,6 +12,8 @@ from idaes.models.properties.modular_properties.phase_equil.forms import log_fug
 from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
 from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
 from property_packages.modular.builder.data.chem_sep import ChemSep
+from pyomo.common.fileutils import this_file_dir
+import csv
 
 """
 
@@ -239,9 +243,41 @@ class pr_kappa_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         kappa_parameters = {}
+        compound_id_map = {}
+
         for i, compound1 in enumerate(compounds):
+            compound_id_map[str(floor(compound1["LibraryIndex"].value))] = compound1
             for j, compound2 in enumerate(compounds):
                 kappa_parameters[(compound1["CompoundID"].value, compound2["CompoundID"].value)] = 0.000
                 # Setting all interactions initially to zero
-                # TODO: Pass over the correct values
+
+        # TODO: Pass over the correct values
+        # Open and read the interaction data file
+        file = open(this_file_dir() + "/data/pr.dat", 'r')
+        reader = csv.reader(file, delimiter=';')
+        for row in reader:
+
+            # Skip invalid rows
+            if len(row) < 4:
+                continue
+            
+            # Extract ID1, ID2, kappa (k12) and comment
+            id1, id2, kappa, _ = row
+
+            try:
+                # Convert kappa to a float (if possible)
+                kappa_value = float(kappa)
+            
+            except ValueError:
+                continue  # Skip rows with invalid kappa values
+
+            # Check if the compound IDs exist in the compound list
+
+            if id1 in compound_id_map and id2 in compound_id_map:
+
+                compound1 = compound_id_map[id1]
+                compound2 = compound_id_map[id2]
+                kappa_parameters[(compound1["CompoundID"].value, compound2["CompoundID"].value)] = kappa_value
+                kappa_parameters[(compound2["CompoundID"].value, compound1["CompoundID"].value)] = kappa_value
+
         return {"PR_kappa": kappa_parameters}

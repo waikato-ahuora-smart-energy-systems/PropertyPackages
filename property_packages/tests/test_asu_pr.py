@@ -18,10 +18,6 @@ from idaes.core.util.model_statistics import (
 )
 from idaes.core.solvers import get_solver
 
-from idaes.models.properties.modular_properties.base.generic_property import (
-    GenericParameterBlock,
-)
-
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
@@ -82,7 +78,7 @@ def test_build():
         {
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
             "temperature": (10, 300, 350, pyunits.K),
-            "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            "pressure": (5e4, 1e5, 1e7, pyunits.Pa),
         },
         item_callback=_as_quantity,
     )
