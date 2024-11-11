@@ -36,15 +36,12 @@ def build_config(property_package_name, compound_names: List[str]) -> dict[str,a
   template = package.get_template()
   
   # Building template
-
+  # NOTE: must pass a copy of the template back, do not directly pass template
   new_template = {}
 
   for key, obj in template.items():
     # Call the parse method on each object and update the template
     new_template[key] = obj.serialise(compounds)
 
-  pprint(new_template)
-
   # Building property package and returning
-
   return GenericParameterBlock(**new_template)

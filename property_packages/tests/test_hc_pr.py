@@ -78,10 +78,9 @@ def _as_quantity(x):
         unit = pyunits.dimensionless
     return value(x) * unit._get_pint_unit()
 
-def test_build_model():
+def build_model():
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
-  #m.fs.props = GenericParameterBlock(**configuration)
   m.fs.props = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", "n-butane", 
                                                "isobutane", "ethylene", "propylene", "1-butene", "1-pentene", 
                                                "1-hexene", "1-heptene", "1-octene"])
@@ -91,9 +90,7 @@ def test_build_model():
   iscale.calculate_scaling_factors(m.fs.props)
   iscale.calculate_scaling_factors(m.fs.state[1])
 
-  # assert_units_consistent(m)
-
-  m.fs.state[1].flow_mol.fix(100)
+  m.fs.state[1].flow_mol.fix(1)
   m.fs.state[1].mole_frac_comp["hydrogen"].fix(0.077)
   m.fs.state[1].mole_frac_comp["methane"].fix(0.077)
   m.fs.state[1].mole_frac_comp["ethane"].fix(0.077)
@@ -107,20 +104,7 @@ def test_build_model():
   m.fs.state[1].mole_frac_comp["1-hexene"].fix(0.077)
   m.fs.state[1].mole_frac_comp["1-heptene"].fix(0.077)
   m.fs.state[1].mole_frac_comp["1-octene"].fix(0.076)
-#   m.fs.state[1].mole_frac_comp["hydrogen"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["methane"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["ethane"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["propane"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["nbutane"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["ibutane"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["ethylene"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["propene"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["butene"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["pentene"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["hexene"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["heptene"].fix(0.077)
-#   m.fs.state[1].mole_frac_comp["octene"].fix(0.076)
-  m.fs.state[1].temperature.fix(350)
+  m.fs.state[1].temperature.fix(295)
   m.fs.state[1].pressure.fix(1e5)
 
   m.fs.state[1].enth_mol_phase
@@ -130,7 +114,6 @@ def test_build_model():
 
   return m
 
-"""
 def initialize_model(model):
     model.fs.state.initialize(optarg={"tol": 1e-6})
 
@@ -170,18 +153,11 @@ def test_params():
       assert isinstance(model.params.get_component(i), Component)
 
   assert isinstance(model.params._phase_component_set, Set)
-
-  assert len(model.params._phase_component_set) == 26
-  # Originally both hydrogen and methane only are valid for vapor
-  # this was removed as it was difficult to dynamically determine 
-  # the valid phase types for components. In the future this could
-  # be added back in.
+  assert len(model.params._phase_component_set) == 24
   for i in model.params._phase_component_set:
       assert i in [
           ("Liq", "ethane"),
           ("Vap", "hydrogen"),
-          ("Liq", "hydrogen"),
-          ("Liq", "methane"),
           ("Vap", "methane"),
           ("Vap", "ethane"),
           ("Liq", "propane"),
@@ -212,8 +188,8 @@ def test_params():
       model.params.config.state_bounds,
       {
           "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-          "temperature": (273.15, 300, 500, pyunits.K), # TODO: Check bounds
-          "pressure": (5e4, 1e5, 1e6, pyunits.Pa), # TODO: Check bounds
+          "temperature": (273.15, 300, 500, pyunits.K),
+          "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
       },
       item_callback=_as_quantity,
   )
@@ -223,7 +199,7 @@ def test_params():
   }
 
   assert isinstance(model.params.phase_equilibrium_idx, Set)
-  assert len(model.params.phase_equilibrium_idx) == 13
+  assert len(model.params.phase_equilibrium_idx) == 11
   for i in model.params.phase_equilibrium_idx:
       assert i in [
           "PE1",
@@ -237,24 +213,20 @@ def test_params():
           "PE9",
           "PE10",
           "PE11",
-          "PE12",
-          "PE13",
       ]
 
   assert model.params.phase_equilibrium_list == {
-      "PE1": {"methane": ("Vap", "Liq")},
-      "PE2": {"hydrogen": ("Vap", "Liq")},
-      "PE3": {"ethane": ("Vap", "Liq")},
-      "PE4": {"propane": ("Vap", "Liq")},
-      "PE5": {"n-butane": ("Vap", "Liq")},
-      "PE6": {"isobutane": ("Vap", "Liq")},
-      "PE7": {"ethylene": ("Vap", "Liq")},
-      "PE8": {"propylene": ("Vap", "Liq")},
-      "PE9": {"1-butene": ("Vap", "Liq")},
-      "PE10": {"1-pentene": ("Vap", "Liq")},
-      "PE11": {"1-hexene": ("Vap", "Liq")},
-      "PE12": {"1-heptene": ("Vap", "Liq")},
-      "PE13": {"1-octene": ("Vap", "Liq")},
+      "PE1": {"ethane": ("Vap", "Liq")},
+      "PE2": {"propane": ("Vap", "Liq")},
+      "PE3": {"n-butane": ("Vap", "Liq")},
+      "PE4": {"isobutane": ("Vap", "Liq")},
+      "PE5": {"ethylene": ("Vap", "Liq")},
+      "PE6": {"propylene": ("Vap", "Liq")},
+      "PE7": {"1-butene": ("Vap", "Liq")},
+      "PE8": {"1-pentene": ("Vap", "Liq")},
+      "PE9": {"1-hexene": ("Vap", "Liq")},
+      "PE10": {"1-heptene": ("Vap", "Liq")},
+      "PE11": {"1-octene": ("Vap", "Liq")}
   }
 
   assert model.params.pressure_ref.value == 101325
@@ -413,4 +385,3 @@ def test_solution():
 def test_report():
   model = build_model()
   model.fs.state[1].report()
-"""
