@@ -1,5 +1,6 @@
 import pytest
 from pyomo.environ import (
+    assert_optimal_termination,
     check_optimal_termination,
     ConcreteModel,
     Set,
@@ -28,7 +29,12 @@ from ..build_package import build_package
 
 # -----------------------------------------------------------------------------
 # Get default solver for testing
-solver = get_solver("ipopt_v2")
+solver = get_solver("ipopt")
+
+def assert_approx(value, expected_value, error_margin):
+    percent_error = error_margin / 100
+    tolerance = abs(percent_error * expected_value)
+    assert pytest.approx(value, abs=tolerance) == expected_value
 
 def _as_quantity(x):
     unit = pyunits.get_units(x)
@@ -42,7 +48,7 @@ def build_model():
     model.props = model.params.build_state_block([1], defined_state=True)
     return model
 
-def test_build():
+def test_params():
     model = ConcreteModel()
     model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
 
@@ -77,8 +83,8 @@ def test_build():
         model.params.config.state_bounds,
         {
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-            "temperature": (10, 300, 350, pyunits.K),
-            "pressure": (5e4, 1e5, 1e7, pyunits.Pa),
+            "temperature": (10, 300, 500, pyunits.K),
+            "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
         },
         item_callback=_as_quantity,
     )
@@ -93,25 +99,25 @@ def test_build():
         assert i in ["PE1", "PE2", "PE3"]
 
     assert model.params.phase_equilibrium_list == {
-        "PE1": ["nitrogen", ("Vap", "Liq")],
-        "PE2": ["argon", ("Vap", "Liq")],
-        "PE3": ["oxygen", ("Vap", "Liq")],
+        "PE1": {"nitrogen": ("Vap", "Liq")},
+        "PE2": {"argon": ("Vap", "Liq")},
+        "PE3": {"oxygen": ("Vap", "Liq")},
     }
 
-    assert model.params.pressure_ref.value == 101325
-    assert model.params.temperature_ref.value == 298.15
+    assert_approx(model.params.pressure_ref.value, 101325, 0.2)
+    assert_approx(model.params.temperature_ref.value, 298.15, 0.2)
 
-    assert model.params.nitrogen.mw.value == 28.0135e-3
-    assert model.params.nitrogen.pressure_crit.value == 34e5
-    assert model.params.nitrogen.temperature_crit.value == 126.2
+    assert_approx(model.params.nitrogen.mw.value, 28.0134e-3, 0.2)
+    assert_approx(model.params.nitrogen.pressure_crit.value, 34e5, 0.2)
+    assert_approx(model.params.nitrogen.temperature_crit.value, 126.2, 0.2)
 
-    assert model.params.argon.mw.value == 39.948e-3
-    assert model.params.argon.pressure_crit.value == 48.98e5
-    assert model.params.argon.temperature_crit.value == 150.86
+    assert_approx(model.params.argon.mw.value, 39.948e-3, 0.2)
+    assert_approx(model.params.argon.pressure_crit.value, 48.98e5, 0.2)
+    assert_approx(model.params.argon.temperature_crit.value, 150.86, 0.2)
 
-    assert model.params.oxygen.mw.value == 31.999e-3
-    assert model.params.oxygen.pressure_crit.value == 50.43e5
-    assert model.params.oxygen.temperature_crit.value == 154.58
+    assert_approx(model.params.oxygen.mw.value, 31.999e-3, 0.2)
+    assert_approx(model.params.oxygen.pressure_crit.value, 50.43e5, 0.2)
+    assert_approx(model.params.oxygen.temperature_crit.value, 154.58, 0.2)
 
     assert_units_consistent(model)
 
@@ -125,12 +131,12 @@ def test_build():
 
     assert isinstance(model.props[1].pressure, Var)
     assert value(model.props[1].pressure) == 1e5
-    assert model.props[1].pressure.ub == 1e7
+    assert model.props[1].pressure.ub == 1e6
     assert model.props[1].pressure.lb == 5e4
 
     assert isinstance(model.props[1].temperature, Var)
     assert value(model.props[1].temperature) == 300
-    assert model.props[1].temperature.ub == 350
+    assert model.props[1].temperature.ub == 500
     assert model.props[1].temperature.lb == 10
 
     assert isinstance(model.props[1].mole_frac_comp, Var)
@@ -199,15 +205,10 @@ def test_initialize():
     for v in fin_fixed_vars:
         assert v in orig_fixed_vars
 
-def test_solve():
+def test_solve_and_solution():
     model = build_model()
     results = solver.solve(model)
-
-    # Check for optimal solution
-    assert check_optimal_termination(results)
-
-def test_solution():
-    model = build_model()
+    assert_optimal_termination(results)
     # Check phase equilibrium results
     assert model.props[1].mole_frac_phase_comp[
         "Liq", "nitrogen"

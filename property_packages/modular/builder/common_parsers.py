@@ -225,7 +225,7 @@ class state_bounds_parser(BuildBase):
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
         return {
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-            "temperature": (273.15, 300, 500, pyunits.K),
+            "temperature": (10, 300, 500, pyunits.K),
             "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
         }
 
@@ -251,6 +251,7 @@ class pr_kappa_parser(BuildBase):
                 kappa_parameters[(compound1["CompoundID"].value, compound2["CompoundID"].value)] = 0.000
                 # Setting all interactions initially to zero
 
+        # TODO: Adjust method so the multiple kappa values for single pair are supported
         # TODO: Pass over the correct values
         # Open and read the interaction data file
         file = open(this_file_dir() + "/data/pr.dat", 'r')
