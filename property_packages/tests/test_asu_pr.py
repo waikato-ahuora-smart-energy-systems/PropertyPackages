@@ -40,190 +40,214 @@ def assert_approx(value, expected_value, error_margin):
     tolerance = abs(percent_error * expected_value)
     assert pytest.approx(value, abs=tolerance) == expected_value
 
+
 def _as_quantity(x):
     unit = pyunits.get_units(x)
     if unit is None:
         unit = pyunits.dimensionless
     return value(x) * unit._get_pint_unit()
 
-def build_model():
-    model = ConcreteModel()
-    # model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
-    model.params = GenericParameterBlock(**config)
-    model.props = model.params.build_state_block([1], defined_state=True)
-    return model
 
-def test_params():
-    model = ConcreteModel()
-    model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
+@pytest.mark.skipif(not cubic_roots_available(), reason="Cubic functions not available")
+class TestASUPR(PropertyTestHarness):
+    def configure(self):
+        self.prop_pack = GenericParameterBlock
+        self.param_args = configuration
+        self.prop_args = {}
+        self.has_density_terms = False
 
-    assert isinstance(model.params.phase_list, Set)
-    assert len(model.params.phase_list) == 2
-    for i in model.params.phase_list:
-        assert i in ["Liq", "Vap"]
-    assert model.params.Liq.is_liquid_phase()
-    assert model.params.Vap.is_vapor_phase()
 
-    assert isinstance(model.params.component_list, Set)
-    assert len(model.params.component_list) == 3
-    for i in model.params.component_list:
-        assert i in ["nitrogen", "argon", "oxygen"]
-        assert isinstance(model.params.get_component(i), Component)
+# Test for configuration dictionaries with parameters from Properties of Gases
+# and liquids 4th edition
+class TestParamBlock(object):
+    @pytest.mark.unit
+    def test_build(self):
+        model = ConcreteModel()
+        model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
 
-    assert isinstance(model.params._phase_component_set, Set)
-    assert len(model.params._phase_component_set) == 6
-    for i in model.params._phase_component_set:
-        assert i in [
-            ("Liq", "nitrogen"),
-            ("Liq", "argon"),
-            ("Liq", "oxygen"),
-            ("Vap", "nitrogen"),
-            ("Vap", "argon"),
-            ("Vap", "oxygen"),
-        ]
+        assert isinstance(model.params.phase_list, Set)
+        assert len(model.params.phase_list) == 2
+        for i in model.params.phase_list:
+            assert i in ["Liq", "Vap"]
+        assert model.params.Liq.is_liquid_phase()
+        assert model.params.Vap.is_vapor_phase()
 
-    assert model.params.config.state_definition == FTPx
+        assert isinstance(model.params.component_list, Set)
+        assert len(model.params.component_list) == 3
+        for i in model.params.component_list:
+            assert i in ["nitrogen", "argon", "oxygen"]
+            assert isinstance(model.params.get_component(i), Component)
 
-    assertStructuredAlmostEqual(
-        model.params.config.state_bounds,
-        {
-            "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-            "temperature": (10, 300, 500, pyunits.K),
-            "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-        },
-        item_callback=_as_quantity,
-    )
+        assert isinstance(model.params._phase_component_set, Set)
+        assert len(model.params._phase_component_set) == 6
+        for i in model.params._phase_component_set:
+            assert i in [
+                ("Liq", "nitrogen"),
+                ("Liq", "argon"),
+                ("Liq", "oxygen"),
+                ("Vap", "nitrogen"),
+                ("Vap", "argon"),
+                ("Vap", "oxygen"),
+            ]
 
-    assert model.params.config.phase_equilibrium_state == {
-        ("Vap", "Liq"): SmoothVLE
-    }
+        assert model.params.config.state_definition == FTPx
 
-    assert isinstance(model.params.phase_equilibrium_idx, Set)
-    assert len(model.params.phase_equilibrium_idx) == 3
-    for i in model.params.phase_equilibrium_idx:
-        assert i in ["PE1", "PE2", "PE3"]
+        assertStructuredAlmostEqual(
+            model.params.config.state_bounds,
+            {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (10, 300, 500, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            },
+            item_callback=_as_quantity,
+        )
 
-    assert model.params.phase_equilibrium_list == {
-        "PE1": {"nitrogen": ("Vap", "Liq")},
-        "PE2": {"argon": ("Vap", "Liq")},
-        "PE3": {"oxygen": ("Vap", "Liq")},
-    }
+        assert model.params.config.phase_equilibrium_state == {
+            ("Vap", "Liq"): SmoothVLE
+        }
 
-    assert_approx(model.params.pressure_ref.value, 101325, 0.2)
-    assert_approx(model.params.temperature_ref.value, 298.15, 0.2)
+        assert isinstance(model.params.phase_equilibrium_idx, Set)
+        assert len(model.params.phase_equilibrium_idx) == 3
+        for i in model.params.phase_equilibrium_idx:
+            assert i in ["PE1", "PE2", "PE3"]
 
-    assert_approx(model.params.nitrogen.mw.value, 28.0134e-3, 0.2)
-    assert_approx(model.params.nitrogen.pressure_crit.value, 34e5, 0.2)
-    assert_approx(model.params.nitrogen.temperature_crit.value, 126.2, 0.2)
+        assert model.params.phase_equilibrium_list == {
+            "PE1": {"nitrogen": ("Vap", "Liq")},
+            "PE2": {"argon": ("Vap", "Liq")},
+            "PE3": {"oxygen": ("Vap", "Liq")},
+        }
 
-    assert_approx(model.params.argon.mw.value, 39.948e-3, 0.2)
-    assert_approx(model.params.argon.pressure_crit.value, 48.98e5, 0.2)
-    assert_approx(model.params.argon.temperature_crit.value, 150.86, 0.2)
+        assert_approx(model.params.pressure_ref.value, 101325, 0.2)
+        assert_approx(model.params.temperature_ref.value, 298.15, 0.2)
 
-    assert_approx(model.params.oxygen.mw.value, 31.999e-3, 0.2)
-    assert_approx(model.params.oxygen.pressure_crit.value, 50.43e5, 0.2)
-    assert_approx(model.params.oxygen.temperature_crit.value, 154.58, 0.2)
+        assert_approx(model.params.nitrogen.mw.value, 28.0135e-3, 0.2)
+        assert_approx(model.params.nitrogen.pressure_crit.value, 34e5, 0.2)
+        assert_approx(model.params.nitrogen.temperature_crit.value, 126.2, 0.2)
 
-    assert_units_consistent(model)
+        assert_approx(model.params.argon.mw.value, 39.948e-3, 0.2)
+        assert_approx(model.params.argon.pressure_crit.value, 48.98e5, 0.2)
+        assert_approx(model.params.argon.temperature_crit.value, 150.86, 0.2)
 
-def test_build():
-    model = build_model()
-    # Check state variable values and bounds
-    assert isinstance(model.props[1].flow_mol, Var)
-    assert value(model.props[1].flow_mol) == 100
-    assert model.props[1].flow_mol.ub == 1000
-    assert model.props[1].flow_mol.lb == 0
+        assert_approx(model.params.oxygen.mw.value, 31.999e-3, 0.2)
+        assert_approx(model.params.oxygen.pressure_crit.value, 50.43e5, 0.2)
+        assert_approx(model.params.oxygen.temperature_crit.value, 154.58, 0.2)
 
-    assert isinstance(model.props[1].pressure, Var)
-    assert value(model.props[1].pressure) == 1e5
-    assert model.props[1].pressure.ub == 1e6
-    assert model.props[1].pressure.lb == 5e4
+        assert_units_consistent(model)
 
-    assert isinstance(model.props[1].temperature, Var)
-    assert value(model.props[1].temperature) == 300
-    assert model.props[1].temperature.ub == 500
-    assert model.props[1].temperature.lb == 10
 
-    assert isinstance(model.props[1].mole_frac_comp, Var)
-    assert len(model.props[1].mole_frac_comp) == 3
-    for i in model.props[1].mole_frac_comp:
-        assert value(model.props[1].mole_frac_comp[i]) == 1 / 3
+@pytest.mark.skipif(not cubic_roots_available(), reason="Cubic functions not available")
+class TestStateBlock(object):
+    @pytest.fixture(scope="class")
+    def model(self):
+        model = ConcreteModel()
+        model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
 
-    assert_units_consistent(model)
+        model.props = model.params.build_state_block([1], defined_state=True)
 
-def test_define_state_vars():
-    model = build_model()
-    sv = model.props[1].define_state_vars()
+        return model
 
-    assert len(sv) == 4
-    for i in sv:
-        assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
+    @pytest.mark.unit
+    def test_build(self, model):
+        # Check state variable values and bounds
+        assert isinstance(model.props[1].flow_mol, Var)
+        assert value(model.props[1].flow_mol) == 100
+        assert model.props[1].flow_mol.ub == 1000
+        assert model.props[1].flow_mol.lb == 0
 
-def test_define_port_members():
-    model = build_model()
-    sv = model.props[1].define_state_vars()
+        assert isinstance(model.props[1].pressure, Var)
+        assert value(model.props[1].pressure) == 1e5
+        assert model.props[1].pressure.ub == 1e6
+        assert model.props[1].pressure.lb == 5e4
 
-    assert len(sv) == 4
-    for i in sv:
-        assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
+        assert isinstance(model.props[1].temperature, Var)
+        assert value(model.props[1].temperature) == 300
+        assert model.props[1].temperature.ub == 500
+        assert model.props[1].temperature.lb == 10
 
-def test_define_display_vars():
-    model = build_model()
-    sv = model.props[1].define_display_vars()
+        assert isinstance(model.props[1].mole_frac_comp, Var)
+        assert len(model.props[1].mole_frac_comp) == 3
+        for i in model.props[1].mole_frac_comp:
+            assert value(model.props[1].mole_frac_comp[i]) == 1 / 3
 
-    assert len(sv) == 4
-    for i in sv:
-        assert i in [
-            "Total Molar Flowrate",
-            "Total Mole Fraction",
-            "Temperature",
-            "Pressure",
-        ]
+        assert_units_consistent(model)
 
-def test_initialize():
-    model = build_model()
-    # Fix state
-    model.props[1].flow_mol.fix(1)
-    model.props[1].temperature.fix(85.00)
-    model.props[1].pressure.fix(101325)
-    model.props[1].mole_frac_comp["nitrogen"].fix(1 / 3)
-    model.props[1].mole_frac_comp["argon"].fix(1 / 3)
-    model.props[1].mole_frac_comp["oxygen"].fix(1 / 3)
+    @pytest.mark.unit
+    def test_define_state_vars(self, model):
+        sv = model.props[1].define_state_vars()
 
-    assert degrees_of_freedom(model.props[1]) == 0
+        assert len(sv) == 4
+        for i in sv:
+            assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
 
-    orig_fixed_vars = fixed_variables_set(model)
-    orig_act_consts = activated_constraints_set(model)
+    @pytest.mark.unit
+    def test_define_port_members(self, model):
+        sv = model.props[1].define_state_vars()
 
-    model.props.initialize(optarg={"tol": 1e-6})
+        assert len(sv) == 4
+        for i in sv:
+            assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
 
-    assert degrees_of_freedom(model) == 0
+    @pytest.mark.unit
+    def test_define_display_vars(self, model):
+        sv = model.props[1].define_display_vars()
 
-    fin_fixed_vars = fixed_variables_set(model)
-    fin_act_consts = activated_constraints_set(model)
+        assert len(sv) == 4
+        for i in sv:
+            assert i in [
+                "Total Molar Flowrate",
+                "Total Mole Fraction",
+                "Temperature",
+                "Pressure",
+            ]
 
-    assert len(fin_act_consts) == len(orig_act_consts)
-    assert len(fin_fixed_vars) == len(orig_fixed_vars)
+    @pytest.mark.component
+    def test_initialize(self, model):
+        # Fix state
+        model.props[1].flow_mol.fix(1)
+        model.props[1].temperature.fix(85.00)
+        model.props[1].pressure.fix(101325)
+        model.props[1].mole_frac_comp["nitrogen"].fix(1 / 3)
+        model.props[1].mole_frac_comp["argon"].fix(1 / 3)
+        model.props[1].mole_frac_comp["oxygen"].fix(1 / 3)
 
-    for c in fin_act_consts:
-        assert c in orig_act_consts
-    for v in fin_fixed_vars:
-        assert v in orig_fixed_vars
+        assert degrees_of_freedom(model.props[1]) == 0
 
-def test_solve_and_solution():
-    model = build_model()
-    results = solver.solve(model)
-    assert_optimal_termination(results)
-    # Check phase equilibrium results
-    assert_approx(model.props[1].mole_frac_phase_comp[
-        "Liq", "nitrogen"
-    ].value, 0.1739, 0.2)
-    assert_approx(model.props[1].mole_frac_phase_comp[
-        "Vap", "nitrogen"
-    ].value, 0.4221, 0.2)
-    assert_approx(model.props[1].phase_frac["Vap"].value, 
-        0.6422, 0.2)
+        orig_fixed_vars = fixed_variables_set(model)
+        orig_act_consts = activated_constraints_set(model)
 
-def test_report():
-    model = build_model()
-    model.props[1].report()
+        model.props.initialize(optarg={"tol": 1e-6})
+
+        assert degrees_of_freedom(model) == 0
+
+        fin_fixed_vars = fixed_variables_set(model)
+        fin_act_consts = activated_constraints_set(model)
+
+        assert len(fin_act_consts) == len(orig_act_consts)
+        assert len(fin_fixed_vars) == len(orig_fixed_vars)
+
+        for c in fin_act_consts:
+            assert c in orig_act_consts
+        for v in fin_fixed_vars:
+            assert v in orig_fixed_vars
+
+    @pytest.mark.component
+    def test_solve(self, model):
+        results = solver.solve(model)
+
+        # Check for optimal solution
+        assert check_optimal_termination(results)
+
+    @pytest.mark.component
+    def test_solution(self, model):
+        # Check phase equilibrium results
+        assert_approx(model.props[1].mole_frac_phase_comp[
+            "Liq", "nitrogen"
+        ].value, 0.1739, 2)
+        assert_approx(model.props[1].mole_frac_phase_comp[
+            "Vap", "nitrogen"
+        ].value, 0.4221, 2)
+        assert_approx(model.props[1].phase_frac["Vap"].value, 0.6422, 2)
+
+    @pytest.mark.unit
+    def test_report(self, model):
+        model.props[1].report()
