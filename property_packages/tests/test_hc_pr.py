@@ -81,8 +81,10 @@ def _as_quantity(x):
 def test_build_model():
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
-  m.fs.props = GenericParameterBlock(**configuration)
-  #m.fs.props = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", "n-butane", "isobutane", "ethylene", "propylene", "1-butene", "1-pentene", "1-hexene", "1-heptene", "1-octene"])
+  #m.fs.props = GenericParameterBlock(**configuration)
+  m.fs.props = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", "n-butane", 
+                                               "isobutane", "ethylene", "propylene", "1-butene", "1-pentene", 
+                                               "1-hexene", "1-heptene", "1-octene"])
 
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
 

@@ -44,7 +44,6 @@ class components_parser(BuildBase):
             # configuration default to all components 
             config = {
                 "type": Component,
-                "phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
                 "parameter_data": {
                     "mw": (compound["MolecularWeight"].value, pyunits.kg/pyunits.kilomol),
                     "pressure_crit": (compound["CriticalPressure"].value, pyunits.Pa),
@@ -52,6 +51,12 @@ class components_parser(BuildBase):
                     "omega": compound["AcentricityFactor"].value,
                 }
             }
+
+            # TODO: update this logic
+            if compound["CompoundID"].value == "hydrogen" or compound["CompoundID"].value == "methane":
+                config["valid_phase_types"] = PT.vaporPhase
+            else:
+                config["phase_equilibrium_form"] = {("Vap", "Liq"): log_fugacity}
 
             # Energies of Formation
             if compound["HeatOfFormation"] is not None: # this does not work when passed

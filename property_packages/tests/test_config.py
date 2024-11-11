@@ -393,6 +393,7 @@ configuration = {
             'enth_mol_liq_comp': ChemSep,
             'entr_mol_ig_comp': ChemSep,
             'entr_mol_liq_comp': ChemSep,
+            "valid_phase_types": PT.vaporPhase,
             'parameter_data': {
                 'cp_mol_ig_comp_coeff': {
                     'A': (23052.64, pyunits.J / pyunits.kmol / pyunits.K),
@@ -429,7 +430,6 @@ configuration = {
                 },
                 'temperature_crit': (33.19, pyunits.K)
             },
-            'phase_equilibrium_form': {('Vap', 'Liq'): log_fugacity},
             'pressure_sat_comp': ChemSep,
             'type': Component
         },
@@ -485,6 +485,7 @@ configuration = {
             'enth_mol_liq_comp': ChemSep,
             'entr_mol_ig_comp': ChemSep,
             'entr_mol_liq_comp': ChemSep,
+            "valid_phase_types": PT.vaporPhase,
             'parameter_data': {
                 'cp_mol_ig_comp_coeff': {
                     'A': (37981.0, pyunits.J / pyunits.kmol / pyunits.K),
@@ -521,7 +522,6 @@ configuration = {
                 },
                 'temperature_crit': (190.56, pyunits.K)
             },
-            'phase_equilibrium_form': {('Vap', 'Liq'): log_fugacity},
             'pressure_sat_comp': ChemSep,
             'type': Component
         },
