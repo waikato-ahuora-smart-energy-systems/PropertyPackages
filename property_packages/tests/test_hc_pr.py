@@ -87,10 +87,13 @@ def build_model():
 
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
 
-  iscale.calculate_scaling_factors(m.fs.props)
-  iscale.calculate_scaling_factors(m.fs.state[1])
+  # iscale.calculate_scaling_factors(m.fs.props)
+  # iscale.calculate_scaling_factors(m.fs.state[1])
 
   m.fs.state[1].flow_mol.fix(1)
+  m.fs.state[1].temperature.fix(295)
+  m.fs.state[1].pressure.fix(1e5)
+
   m.fs.state[1].mole_frac_comp["hydrogen"].fix(0.077)
   m.fs.state[1].mole_frac_comp["methane"].fix(0.077)
   m.fs.state[1].mole_frac_comp["ethane"].fix(0.077)
@@ -104,13 +107,6 @@ def build_model():
   m.fs.state[1].mole_frac_comp["1-hexene"].fix(0.077)
   m.fs.state[1].mole_frac_comp["1-heptene"].fix(0.077)
   m.fs.state[1].mole_frac_comp["1-octene"].fix(0.076)
-  m.fs.state[1].temperature.fix(295)
-  m.fs.state[1].pressure.fix(1e5)
-
-  m.fs.state[1].enth_mol_phase
-  m.fs.state[1].entr_mol_phase
-
-  m.fs.state.initialize()
 
   return m
 
@@ -362,14 +358,11 @@ def test_initialize():
   for v in fin_fixed_vars:
       assert v in orig_fixed_vars
 
-def test_solve():
+def test_solve_and_solution():
+  # Solving the model
   model = build_model()
   results = solver.solve(model)
   assert_optimal_termination(results)
-
-def test_solution():
-
-  model = build_model()
   # Check phase equilibrium results
   assert_approx(model.fs.state[1].mole_frac_phase_comp[
       "Vap", "hydrogen"
