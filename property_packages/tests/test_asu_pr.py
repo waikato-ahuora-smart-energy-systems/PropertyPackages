@@ -26,7 +26,7 @@ from idaes.models.properties.tests.test_harness import PropertyTestHarness
 
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 
-from idaes.core import GenericParameterBlock
+from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 
 from ..build_package import build_package
 from .test_config_asu import config
