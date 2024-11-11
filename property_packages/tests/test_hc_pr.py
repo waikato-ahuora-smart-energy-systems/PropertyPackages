@@ -38,12 +38,10 @@ from idaes.core.solvers import get_solver
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 
 from ..build_package import build_package
 from idaes.core import FlowsheetBlock
 import idaes.core.util.scaling as iscale
-from .test_config import configuration
 
 # -----------------------------------------------------------------------------
 # Get default solver for testing
