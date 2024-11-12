@@ -221,8 +221,16 @@ class pressure_ref_parser(BuildBase):
         return (101325, pyunits.Pa)
 
 class state_bounds_parser(BuildBase):
+    """
+    State bounds are used to assert optimal termination
+    need to find a way to dynamically determine these
+    """
     @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+
+        # Loop through compounds
+
+        # Check upper and lower bounds
         return {
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
             "temperature": (10, 300, 500, pyunits.K),

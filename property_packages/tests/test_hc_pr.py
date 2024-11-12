@@ -182,7 +182,7 @@ def test_params():
       model.params.config.state_bounds,
       {
           "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-          "temperature": (273.15, 300, 500, pyunits.K),
+          "temperature": (10, 300, 500, pyunits.K),
           "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
       },
       item_callback=_as_quantity,
@@ -298,7 +298,7 @@ def test_build():
   assert isinstance(model.fs.state[1].temperature, Var)
   assert value(model.fs.state[1].temperature) == 295
   assert model.fs.state[1].temperature.ub == 500 # changed from 1500 (different bounds) TODO: check this
-  assert model.fs.state[1].temperature.lb == 273.15
+  assert model.fs.state[1].temperature.lb == 10
 
   assert isinstance(model.fs.state[1].mole_frac_comp, Var)
   assert len(model.fs.state[1].mole_frac_comp) == 13
