@@ -165,10 +165,6 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T, dT=False):
-
-            print("Calculating pressure saturation pressure")
-            print("at the specified temperature", value(T), u.get_units(T))
-
             psat = (
                     exp(
                         cobj.pressure_sat_comp_coeff_A - cobj.pressure_sat_comp_coeff_B /

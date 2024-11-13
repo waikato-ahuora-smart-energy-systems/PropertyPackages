@@ -1,5 +1,4 @@
 # Build and solve a state block.
-from pprint import pprint
 from ..build_package import build_package
 from pytest import approx
 
@@ -94,7 +93,7 @@ def test_P_sweep():
       m.fs.state[1].mole_frac_comp["toluene"].fix(0.5)
       m.fs.state[1].temperature.fix(T)
       m.fs.state[1].pressure.fix(1e5)
-
+      print(T)
       m.fs.state.initialize()
 
       results = solver.solve(m)

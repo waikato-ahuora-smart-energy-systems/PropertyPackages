@@ -1,5 +1,4 @@
 
-from pprint import pprint
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
