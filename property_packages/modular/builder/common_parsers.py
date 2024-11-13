@@ -14,18 +14,6 @@ from property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
 import csv
 
-"""
-
-    TODO: Need to double check all equation numbers 
-    to throw errors if mis-matched or not found
-
-    - dynamic state bound assignment
-    - phase-specific parsing
-    - determine state of compounds
-
-"""
-
-
 class base_units_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
