@@ -1,5 +1,4 @@
 from math import floor
-from pprint import pprint
 from typing import Any, Dict, List
 from .base_parser import BuildBase
 from compounds.Compound import Compound
@@ -192,7 +191,7 @@ class components_parser(BuildBase):
 class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
-        return {("Vap", "Liq"): SmoothVLE} # TODO: Update to Smooth VLE_v2 https://github.com/IDAES/idaes-pse/blob/main/idaes/models/properties/modular_properties/phase_equil/smooth_VLE_2.py
+        return {("Vap", "Liq"): SmoothVLE}
 
 class phases_parser(BuildBase):
     @staticmethod
@@ -222,20 +221,26 @@ class pressure_ref_parser(BuildBase):
 
 class state_bounds_parser(BuildBase):
     """
-    State bounds are used to assert optimal termination
-    need to find a way to dynamically determine these
+    State bounds are used to find optimal solution
+    TODO: need to find a way to dynamically determine these
     """
     @staticmethod
     def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+        min_melting_point = min([compound["NormalMeltingPointTemperature"].value for compound in compounds])
+        min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
 
-        # Loop through compounds
-
-        # Check upper and lower bounds
-        return {
-            "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-            "temperature": (10, 300, 500, pyunits.K),
-            "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-        }
+        if(min_critical_temperature > 500):
+            return {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (min_melting_point, 300, 500, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            }
+        else:
+            return {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (min_melting_point, 150, 350, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            }
 
 class state_definition_parser(BuildBase):
     @staticmethod
@@ -260,7 +265,6 @@ class pr_kappa_parser(BuildBase):
                 # Setting all interactions initially to zero
 
         # TODO: Adjust method so the multiple kappa values for single pair are supported
-        # TODO: Pass over the correct values
         # Open and read the interaction data file
         file = open(this_file_dir() + "/data/pr.dat", 'r')
         reader = csv.reader(file, delimiter=';')
@@ -274,16 +278,12 @@ class pr_kappa_parser(BuildBase):
             id1, id2, kappa, _ = row
 
             try:
-                # Convert kappa to a float (if possible)
                 kappa_value = float(kappa)
-            
             except ValueError:
-                continue  # Skip rows with invalid kappa values
+                continue
 
             # Check if the compound IDs exist in the compound list
-
             if id1 in compound_id_map and id2 in compound_id_map:
-
                 compound1 = compound_id_map[id1]
                 compound2 = compound_id_map[id2]
                 kappa_parameters[(compound1["CompoundID"].value, compound2["CompoundID"].value)] = kappa_value

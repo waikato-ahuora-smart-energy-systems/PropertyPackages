@@ -11,8 +11,6 @@
 # for full copyright and license information.
 #################################################################################
 
-from math import exp
-from pprint import pprint
 import pytest
 from pyomo.environ import (
     assert_optimal_termination,
@@ -182,7 +180,7 @@ def test_params():
       model.params.config.state_bounds,
       {
           "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-          "temperature": (10, 300, 500, pyunits.K),
+          "temperature": (13.95, 150, 350, pyunits.K),
           "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
       },
       item_callback=_as_quantity,
@@ -292,13 +290,13 @@ def test_build():
 
   assert isinstance(model.fs.state[1].pressure, Var)
   assert value(model.fs.state[1].pressure) == 1e5
-  assert model.fs.state[1].pressure.ub == 1e6 # changed from 1e7 (different bounds) TODO: check this
+  assert model.fs.state[1].pressure.ub == 1e6
   assert model.fs.state[1].pressure.lb == 5e4
 
   assert isinstance(model.fs.state[1].temperature, Var)
   assert value(model.fs.state[1].temperature) == 295
-  assert model.fs.state[1].temperature.ub == 500 # changed from 1500 (different bounds) TODO: check this
-  assert model.fs.state[1].temperature.lb == 10
+  assert model.fs.state[1].temperature.ub == 350
+  assert model.fs.state[1].temperature.lb == 13.95
 
   assert isinstance(model.fs.state[1].mole_frac_comp, Var)
   assert len(model.fs.state[1].mole_frac_comp) == 13

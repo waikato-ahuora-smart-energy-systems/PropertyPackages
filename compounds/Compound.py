@@ -1,9 +1,7 @@
-from pprint import pprint
 import xml.etree.ElementTree as ET
+from pydantic import BaseModel
 from typing import Dict
 import os
-import json
-from pydantic import BaseModel
 
 def convert_string_to_float(string: str) -> float | str:
     try:

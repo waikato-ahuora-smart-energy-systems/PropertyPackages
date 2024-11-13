@@ -1,6 +1,5 @@
 import pytest
 from pyomo.environ import (
-    assert_optimal_termination,
     check_optimal_termination,
     ConcreteModel,
     Set,
@@ -23,16 +22,10 @@ from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
 from idaes.models.properties.tests.test_harness import PropertyTestHarness
-
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
-
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
-
 from ..build_package import build_package
-from .test_config_asu import config
 
-# -----------------------------------------------------------------------------
-# Get default solver for testing
 solver = get_solver("ipopt")
 
 def assert_approx(value, expected_value, error_margin):
@@ -57,8 +50,6 @@ class TestASUPR(PropertyTestHarness):
         self.has_density_terms = False
 
 
-# Test for configuration dictionaries with parameters from Properties of Gases
-# and liquids 4th edition
 class TestParamBlock(object):
     @pytest.mark.unit
     def test_build(self):
@@ -96,7 +87,7 @@ class TestParamBlock(object):
             model.params.config.state_bounds,
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (10, 300, 500, pyunits.K),
+                "temperature": (54.361, 150, 350, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,
@@ -160,9 +151,9 @@ class TestStateBlock(object):
         assert model.props[1].pressure.lb == 5e4
 
         assert isinstance(model.props[1].temperature, Var)
-        assert value(model.props[1].temperature) == 300
-        assert model.props[1].temperature.ub == 500
-        assert model.props[1].temperature.lb == 10
+        assert value(model.props[1].temperature) == 150
+        assert model.props[1].temperature.ub == 350
+        assert model.props[1].temperature.lb == 54.361
 
         assert isinstance(model.props[1].mole_frac_comp, Var)
         assert len(model.props[1].mole_frac_comp) == 3
