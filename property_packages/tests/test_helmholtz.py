@@ -26,6 +26,7 @@ def test_helmholtz():
     m.fs.heater.inlet.enth_mol.fix(1878.87)
     m.fs.heater.inlet.pressure.fix(101325)
     assert degrees_of_freedom(m) == 0
+    m.fs.heater.initialize()
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
     assert value(_get_state_from_port(m.fs.heater.outlet,0).temperature) == approx(298)
