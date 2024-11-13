@@ -19,6 +19,10 @@ import csv
     TODO: Need to double check all equation numbers 
     to throw errors if mis-matched or not found
 
+    - dynamic state bound assignment
+    - phase-specific parsing
+    - determine state of compounds
+
 """
 
 

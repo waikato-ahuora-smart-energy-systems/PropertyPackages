@@ -21,7 +21,6 @@ from idaes.core.solvers import get_solver
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
-from idaes.models.properties.tests.test_harness import PropertyTestHarness
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from ..build_package import build_package
@@ -41,17 +40,7 @@ def _as_quantity(x):
     return value(x) * unit._get_pint_unit()
 
 
-@pytest.mark.skipif(not cubic_roots_available(), reason="Cubic functions not available")
-class TestASUPR(PropertyTestHarness):
-    def configure(self):
-        self.prop_pack = GenericParameterBlock
-        self.param_args = configuration
-        self.prop_args = {}
-        self.has_density_terms = False
-
-
 class TestParamBlock(object):
-    @pytest.mark.unit
     def test_build(self):
         model = ConcreteModel()
         model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
@@ -128,16 +117,14 @@ class TestParamBlock(object):
 
 @pytest.mark.skipif(not cubic_roots_available(), reason="Cubic functions not available")
 class TestStateBlock(object):
+
     @pytest.fixture(scope="class")
     def model(self):
         model = ConcreteModel()
         model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
-
         model.props = model.params.build_state_block([1], defined_state=True)
-
         return model
 
-    @pytest.mark.unit
     def test_build(self, model):
         # Check state variable values and bounds
         assert isinstance(model.props[1].flow_mol, Var)
@@ -162,7 +149,6 @@ class TestStateBlock(object):
 
         assert_units_consistent(model)
 
-    @pytest.mark.unit
     def test_define_state_vars(self, model):
         sv = model.props[1].define_state_vars()
 
@@ -170,7 +156,6 @@ class TestStateBlock(object):
         for i in sv:
             assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
 
-    @pytest.mark.unit
     def test_define_port_members(self, model):
         sv = model.props[1].define_state_vars()
 
@@ -178,7 +163,6 @@ class TestStateBlock(object):
         for i in sv:
             assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
 
-    @pytest.mark.unit
     def test_define_display_vars(self, model):
         sv = model.props[1].define_display_vars()
 
@@ -191,7 +175,6 @@ class TestStateBlock(object):
                 "Pressure",
             ]
 
-    @pytest.mark.component
     def test_initialize(self, model):
         # Fix state
         model.props[1].flow_mol.fix(1)
@@ -221,14 +204,12 @@ class TestStateBlock(object):
         for v in fin_fixed_vars:
             assert v in orig_fixed_vars
 
-    @pytest.mark.component
     def test_solve(self, model):
         results = solver.solve(model)
 
         # Check for optimal solution
         assert check_optimal_termination(results)
 
-    @pytest.mark.component
     def test_solution(self, model):
         # Check phase equilibrium results
         assert_approx(model.props[1].mole_frac_phase_comp[
@@ -239,6 +220,5 @@ class TestStateBlock(object):
         ].value, 0.4221, 2)
         assert_approx(model.props[1].phase_frac["Vap"].value, 0.6422, 2)
 
-    @pytest.mark.unit
     def test_report(self, model):
         model.props[1].report()

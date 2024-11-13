@@ -41,8 +41,6 @@ from ..build_package import build_package
 from idaes.core import FlowsheetBlock
 import idaes.core.util.scaling as iscale
 
-# -----------------------------------------------------------------------------
-# Get default solver for testing
 solver = get_solver("ipopt")
 
 
