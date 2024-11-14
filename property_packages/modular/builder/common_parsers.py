@@ -46,12 +46,12 @@ class components_parser(BuildBase):
                     "omega": compound["AcentricityFactor"].value,
                 }
             }
-
-            # TODO: update this logic
-            if compound["CompoundID"].value == "hydrogen" or compound["CompoundID"].value == "methane":
-                config["valid_phase_types"] = PT.vaporPhase
-            else:
+            
+            valid_phase = valid_phases(compound)
+            if valid_phase != PT.vaporPhase:
                 config["phase_equilibrium_form"] = {("Vap", "Liq"): log_fugacity}
+            else:
+                config["valid_phase_types"] = valid_phase
 
             # Energies of Formation
             if compound["HeatOfFormation"] is not None: # this does not work when passed
@@ -174,6 +174,13 @@ class components_parser(BuildBase):
                 config["parameter_data"].update({"valid_phase_types": PT.vaporphase})
 
             return config
+        
+        def valid_phases(compound: Compound) -> PT:
+            # Assumption: Anything above hydrogen can exist as both liquid and vapor
+            if compound["NormalBoilingPointTemperature"].value >= 21:
+                return [PT.liquidPhase, PT.vaporPhase]
+            else:
+                return PT.vaporPhase
         
         components_output = {}
         for compound in compounds:
