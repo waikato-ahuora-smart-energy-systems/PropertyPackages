@@ -1,5 +1,6 @@
-from typing import List, Dict
 from compounds.Compound import load_compound
+from property_packages.types import States
+from typing import List, Dict
 
 class BuildBase:
 
@@ -7,7 +8,7 @@ class BuildBase:
     pass
   
   @staticmethod
-  def serialise( compounds: List[Dict]) -> Dict:
+  def serialise(compounds: List[Dict], valid_states: List[States]) -> Dict:
     """
     accepts
     - List of compounds

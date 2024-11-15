@@ -51,7 +51,7 @@ def assert_approx(value, expected_value, error_margin):
 def get_m():
   m = ConcreteModel()
   m.fs = FlowsheetBlock(dynamic=False)
-  m.fs.props = build_package("peng-robinson", ["benzene", "toluene"])
+  m.fs.props = build_package("peng-robinson", ["benzene", "toluene"], ["Liq", "Vap"])
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
   iscale.calculate_scaling_factors(m.fs.props)
   iscale.calculate_scaling_factors(m.fs.state[1])

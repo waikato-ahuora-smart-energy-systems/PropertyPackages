@@ -1,14 +1,16 @@
-from typing import List, Literal
-
 from property_packages.modular.template_builder import build_config
 from .helmholtz.helmholtz_builder import build_helmholtz_package
+from property_packages.types import PackageName, States
+from typing import List, Optional
 
-PackageName = Literal["peng-robinson"] | Literal[ "helmholtz"]  | Literal["nrtl"] 
+def build_package(package_name: PackageName, compound_list: List[str], valid_states: List[States]): # type: ignore
 
-def build_package(package_name: PackageName, compound_list: List[str]):
+    if valid_states is None:
+        valid_states = ["Liq", "Vap"]
+
     match package_name:
         case "peng-robinson":
-            return build_config("peng-robinson", compound_list)
+            return build_config("peng-robinson", compound_list, valid_states)
         case "helmholtz":
             return build_helmholtz_package(compound_list)
         case "nrtl":

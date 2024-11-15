@@ -43,7 +43,7 @@ def _as_quantity(x):
 class TestParamBlock(object):
     def test_build(self):
         model = ConcreteModel()
-        model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
+        model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"], ["Liq","Vap"])
 
         assert isinstance(model.params.phase_list, Set)
         assert len(model.params.phase_list) == 2
@@ -121,7 +121,7 @@ class TestStateBlock(object):
     @pytest.fixture(scope="class")
     def model(self):
         model = ConcreteModel()
-        model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"])
+        model.params = build_package("peng-robinson", ["nitrogen", "argon", "oxygen"], ["Liq", "Vap"])
         model.props = model.params.build_state_block([1], defined_state=True)
         return model
 
