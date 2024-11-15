@@ -2,6 +2,7 @@
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
+from property_packages.types import States
 from typing import List
 
 """
@@ -10,7 +11,7 @@ https://idaes-pse.readthedocs.io/en/stable/explanations/components/property_pack
 
 """
 
-def build_config(property_package_name, compound_names: List[str]) -> dict[str,any]:
+def build_config(property_package_name, compound_names: List[str], valid_states: List[States]) -> dict[str,any]:
 
   # Build list of compound objects
 
@@ -31,7 +32,6 @@ def build_config(property_package_name, compound_names: List[str]) -> dict[str,a
       raise ValueError("Invalid property package name")
 
   # Retrieve property package template
-
   template = package.get_template()
   
   # Building template
@@ -40,7 +40,7 @@ def build_config(property_package_name, compound_names: List[str]) -> dict[str,a
 
   for key, obj in template.items():
     # Call the parse method on each object and update the template
-    new_template[key] = obj.serialise(compounds)
+    new_template[key] = obj.serialise(compounds, valid_states)
 
   # Building property package and returning
   return GenericParameterBlock(**new_template)

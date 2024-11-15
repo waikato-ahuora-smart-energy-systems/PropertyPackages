@@ -64,7 +64,7 @@ def build_model():
     model.params = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", 
                                                   "n-butane", "isobutane", "ethylene", "propylene", 
                                                   "1-butene", "1-pentene", "1-hexene", "1-heptene", 
-                                                  "1-octene"])
+                                                  "1-octene"], ["Liq", "Vap"])
 
     model.props = model.params.build_state_block([1], defined_state=True)
 
@@ -97,7 +97,7 @@ class TestParamBlock(object):
         model.params = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", 
                                                   "n-butane", "isobutane", "ethylene", "propylene", 
                                                   "1-butene", "1-pentene", "1-hexene", "1-heptene", 
-                                                  "1-octene"])
+                                                  "1-octene"], ["Liq", "Vap"])
 
         assert isinstance(model.params.phase_list, Set)
         assert len(model.params.phase_list) == 2

@@ -12,11 +12,12 @@ from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
 from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
 from property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
+from property_packages.types import States
 import csv
 
 class base_units_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return {
             'time': pyunits.s,
             'length': pyunits.m,
@@ -27,12 +28,12 @@ class base_units_parser(BuildBase):
 
 class bubble_dew_method_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return LogBubbleDew
 
 class components_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
     
         def serialise_component(compound: Compound) -> Dict[str, Any]:
 
@@ -189,33 +190,36 @@ class components_parser(BuildBase):
 
 class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return {("Vap", "Liq"): SmoothVLE}
 
 class phases_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
-        return {
-            "Liq": {
-                "type": LiquidPhase,
-                "equation_of_state": Cubic,
-                "equation_of_state_options": {"type": CubicType.PR},
-            },
-            "Vap": {
-                "type": VaporPhase,
-                "equation_of_state": Cubic,
-                "equation_of_state_options": {"type": CubicType.PR},
-            },
-        }
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
+      phases = {}
+      for state in valid_states:
+          if state == "Liq":
+              phases["Liq"] = {
+                  "type": LiquidPhase,
+                  "equation_of_state": Cubic,
+                  "equation_of_state_options": {"type": CubicType.PR},
+              }
+          elif state == "Vap":
+              phases["Vap"] = {
+                  "type": VaporPhase,
+                  "equation_of_state": Cubic,
+                  "equation_of_state_options": {"type": CubicType.PR},
+              }
+      return phases
 
 class phases_in_equilibrium_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return [("Vap", "Liq")]
 
 class pressure_ref_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return (101325, pyunits.Pa)
 
 class state_bounds_parser(BuildBase):
@@ -224,7 +228,7 @@ class state_bounds_parser(BuildBase):
     TODO: need to find a way to dynamically determine these
     """
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         min_melting_point = min([compound["NormalMeltingPointTemperature"].value for compound in compounds])
         min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
 
@@ -243,17 +247,17 @@ class state_bounds_parser(BuildBase):
 
 class state_definition_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> str:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> str:
         return FTPx
 
 class temperature_ref_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return (298.15, pyunits.K)
 
 class pr_kappa_parser(BuildBase):
     @staticmethod
-    def serialise(compounds: List[Compound]) -> Dict[str, Any]:
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         kappa_parameters = {}
         compound_id_map = {}
 
