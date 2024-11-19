@@ -9,25 +9,37 @@ from pyomo.environ import ConcreteModel, SolverFactory, value, units
 from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.models.unit_models.heater import Heater
+from idaes.models.unit_models.pressure_changer import Pump
 from idaes.core.util.tables import _get_state_from_port
 
-
+def assert_approx(value, expected_value, error_margin):
+    percent_error = error_margin / 100
+    tolerance = abs(percent_error * expected_value)
+    assert approx(value, abs=tolerance) == expected_value
 
 def test_pump():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False) 
     m.fs.properties = build_package("peng-robinson", ["benzene", "toluene"], ["Liq", "Vap"])
     
-    m.fs.heater = Heater(property_package=m.fs.properties)
-    m.fs.heater.heat_duty.fix(0)
-    m.fs.heater.inlet.flow_mol.fix(1)
-    #m.fs.heater.inlet.vapor_frac.fix(0)
-    #m.fs.heater.inlet.temperature.fix(298) # room temperature in K
-    m.fs.heater.inlet.enth_mol.fix(1878.87)
-    m.fs.heater.inlet.pressure.fix(101325)
+    m.fs.pump = Pump(property_package=m.fs.properties)
+
+    m.fs.pump.inlet.flow_mol[0].fix(100)
+    m.fs.pump.inlet.pressure.fix(101325)
+    m.fs.pump.inlet.mole_frac_comp[0, "benzene"].fix(0.4)
+    m.fs.pump.inlet.mole_frac_comp[0, "toluene"].fix(0.6)
+    m.fs.pump.inlet.temperature.fix(353)
+
+    m.fs.pump.deltaP.fix(100000)
+    m.fs.pump.efficiency_pump.fix(0.8)
+
+    m.fs.pump.initialize()
+
     assert degrees_of_freedom(m) == 0
+
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
-    assert value(_get_state_from_port(m.fs.heater.outlet,0).temperature) == approx(298)
-    assert value(m.fs.heater.outlet.pressure[0]) == approx(101325)
-    assert value(m.fs.heater.outlet.flow_mol[0]) == approx(1)
+
+    assert_approx(value(_get_state_from_port(m.fs.pump.outlet,0).temperature), 353, 0.2)
+    assert value(m.fs.pump.outlet.pressure[0]) == approx(201325)
+    assert value(m.fs.pump.outlet.flow_mol[0]) == approx(100)

@@ -1,4 +1,5 @@
 
+from pprint import pprint
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
@@ -40,7 +41,11 @@ def build_config(property_package_name, compound_names: List[str], valid_states:
 
   for key, obj in template.items():
     # Call the parse method on each object and update the template
-    new_template[key] = obj.serialise(compounds, valid_states)
+    result = obj.serialise(compounds, valid_states)
+    if result is not None:
+        new_template[key] = result
+
+  pprint(new_template)
 
   # Building property package and returning
   return GenericParameterBlock(**new_template)

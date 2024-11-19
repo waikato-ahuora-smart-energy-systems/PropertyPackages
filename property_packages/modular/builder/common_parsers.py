@@ -75,7 +75,7 @@ class components_parser(BuildBase):
                 if compound["RPPHeatCapacityCp"]["eqno"] == 4:
                     config["enth_mol_ig_comp"] = RPP4
                     config["entr_mol_ig_comp"] = RPP4
-                    config["parameter_data"].update({"cp_mol_ig_comp_coeff": {
+                    config["parameter_data"].update({"enth_entr_mol_ig_coeff": {
                         "A": (float(compound["RPPHeatCapacityCp"]["A"]), pyunits.J / pyunits.kilomol / pyunits.K),
                         "B": (float(compound["RPPHeatCapacityCp"]["B"]), pyunits.J / pyunits.kilomol / pyunits.K**2),
                         "C": (float(compound["RPPHeatCapacityCp"]["C"]), pyunits.J / pyunits.kilomol / pyunits.K**3),
@@ -84,7 +84,7 @@ class components_parser(BuildBase):
                 elif compound["RPPHeatCapacityCp"]["eqno"] == 100 or compound["RPPHeatCapacityCp"]["eqno"] == 5:
                     config["enth_mol_ig_comp"] = ChemSep
                     config["entr_mol_ig_comp"] = ChemSep
-                    config["parameter_data"].update({"cp_mol_ig_comp_coeff": {
+                    config["parameter_data"].update({"enth_entr_mol_ig_coeff": {
                         "A": (compound["RPPHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K),
                         "B": (compound["RPPHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
                         "C": (compound["RPPHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
@@ -95,6 +95,20 @@ class components_parser(BuildBase):
                     raise ValueError(f"Invalid equation number for heat capacity {compound['RPPHeatCapacityCp']['eqno']}")
             else:
                 raise ValueError("No Heat Capacity Data")
+
+            # Ideal Gas Heat Capacity
+            if compound["IdealGasHeatCapacityCp"] is not None:
+                if compound["IdealGasHeatCapacityCp"]["eqno"] == 16:
+                    config["cp_mol_ig_comp"] = ChemSep
+                    config["parameter_data"].update({"cp_mol_ig_comp_coeff": {
+                        "A": (compound["IdealGasHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K),
+                        "B": (compound["IdealGasHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
+                        "C": (compound["IdealGasHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
+                        "D": (compound["IdealGasHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
+                        "E": (compound["IdealGasHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
+                    }})
+                else:
+                    raise ValueError("No Ideal Gas Heat Capacity Equation Data")
 
             # Saturation Pressure (Vapor)
             if compound["AntoineVaporPressure"] is not None:
@@ -121,6 +135,15 @@ class components_parser(BuildBase):
                         "3": (compound["LiquidDensity"]["C"], pyunits.K),
                         "4": (compound["LiquidDensity"]["D"], None),
                     }})
+                elif compound["LiquidDensity"]["eqno"] == 106:
+                    config["dens_mol_liq_comp"] = ChemSep
+                    config["parameter_data"].update({"dens_mol_liq_comp_coeff": {
+                        "A": (compound["LiquidDensity"]["A"], pyunits.kmol / pyunits.m**3),
+                        "B": (compound["LiquidDensity"]["B"], None),
+                        "C": (compound["LiquidDensity"]["C"], None),
+                        "D": (compound["LiquidDensity"]["D"], None),
+                        "E": (compound["LiquidDensity"]["E"], None),
+                    }})
                 else:
                     raise ValueError("No Liquid Density Equation Data")
             else:
@@ -128,7 +151,7 @@ class components_parser(BuildBase):
 
             # Liquid Heat Capacity & Entropy / Enthalpy
             if compound["LiquidHeatCapacityCp"] is not None:
-                if compound["LiquidHeatCapacityCp"]["eqno"] == 100:
+                if compound["LiquidHeatCapacityCp"]["eqno"] == 100 or compound["LiquidHeatCapacityCp"]["eqno"] == 4:
                     # Uses correct equations to calculate
                     config["enth_mol_liq_comp"] = Perrys
                     config["entr_mol_liq_comp"] = Perrys
@@ -147,7 +170,7 @@ class components_parser(BuildBase):
 
                     config["parameter_data"].update({
                         "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
-                    }) 
+                    })
                 elif compound["LiquidHeatCapacityCp"]["eqno"] == 16:
                     # Uses correct equations to calculate
                     config["enth_mol_liq_comp"] = ChemSep
@@ -191,7 +214,10 @@ class components_parser(BuildBase):
 class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return {("Vap", "Liq"): SmoothVLE}
+        if valid_states == ["Liq", "Vap"]:
+            return {("Liq", "Vap"): SmoothVLE}
+        else:
+            return None
 
 class phases_parser(BuildBase):
     @staticmethod
@@ -215,7 +241,10 @@ class phases_parser(BuildBase):
 class phases_in_equilibrium_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return [("Vap", "Liq")]
+        if(valid_states == ["Liq", "Vap"]):
+            return [("Liq", "Vap")]
+        else:
+            return None
 
 class pressure_ref_parser(BuildBase):
     @staticmethod
@@ -231,8 +260,13 @@ class state_bounds_parser(BuildBase):
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         min_melting_point = min([compound["NormalMeltingPointTemperature"].value for compound in compounds])
         min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
-
-        if(min_critical_temperature > 500):
+        if(min_critical_temperature > 600):
+            return {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (min_melting_point, 400, 1000, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            }
+        elif(min_critical_temperature > 500):
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
                 "temperature": (min_melting_point, 300, 500, pyunits.K),
