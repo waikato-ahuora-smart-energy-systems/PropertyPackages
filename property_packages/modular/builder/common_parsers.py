@@ -52,10 +52,9 @@ class components_parser(BuildBase):
             if valid_phase != PT.vaporPhase:
                 config["phase_equilibrium_form"] = {("Vap", "Liq"): log_fugacity}
             else:
-                raise ValueError("Invalid phase setup")
                 config["valid_phase_types"] = valid_phase
 
-            # Energies of Formation
+            # Energies of Forma tion
             if compound["HeatOfFormation"] is not None: # this does not work when passed
                 config["parameter_data"].update({
                     "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol)
@@ -205,7 +204,6 @@ class components_parser(BuildBase):
             if compound["NormalBoilingPointTemperature"].value >= 21:
                 return [PT.liquidPhase, PT.vaporPhase]
             else:
-                raise ValueError("Invalid phase setup")
                 return PT.vaporPhase
         
         components_output = {}
@@ -219,7 +217,6 @@ class phase_equilibrium_state_parser(BuildBase):
         if(valid_states.__contains__("Liq") and valid_states.__contains__("Vap")):
             return {("Liq", "Vap"): SmoothVLE}
         else:
-            raise ValueError("Invalid phase setup")
             return None
 
 class phases_parser(BuildBase):
@@ -247,7 +244,6 @@ class phases_in_equilibrium_parser(BuildBase):
         if(valid_states.__contains__("Liq") and valid_states.__contains__("Vap")):
             return [("Liq", "Vap")]
         else:
-            raise ValueError("Invalid phase setup")
             return None
 
 class pressure_ref_parser(BuildBase):

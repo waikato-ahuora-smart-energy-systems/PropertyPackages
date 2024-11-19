@@ -20,7 +20,7 @@ def assert_approx(value, expected_value, error_margin):
 def test_heat_exchanger():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False)
-    m.fs.properties1 = iapws95.Iapws95ParameterBlock()
+    m.fs.properties1 = build_package("peng-robinson", ["nitrogen", "oxygen"], ["Vap"])
     m.fs.properties2 = build_package("peng-robinson", ["benzene", "toluene"], ["Liq", "Vap"])
     
     m.fs.heat_exchanger = HeatExchanger(

@@ -372,3 +372,55 @@ class ChemSep(object):
             units = b.params.get_metadata().derived_units
 
             return pyunits.convert(rho, units.DENSITY_MOLE)
+    
+    class eqn_100:
+        @staticmethod
+        def build_parameters(cobj):
+            cobj.dens_mol_liq_comp_coeff_eqn_type = Param(
+                mutable=True, doc="Liquid molar density equation form"
+            )
+
+            set_param_from_config(
+                cobj, param="dens_mol_liq_comp_coeff", index="eqn_type"
+            )
+
+            if cobj.dens_mol_liq_comp_coeff_eqn_type.value == 1:
+                Perrys.dens_mol_liq_comp_eqn_1.build_parameters(cobj)
+            elif cobj.dens_mol_liq_comp_coeff_eqn_type.value == 2:
+                Perrys.dens_mol_liq_comp_eqn_2.build_parameters(cobj)
+            else:
+                raise ConfigurationError(
+                    f"{cobj.name} unrecognized value for "
+                    f"dens_mol_liq_comp equation type: "
+                    f"{cobj.dens_mol_liq_comp_coeff_eqn_type}"
+                )
+        
+        @staticmethod
+        def return_expression(b, cobj, T):
+            T = pyunits.convert(T, to_units=pyunits.K)
+            A = cobj.eqn_4_coeff_A
+            B = cobj.eqn_4_coeff_B
+            C = cobj.eqn_4_coeff_C
+            D = cobj.eqn_4_coeff_D
+            E = cobj.eqn_4_coeff_E
+
+            rho = A + B * T + C * T^2 + D * T^3 + E * T^4
+
+            units = b.params.get_metadata().derived_units
+            return pyunits.convert(rho, units.DENSITY_MOLE)
+    
+    class eqn_106:
+        @staticmethod
+        def return_expression(b, cobj, T):
+            T = pyunits.convert(T, to_units=pyunits.K)
+            A = cobj.eqn_4_coeff_A
+            B = cobj.eqn_4_coeff_B
+            C = cobj.eqn_4_coeff_C
+            D = cobj.eqn_4_coeff_D
+            E = cobj.eqn_4_coeff_E
+
+            rho = A + B * T + C * T^2 + D * T^3 + E * T^4
+
+            units = b.params.get_metadata().derived_units
+
+            return pyunits.convert(rho, units.DENSITY_MOLE)

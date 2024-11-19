@@ -127,7 +127,7 @@ def test_T350_P1_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 365, 0.5)
+  assert_approx(value(m.fs.state[1]._teq[("Liq", "Vap")]), 365, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.0035346, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.966749, 0.5)
   assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 0.894676, 2) # Investigate
@@ -165,7 +165,7 @@ def test_T350_P5_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 431.47, 0.5)
+  assert_approx(value(m.fs.state[1]._teq[("Liq", "Vap")]), 431.47, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.01766, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.80245, 0.5)
   assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 0.181229, 1.5) # Investigate
@@ -203,7 +203,7 @@ def test_T450_P1_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 371.4, 0.5)
+  assert_approx(value(m.fs.state[1]._teq[("Liq", "Vap")]), 371.4, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.0033583, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.9821368, 0.5)
   assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 8.069323, 1) # Investigate
@@ -241,7 +241,7 @@ def test_T450_P5_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 436.93, 0.5)
+  assert_approx(value(m.fs.state[1]._teq[("Liq", "Vap")]), 436.93, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.0166181, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.9053766, 0.5)
 
@@ -280,7 +280,7 @@ def test_T368_P1_x5():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 368, 0.5)
+  assert_approx(value(m.fs.state[1]._teq[("Liq", "Vap")]), 368, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.003504, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.97, 0.5)
   assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1.492049, 1.5) # Investigate
@@ -318,7 +318,7 @@ def test_T376_P1_x2():
   # Check for optimal solution
   assert check_optimal_termination(results)
 
-  assert_approx(value(m.fs.state[1]._teq[("Vap", "Liq")]), 376, 0.5)
+  assert_approx(value(m.fs.state[1]._teq[("Liq", "Vap")]), 376, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Liq"]), 0.00361333, 0.5)
   assert_approx(value(m.fs.state[1].compress_fact_phase["Vap"]), 0.968749, 0.5)
   assert_approx(value(m.fs.state[1].fug_coeff_phase_comp["Liq", "benzene"]), 1.8394188, 1.5) # Investigate
