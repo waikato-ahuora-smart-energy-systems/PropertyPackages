@@ -110,7 +110,7 @@ config = {
     'state_bounds': {
         'flow_mol': (0, 100, 1000, pyunits.mol/pyunits.s),
         'pressure': (50000.0, 100000.0, 1000000.0, pyunits.Pa),
-        'temperature': (278.68, 300, 500, pyunits.K)
+        'temperature': (150, 250, 350, pyunits.K)
     },
     'state_definition': FTPx,
     'temperature_ref': (298.15, pyunits.K),

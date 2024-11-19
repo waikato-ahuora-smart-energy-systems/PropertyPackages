@@ -141,7 +141,7 @@ class ChemSep(object):
         @staticmethod
         def build_parameters(cobj):
             # Required for calculating enthalpy
-            if not hasattr(cobj, "enth_entr_mol_ig_coeff_coeff_A"):
+            if not hasattr(cobj, "enth_entr_mol_ig_coeff_A"):
                 ChemSep.enth_entr_mol_ig.build_parameters(cobj)
 
             units = cobj.parent_block().get_metadata().derived_units
@@ -163,11 +163,11 @@ class ChemSep(object):
 
             s = (
                 pyunits.convert(
-                    (cobj.enth_entr_mol_ig_coeff_coeff_A * log(T / Tr)
-                     + cobj.enth_entr_mol_ig_coeff_coeff_B * (T - Tr)
-                     + (cobj.enth_entr_mol_ig_coeff_coeff_C / 2) * (T ** 2 - Tr ** 2)
-                     + (cobj.enth_entr_mol_ig_coeff_coeff_D / 3) * (T ** 3 - Tr ** 3)
-                     + (cobj.enth_entr_mol_ig_coeff_coeff_E / 4) * (T ** 4 - Tr ** 4)),
+                    (cobj.enth_entr_mol_ig_coeff_A * log(T / Tr)
+                     + cobj.enth_entr_mol_ig_coeff_B * (T - Tr)
+                     + (cobj.enth_entr_mol_ig_coeff_C / 2) * (T ** 2 - Tr ** 2)
+                     + (cobj.enth_entr_mol_ig_coeff_D / 3) * (T ** 3 - Tr ** 3)
+                     + (cobj.enth_entr_mol_ig_coeff_E / 4) * (T ** 4 - Tr ** 4)),
                     units.ENTROPY_MOLE,
                 ) + cobj.entr_mol_form_vap_comp_ref
             )
