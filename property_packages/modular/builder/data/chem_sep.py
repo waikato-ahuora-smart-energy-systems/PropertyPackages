@@ -365,7 +365,7 @@ class ChemSepEqn:
     
     @staticmethod
     def return_expression(prefix, b, cobj, T):
-        
+
 
     @abstractmethod
     def return_expression(prefix, b, cobj, T):
@@ -387,8 +387,12 @@ class eqn_100(ChemSepEqn):
 class eqn_106(ChemSepEqn):
 
     @staticmethod
-    def solve_eqn(b, params, T):
+    def return_expression(prefix, b, cobj, T):
+        # Ensuring temperature is in Kelvin
         T = pyunits.convert(T, to_units=pyunits.K)
+        # Retrieving A-E coefficients based on prefix
+        A, B, C, D, E, units = ChemSepEqn.get_params(cobj, prefix)
+        # Equation 106 taken from Chem Sep Book
         rho = params.A + params.B * T + params.C * T^2 + params.D * T^3 + params.E * T^4
         units = b.params.get_metadata().derived_units
         return pyunits.convert(rho, units.DENSITY_MOLE)
