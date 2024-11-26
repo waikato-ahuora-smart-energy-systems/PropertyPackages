@@ -43,3 +43,11 @@ Support different phases:
 ```py
 property_packages.build_package("helmholtz",["h2o"],["vap","liq"])
 ```
+
+# Installation & testing
+
+```
+pip install -r requirements.txt
+idaes get-extensions
+pytest
+```

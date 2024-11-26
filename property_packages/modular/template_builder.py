@@ -44,6 +44,8 @@ def build_config(property_package_name, compound_names: List[str], valid_states:
     result = obj.serialise(compounds, valid_states)
     if result is not None:
         new_template[key] = result
+
+  pprint(new_template)
   
   # Building property package and returning
   return GenericParameterBlock(**new_template)

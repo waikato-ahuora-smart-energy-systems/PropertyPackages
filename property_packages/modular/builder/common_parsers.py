@@ -34,9 +34,21 @@ class bubble_dew_method_parser(BuildBase):
 class components_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-    
-        def serialise_component(compound: Compound) -> Dict[str, Any]:
 
+        def build_coeff(compound: Compound, config_key: str, compound_key: str, config: Dict[str, Any]):
+            config[config_key] = ChemSep
+            config["parameter_data"].update({f"{config_key}_coeff": {
+                "units": compound[compound_key]["units"],
+                "eqno": compound[compound_key]["eqno"],
+                "A": (compound[compound_key]["A"]),
+                "B": (compound[compound_key]["B"]),
+                "C": (compound[compound_key]["C"]),
+                "D": (compound[compound_key]["D"]),
+                "E": (compound[compound_key]["E"]),
+            }})
+            return config
+
+        def serialise_component(compound: Compound) -> Dict[str, Any]:
             # configuration default to all components 
             config = {
                 "type": Component,
@@ -47,158 +59,53 @@ class components_parser(BuildBase):
                     "omega": compound["AcentricityFactor"].value,
                 }
             }
-            
+
+            keys = [
+                ["cp_mol_ig_comp", "IdealGasHeatCapacityCp"],
+                ["entr_mol_ig_comp", "RPPHeatCapacityCp"],
+                ["enth_mol_ig_comp", "RPPHeatCapacityCp"],
+                ["pressure_sat_comp", "AntoineVaporPressure"],
+                ["dens_mol_liq_comp", "LiquidDensity"],
+                ["entr_mol_liq_comp", "LiquidHeatCapacityCp"],
+                ["enth_mol_liq_comp", "LiquidHeatCapacityCp"]
+            ]
+
+            for key in keys:
+                config = build_coeff(compound, key[0], key[1], config)
+
+            # Unique logic
             valid_phase = valid_phases(compound)
             if valid_phase != PT.vaporPhase:
                 config["phase_equilibrium_form"] = {("Vap", "Liq"): log_fugacity}
             else:
                 config["valid_phase_types"] = valid_phase
 
-            # Energies of Forma tion
-            if compound["HeatOfFormation"] is not None: # this does not work when passed
+            if compound["HeatOfFormation"] is not None:
                 config["parameter_data"].update({
                     "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol)
                 })
-            else:
-                raise ValueError("No Heat of Formation Data")
 
             if compound["AbsEntropy"] is not None:
                 config["parameter_data"].update({
                     "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K)
                 })
-            else:
-                raise ValueError("No Absolute Entropy Data")
 
-            # Ideal Gas Molar Calculations
-            # All three properties intrinsically linked together
-            if compound["RPPHeatCapacityCp"] is not None:
-                if compound["RPPHeatCapacityCp"]["eqno"] == 4:
-                    config["enth_mol_ig_comp"] = RPP4
-                    config["entr_mol_ig_comp"] = RPP4
-                    config["parameter_data"].update({"enth_entr_mol_ig_coeff": {
-                        "A": (float(compound["RPPHeatCapacityCp"]["A"]), pyunits.J / pyunits.kilomol / pyunits.K),
-                        "B": (float(compound["RPPHeatCapacityCp"]["B"]), pyunits.J / pyunits.kilomol / pyunits.K**2),
-                        "C": (float(compound["RPPHeatCapacityCp"]["C"]), pyunits.J / pyunits.kilomol / pyunits.K**3),
-                        "D": (float(compound["RPPHeatCapacityCp"]["D"]), pyunits.J / pyunits.kilomol / pyunits.K**4),
-                    }})
-                elif compound["RPPHeatCapacityCp"]["eqno"] == 100 or compound["RPPHeatCapacityCp"]["eqno"] == 5:
-                    config["enth_mol_ig_comp"] = ChemSep
-                    config["entr_mol_ig_comp"] = ChemSep
-                    config["parameter_data"].update({"enth_entr_mol_ig_coeff": {
-                        "A": (compound["RPPHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K),
-                        "B": (compound["RPPHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
-                        "C": (compound["RPPHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
-                        "D": (compound["RPPHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
-                        "E": (compound["RPPHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
-                    }})
-                else:
-                    raise ValueError(f"Invalid equation number for heat capacity {compound['RPPHeatCapacityCp']['eqno']}")
-            else:
-                raise ValueError("No Heat Capacity Data")
-
-            # Ideal Gas Heat Capacity
-            if compound["IdealGasHeatCapacityCp"] is not None:
-                if compound["IdealGasHeatCapacityCp"]["eqno"] == 16:
-                    config["cp_mol_ig_comp"] = ChemSep
-                    config["parameter_data"].update({"cp_mol_ig_comp_coeff": {
-                        "A": (compound["IdealGasHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K),
-                        "B": (compound["IdealGasHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
-                        "C": (compound["IdealGasHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
-                        "D": (compound["IdealGasHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
-                        "E": (compound["IdealGasHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
-                    }})
-                else:
-                    raise ValueError("No Ideal Gas Heat Capacity Equation Data")
-
-            # Saturation Pressure (Vapor)
-            if compound["AntoineVaporPressure"] is not None:
-                if compound["AntoineVaporPressure"]["eqno"] == 10:
-                    config["pressure_sat_comp"] = ChemSep
-                    config["parameter_data"].update({"pressure_sat_comp_coeff": {
-                        "A": (compound["AntoineVaporPressure"]["A"], None),
-                        "B": (compound["AntoineVaporPressure"]["B"], pyunits.K),
-                        "C": (compound["AntoineVaporPressure"]["C"], pyunits.K),
-                    }})
-                else:
-                    raise ValueError("No Antoine Vapor Pressure Equation Data")
-            else:
-                raise ValueError("No Antoine Vapor Pressure Data")
-
-            # Liquid Density
-            if compound["LiquidDensity"] is not None:
-                if compound["LiquidDensity"]["eqno"] == 105:
-                    config["dens_mol_liq_comp"] = Perrys
-                    config["parameter_data"].update({"dens_mol_liq_comp_coeff": {
-                        "eqn_type": 1,
-                        "1": (compound["LiquidDensity"]["A"], pyunits.kmol / pyunits.m**3),
-                        "2": (compound["LiquidDensity"]["B"], None),
-                        "3": (compound["LiquidDensity"]["C"], pyunits.K),
-                        "4": (compound["LiquidDensity"]["D"], None),
-                    }})
-                elif compound["LiquidDensity"]["eqno"] == 106:
-                    config["dens_mol_liq_comp"] = ChemSep
-                    config["parameter_data"].update({"dens_mol_liq_comp_coeff": {
-                        "A": (compound["LiquidDensity"]["A"], pyunits.kmol / pyunits.m**3),
-                        "B": (compound["LiquidDensity"]["B"], None),
-                        "C": (compound["LiquidDensity"]["C"], None),
-                        "D": (compound["LiquidDensity"]["D"], None),
-                        "E": (compound["LiquidDensity"]["E"], None),
-                    }})
-                else:
-                    raise ValueError("No Liquid Density Equation Data")
-            else:
-                raise ValueError("No Liquid Density Data")
-
-            # Liquid Heat Capacity & Entropy / Enthalpy
             if compound["LiquidHeatCapacityCp"] is not None:
-                if compound["LiquidHeatCapacityCp"]["eqno"] == 100 or compound["LiquidHeatCapacityCp"]["eqno"] == 4:
-                    # Uses correct equations to calculate
-                    config["enth_mol_liq_comp"] = Perrys
-                    config["entr_mol_liq_comp"] = Perrys
-                    config["parameter_data"].update({"cp_mol_liq_comp_coeff": {
-                        "1": (compound["LiquidHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K**1),
-                        "2": (compound["LiquidHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
-                        "3": (compound["LiquidHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
-                        "4": (compound["LiquidHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
-                        "5": (compound["LiquidHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
-                    }})
-                    
-                    # ASSUMPTION: Molar heat of formation, liq is zero - given the semi-okay by Ben
-                    config["parameter_data"].update({
-                        "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol)
-                    })
-
-                    config["parameter_data"].update({
-                        "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
-                    })
-                elif compound["LiquidHeatCapacityCp"]["eqno"] == 16:
-                    # Uses correct equations to calculate
-                    config["enth_mol_liq_comp"] = ChemSep
-                    config["entr_mol_liq_comp"] = ChemSep
-                    config["parameter_data"].update({"cp_mol_liq_comp_coeff": {
-                        "A": (compound["LiquidHeatCapacityCp"]["A"], pyunits.J / pyunits.kilomol / pyunits.K**1),
-                        "B": (compound["LiquidHeatCapacityCp"]["B"], pyunits.J / pyunits.kilomol / pyunits.K**2),
-                        "C": (compound["LiquidHeatCapacityCp"]["C"], pyunits.J / pyunits.kilomol / pyunits.K**3),
-                        "D": (compound["LiquidHeatCapacityCp"]["D"], pyunits.J / pyunits.kilomol / pyunits.K**4),
-                        "E": (compound["LiquidHeatCapacityCp"]["E"], pyunits.J / pyunits.kilomol / pyunits.K**5),
-                    }})
-
-                    # ASSUMPTION: Molar heat of formation, liq is zero - given the semi-okay by Ben
-                    config["parameter_data"].update({
-                        "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol)
-                    })
-
-                    config["parameter_data"].update({
-                        "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
-                    }) 
-                else:
-                    raise ValueError(f"No Liquid Heat Capacity Equation Data {compound['LiquidHeatCapacityCp']['eqno']}")
+                config["parameter_data"].update({
+                    "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol)
+                })
+                config["parameter_data"].update({
+                    "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
+                }) 
             else: 
                 # Compound only exists in vapor phase
                 config["parameter_data"].update({"valid_phase_types": PT.vaporphase})
 
             return config
         
+        def coeffs(compound: Compound, key: str) -> Dict[str, Any]:
+            pass
+
         def valid_phases(compound: Compound) -> PT:
             # Assumption: Anything above hydrogen can exist as both liquid and vapor
             if compound["NormalBoilingPointTemperature"].value >= 21:

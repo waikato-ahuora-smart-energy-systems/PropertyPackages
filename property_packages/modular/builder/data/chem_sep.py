@@ -10,6 +10,7 @@ from idaes.core.util.misc import set_param_from_config
 from pyomo.environ import log, exp, units as pyunits
 from scipy.integrate import quad
 from pyomo.environ import Var
+from abc import abstractmethod
 
 class ChemSep(object):
 
@@ -59,56 +60,41 @@ class ChemSep(object):
 
             units = b.params.get_metadata().derived_units
             return pyunits.convert(cp, units.HEAT_CAPACITY_MOLE)
-    
-    class enth_entr_mol_ig:
-        @staticmethod
-        def build_parameters(cobj):
-            cobj.enth_entr_mol_ig_coeff_A = Var(
-                doc="Parameter A for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K,
-            )
-            set_param_from_config(cobj, param="enth_entr_mol_ig_coeff", index="A")
 
-            cobj.enth_entr_mol_ig_coeff_B = Var(
-                doc="Parameter B for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 2,
-            )
-            set_param_from_config(cobj, param="enth_entr_mol_ig_coeff", index="B")
-
-            cobj.enth_entr_mol_ig_coeff_C = Var(
-                doc="Parameter C for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 3,
-            )
-            set_param_from_config(cobj, param="enth_entr_mol_ig_coeff", index="C")
-
-            cobj.enth_entr_mol_ig_coeff_D = Var(
-                doc="Parameter D for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 4,
-            )
-            set_param_from_config(cobj, param="enth_entr_mol_ig_coeff", index="D")
-
-            cobj.enth_entr_mol_ig_coeff_E = Var(
-                doc="Parameter E for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 5,
-            )
-            set_param_from_config(cobj, param="enth_entr_mol_ig_coeff", index="E")
-    
     class enth_mol_ig_comp:
         @staticmethod
         def build_parameters(cobj):
-            # Required for calculating entropy
-            if not hasattr(cobj, "enth_entr_mol_ig_coeff_A"):
-                ChemSep.enth_entr_mol_ig.build_parameters(cobj)
+            # Custom variables for each component
+            cobj.enth_mol_ig_comp_coeff_A = Var(
+                doc="Parameter A for ideal gas molar heat capacity",
+                units=pyunits.J / pyunits.kilomol / pyunits.K,
+            )
+            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="A")
 
-            if cobj.parent_block().config.include_enthalpy_of_formation:
+            cobj.enth_mol_ig_comp_coeff_B = Var(
+                doc="Parameter B for ideal gas molar heat capacity",
+                units=pyunits.J / pyunits.kilomol / pyunits.K ** 2,
+            )
+            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="B")
 
-                units = cobj.parent_block().get_metadata().derived_units
+            cobj.enth_mol_ig_comp_coeff_C = Var(
+                doc="Parameter C for ideal gas molar heat capacity",
+                units=pyunits.J / pyunits.kilomol / pyunits.K ** 3,
+            )
+            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="C")
 
-                cobj.enth_mol_form_vap_comp_ref = Var(
-                    doc="Vapor phase molar heat of formation",
-                    units=units.ENERGY_MOLE,
-                )
-                set_param_from_config(cobj, param="enth_mol_form_vap_comp_ref")
+            cobj.enth_mol_ig_comp_coeff_D = Var(
+                doc="Parameter D for ideal gas molar heat capacity",
+                units=pyunits.J / pyunits.kilomol / pyunits.K ** 4,
+            )
+            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="D")
+
+            cobj.enth_mol_ig_comp_coeff_E = Var(
+                doc="Parameter E for ideal gas molar heat capacity",
+                units=pyunits.J / pyunits.kilomol / pyunits.K ** 5,
+            )
+            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="E")
+
 
         @staticmethod
         def return_expression(b, cobj, T):
@@ -126,11 +112,11 @@ class ChemSep(object):
 
             h = (
                 pyunits.convert(
-                    (cobj.enth_entr_mol_ig_coeff_A * (T - Tr)
-                     + (cobj.enth_entr_mol_ig_coeff_B / 2) * (T**2 - Tr**2)
-                     + (cobj.enth_entr_mol_ig_coeff_C / 3) * (T**3 - Tr**3)
-                     + (cobj.enth_entr_mol_ig_coeff_D / 4) * (T**4 - Tr**4)
-                     + (cobj.enth_entr_mol_ig_coeff_E / 5) * (T**5 - Tr**5)),
+                    (cobj.cp_mol_ig_comp_coeff_A * (T - Tr)
+                     + (cobj.cp_mol_ig_comp_coeff_B / 2) * (T**2 - Tr**2)
+                     + (cobj.cp_mol_ig_comp_coeff_C / 3) * (T**3 - Tr**3)
+                     + (cobj.cp_mol_ig_comp_coeff_D / 4) * (T**4 - Tr**4)
+                     + (cobj.cp_mol_ig_comp_coeff_E / 5) * (T**5 - Tr**5)),
                     units.ENERGY_MOLE,
                 ) + h_form
             )
@@ -141,8 +127,8 @@ class ChemSep(object):
         @staticmethod
         def build_parameters(cobj):
             # Required for calculating enthalpy
-            if not hasattr(cobj, "enth_entr_mol_ig_coeff_A"):
-                ChemSep.enth_entr_mol_ig.build_parameters(cobj)
+            if not hasattr(cobj, "cp_mol_ig_comp_coeff_A"):
+                ChemSep.cp_mol_ig_comp.build_parameters(cobj)
 
             units = cobj.parent_block().get_metadata().derived_units
 
@@ -163,11 +149,11 @@ class ChemSep(object):
 
             s = (
                 pyunits.convert(
-                    (cobj.enth_entr_mol_ig_coeff_A * log(T / Tr)
-                     + cobj.enth_entr_mol_ig_coeff_B * (T - Tr)
-                     + (cobj.enth_entr_mol_ig_coeff_C / 2) * (T ** 2 - Tr ** 2)
-                     + (cobj.enth_entr_mol_ig_coeff_D / 3) * (T ** 3 - Tr ** 3)
-                     + (cobj.enth_entr_mol_ig_coeff_E / 4) * (T ** 4 - Tr ** 4)),
+                    (cobj.cp_mol_ig_comp_coeff_A * log(T / Tr)
+                     + cobj.cp_mol_ig_comp_coeff_B * (T - Tr)
+                     + (cobj.cp_mol_ig_comp_coeff_C / 2) * (T ** 2 - Tr ** 2)
+                     + (cobj.cp_mol_ig_comp_coeff_D / 3) * (T ** 3 - Tr ** 3)
+                     + (cobj.cp_mol_ig_comp_coeff_E / 4) * (T ** 4 - Tr ** 4)),
                     units.ENTROPY_MOLE,
                 ) + cobj.entr_mol_form_vap_comp_ref
             )
@@ -327,100 +313,106 @@ class ChemSep(object):
     class dens_mol_liq_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.dens_mol_liq_comp_coeff_A = Var(
-                doc="Parameter A for liquid phase molar density",
-                units=pyunits.kmol * pyunits.m**-3,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="A")
-
-            cobj.dens_mol_liq_comp_coeff_B = Var(
-                doc="Parameter B for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="B")
-
-            cobj.dens_mol_liq_comp_coeff_C = Var(
-                doc="Parameter C for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="C")
-
-            cobj.dens_mol_liq_comp_coeff_D = Var(
-                doc="Parameter D for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="D")
-
-            cobj.dens_mol_liq_comp_coeff_E = Var(
-                doc="Parameter E for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="E")
+            ChemSepEqn.build_parameters(
+                prefix="dens_mol_liq_comp", 
+                doc="liquid phase molar density", 
+                cobj=cobj)
 
         @staticmethod
         def return_expression(b, cobj, T):
 
-            T = pyunits.convert(T, to_units=pyunits.K)
-            A = cobj.dens_mol_liq_comp_coeff_A
-            B = cobj.dens_mol_liq_comp_coeff_B
-            C = cobj.dens_mol_liq_comp_coeff_C
-            D = cobj.dens_mol_liq_comp_coeff_D
-            E = cobj.dens_mol_liq_comp_coeff_E
-
-            rho = A * (1 - T)^(B + C * T + D * T^2 + E * T^3)
-
+            rho = eqn_100.return_expression(
+                    prefix="dens_mol_liq_comp", 
+                    b=b, cobj=cobj, T=T)
             units = b.params.get_metadata().derived_units
-
             return pyunits.convert(rho, units.DENSITY_MOLE)
     
-    class eqn_100:
-        @staticmethod
-        def build_parameters(cobj):
-            cobj.dens_mol_liq_comp_coeff_eqn_type = Param(
-                mutable=True, doc="Liquid molar density equation form"
-            )
 
-            set_param_from_config(
-                cobj, param="dens_mol_liq_comp_coeff", index="eqn_type"
-            )
+class ChemSepEqn:
 
-            if cobj.dens_mol_liq_comp_coeff_eqn_type.value == 1:
-                Perrys.dens_mol_liq_comp_eqn_1.build_parameters(cobj)
-            elif cobj.dens_mol_liq_comp_coeff_eqn_type.value == 2:
-                Perrys.dens_mol_liq_comp_eqn_2.build_parameters(cobj)
-            else:
-                raise ConfigurationError(
-                    f"{cobj.name} unrecognized value for "
-                    f"dens_mol_liq_comp equation type: "
-                    f"{cobj.dens_mol_liq_comp_coeff_eqn_type}"
-                )
+    @staticmethod
+    def eqn_from_str(eqn_str) -> ChemSepEqn:
+        if eqn_str == "100":
+            return eqn_100
+        elif eqn_str == "106":
+            return eqn_106
+        elif eqn_str == "004":
+            return eqn_004
+        elif eqn_str == "016":
+            return eqn_016
+        elif eqn_str == "010":
+            return eqn_010
+        elif eqn_str == "105":
+            return eqn_105
+        else:
+            raise ConfigurationError(f"Equation {eqn_str} not found")
+
+    @staticmethod
+    def get_params(cobj, prefix):
+        coeff_names = ['A', 'B', 'C', 'D', 'E', "eqno", "units"]
+        params = {name: getattr(cobj, f"{prefix}_coeff_{name}", None) for name in coeff_names}
+        return tuple(params[name] for name in coeff_names)
+    
+    @staticmethod
+    def build_parameters(prefix, doc, cobj):
+        coeff_names = ['A', 'B', 'C', 'D', 'E', "units"]
+        for name in coeff_names:
+            setattr(cobj, f"{prefix}_coeff_{name}", Var(
+                doc=f"Parameter {name} for {doc}",
+                units=None,
+            ))
+            set_param_from_config(cobj, param=f"{prefix}_coeff", index=name)
+    
+    @staticmethod
+    def return_expression(prefix, b, cobj, T):
         
-        @staticmethod
-        def return_expression(b, cobj, T):
-            T = pyunits.convert(T, to_units=pyunits.K)
-            A = cobj.eqn_4_coeff_A
-            B = cobj.eqn_4_coeff_B
-            C = cobj.eqn_4_coeff_C
-            D = cobj.eqn_4_coeff_D
-            E = cobj.eqn_4_coeff_E
 
-            rho = A + B * T + C * T^2 + D * T^3 + E * T^4
+    @abstractmethod
+    def return_expression(prefix, b, cobj, T):
+        raise ConfigurationError("solve_eqn not implemented")
 
-            units = b.params.get_metadata().derived_units
-            return pyunits.convert(rho, units.DENSITY_MOLE)
-    
-    class eqn_106:
-        @staticmethod
-        def return_expression(b, cobj, T):
-            T = pyunits.convert(T, to_units=pyunits.K)
-            A = cobj.eqn_4_coeff_A
-            B = cobj.eqn_4_coeff_B
-            C = cobj.eqn_4_coeff_C
-            D = cobj.eqn_4_coeff_D
-            E = cobj.eqn_4_coeff_E
+class eqn_100(ChemSepEqn):
 
-            rho = A + B * T + C * T^2 + D * T^3 + E * T^4
+    @staticmethod
+    def return_expression(prefix, b, cobj, T):
+        # Ensuring temperature is in Kelvin
+        T = pyunits.convert(T, to_units=pyunits.K)
+        # Retrieving A-E coefficients based on prefix
+        A, B, C, D, E, units = ChemSepEqn.get_params(cobj, prefix)
+        # Equation 100 taken from Chem Sep Book
+        rho = (A + B * T + C * T^2 + D * T^3 + E * T^4) * units
+        # Getting the final units
+        return rho
 
-            units = b.params.get_metadata().derived_units
+class eqn_106(ChemSepEqn):
 
-            return pyunits.convert(rho, units.DENSITY_MOLE)
+    @staticmethod
+    def solve_eqn(b, params, T):
+        T = pyunits.convert(T, to_units=pyunits.K)
+        rho = params.A + params.B * T + params.C * T^2 + params.D * T^3 + params.E * T^4
+        units = b.params.get_metadata().derived_units
+        return pyunits.convert(rho, units.DENSITY_MOLE)
+
+class eqn_004(ChemSepEqn):
+
+    @staticmethod
+    def build_parameters(prefix, doc, cobj):
+        pass
+
+class eqn_016(ChemSepEqn):
+
+    @staticmethod
+    def build_parameters(prefix, doc, cobj):
+        pass
+
+class eqn_010(ChemSepEqn):
+
+    @staticmethod
+    def build_parameters(prefix, doc, cobj):
+        pass
+
+class eqn_105(ChemSepEqn):
+
+    @staticmethod
+    def build_parameters(prefix, doc, cobj):
+        pass
