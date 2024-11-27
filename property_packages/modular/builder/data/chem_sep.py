@@ -222,8 +222,10 @@ class ChemSepEqn:
             res = eqn_obj.enth(prefix, b, cobj, T)
         elif eqn_type == "entr":
             res = eqn_obj.entr(prefix, b, cobj, T)
-        else:
+        elif eqn_type == "regular":
             res = eqn_obj.return_expression(prefix, b, cobj, T)
+        else:
+            raise Exception("Invalid equation type")
         
         print(res)
         return res * units
@@ -319,28 +321,35 @@ class eqn_16:
     @staticmethod
     def return_expression(prefix, b, cobj, T):
         # Ensuring temperature is in Kelvin
-        T = pyunits.convert(T, to_units=pyunits.K)
+        if pyunits.get_units(T) != pyunits.dimensionless:
+            T = value(pyunits.convert(T, to_units=pyunits.K))
         # Retrieving A-E coefficients based on prefix
         A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
         # Equation 16 taken from Chem Sep Book
         eqn = (A + exp( B / T + C + D * T + E * T**2))
         return eqn
-    
+
+    @staticmethod
     def enth(prefix, b, cobj, T):
         # Specific enthalpy (eq_16)
-        T = pyunits.convert(T, to_units=pyunits.K)
-        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
         def integrand(T):
-            return eqn_16.return_expression(prefix, b, cobj, T)
-        return pyunits.convert(quad(integrand, Tr, T) + Tr, units.ENERGY_MOLE)
+            return value(eqn_16.return_expression(prefix, b, cobj, T))
+        h = quad(integrand, Tr, T)[0] + Tr
+        print(h)
+        return h
 
+    @staticmethod
     def entr(prefix, b, cobj, T):
         # Specific entropy (eq_16)
-        T = pyunits.convert(T, to_units=pyunits.K)
-        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
         def integrand(T):
-            return eqn_16.return_expression(prefix, b, cobj, T)
-        return pyunits.convert(quad(integrand, Tr, T) / T + Tr, units.ENTROPY_MOLE)
+            return value(eqn_16.return_expression(prefix, b, cobj, T))
+        s = quad(integrand, Tr, T)[0] / (T + Tr)
+        print(s)
+        return s
 
 class eqn_10:
 
