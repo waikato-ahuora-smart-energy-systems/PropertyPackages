@@ -318,75 +318,29 @@ class eqn_16:
 
     @staticmethod
     def return_expression(prefix, b, cobj, T):
+        # Ensuring temperature is in Kelvin
         T = pyunits.convert(T, to_units=pyunits.K)
-
-        cp = (
-            cobj.cp_mol_liq_comp_coeff_A +
-            exp(
-                cobj.cp_mol_liq_comp_coeff_B / T
-                + cobj.cp_mol_liq_comp_coeff_C
-                + cobj.cp_mol_liq_comp_coeff_D * T
-                + cobj.cp_mol_liq_comp_coeff_E * T**2
-            )
-        )
-
-        units = b.params.get_metadata().derived_units
-        return pyunits.convert(cp, units.HEAT_CAPACITY_MOLE)
-        # # Ensuring temperature is in Kelvin
-        # T = pyunits.convert(T, to_units=pyunits.K)
-        # # Retrieving A-E coefficients based on prefix
-        # A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
-        # # Equation 16 taken from Chem Sep Book
-        # eqn = (A + exp( B / T + C + D * T + E * T**2))
-        # print(eqn)
-        # return eqn
+        # Retrieving A-E coefficients based on prefix
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+        # Equation 16 taken from Chem Sep Book
+        eqn = (A + exp( B / T + C + D * T + E * T**2))
+        return eqn
     
     def enth(prefix, b, cobj, T):
+        # Specific enthalpy (eq_16)
         T = pyunits.convert(T, to_units=pyunits.K)
         Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-
-        units = b.params.get_metadata().derived_units
-
-        integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
-
-        h = (
-            pyunits.convert(
-                quad(integrand, Tr, T) + Tr,
-                units.ENERGY_MOLE,
-            )
-        )
-
-        return h
-        # # Specific enthalpy (eq_16)
-        # T = pyunits.convert(T, to_units=pyunits.K)
-        # Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-        # def integrand(T):
-        #     return eqn_16.return_expression(prefix, b, cobj, T)
-        # return pyunits.convert(quad(integrand, Tr, T) + Tr, units.ENERGY_MOLE)
+        def integrand(T):
+            return eqn_16.return_expression(prefix, b, cobj, T)
+        return pyunits.convert(quad(integrand, Tr, T) + Tr, units.ENERGY_MOLE)
 
     def entr(prefix, b, cobj, T):
-        # Specific entropy
+        # Specific entropy (eq_16)
         T = pyunits.convert(T, to_units=pyunits.K)
         Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-
-        units = b.params.get_metadata().derived_units
-
-        integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
-
-        s = (
-            pyunits.convert(
-                quad(integrand, Tr, T)/T + Tr,
-                units.ENERGY_MOLE,
-            )
-        )
-
-        return s
-        # # Specific entropy (eq_16)
-        # T = pyunits.convert(T, to_units=pyunits.K)
-        # Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-        # def integrand(T):
-        #     return eqn_16.return_expression(prefix, b, cobj, T)
-        # return pyunits.convert(quad(integrand, Tr, T) / T + Tr, units.ENTROPY_MOLE)
+        def integrand(T):
+            return eqn_16.return_expression(prefix, b, cobj, T)
+        return pyunits.convert(quad(integrand, Tr, T) / T + Tr, units.ENTROPY_MOLE)
 
 class eqn_10:
 
