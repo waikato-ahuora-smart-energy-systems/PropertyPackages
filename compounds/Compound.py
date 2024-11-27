@@ -23,18 +23,19 @@ unit_dict = {
     "Pa": pyunits.Pa,
     "m3/kmol": pyunits.m**3 / pyunits.kmol,
     "kmol/m3": pyunits.kmol / pyunits.m**3,
-    "_": pyunits.dimensionless,
     "kg/kmol": pyunits.kg / pyunits.kmol,
     "J/kmol": pyunits.J / pyunits.kmol,
     "J/kmol/K": pyunits.J / (pyunits.kmol * pyunits.K),
     "m": pyunits.m,
+    "_": pyunits.dimensionless,
     "J0.5/m1.5": pyunits.J**0.5 / pyunits.m**1.5,
     "Coulomb.m": pyunits.C * pyunits.m, # TODO: update
     "m2/kmol": pyunits.m**2 / pyunits.kmol,
     "W/m/K": pyunits.W / (pyunits.m * pyunits.K),
     "N/m": pyunits.N / pyunits.m,
     "kg0.25.m3/s0.5/kmol": pyunits.kg**0.25 * pyunits.m**3 / (pyunits.s**0.5 * pyunits.kmol),
-    "m3/kmol": pyunits.m**3 / pyunits.kmol
+    "m3/kmol": pyunits.m**3 / pyunits.kmol,
+    "Pa.s": pyunits.Pa * pyunits.s,
 }
 
 
@@ -43,7 +44,6 @@ def get_unit_from_string(unit_str):
         return unit_dict[unit_str]
     else:
         return None
-
 
 class UnitValuePair(BaseModel):
     name: str | None
@@ -63,36 +63,27 @@ def parse_element(elem: ET.Element):
 
 Coefficients = Dict[str, float | str | Any | None]
 
-#
-# Expected output
-#
-# Coefficients = {
-#     "units": Any,
-#     "eqno": int,
-#     "A": float | None,
-#     "B": float | None,
-#     "C": float | None,
-#     "D": float | None,
-#     "E": float | None,
-#     "Tmin": float,
-#     "Tmax": float,
-# }
-
-
 def parse_coeff(element: ET.Element) -> Coefficients:
-    self = {}
+
+    tself = {}
+
     for key in ['eqno', 'A', 'B', 'C', 'D', 'E', 'Tmin', 'Tmax']:
         child = element.find(key)
         if child is not None:
             value = child.get('value')
             if value is not None and key != 'eqno':
-                self[key] = convert_string_to_float(value)
+                tself[key] = convert_string_to_float(value)
             elif value is not None and key == 'eqno':
-                self[key] = convert_string_to_int(value)
+                tself[key] = convert_string_to_int(value)
         else:
-            self[key] = 0.0
-    self['units'] = get_unit_from_string(element.get('units'))
-    return self
+            tself[key] = 0.0
+    if(element.get('name')=='Liquid heat capacity'):
+        raise Exception(get_unit_from_string(element.get('units')))
+    if(get_unit_from_string(element.get('units')) is not None):
+        tself['units'] = get_unit_from_string(element.get('units'))
+    else:
+        raise Exception("Invalid units")
+    return tself
 
 
 compound_template = {

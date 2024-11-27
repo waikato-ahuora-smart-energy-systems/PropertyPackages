@@ -205,30 +205,33 @@ class ChemSepEqn:
         Returns:
             float : Result of the equation
         """
-        eqn_number = str(ChemSepEqn.get_params(cobj, prefix)[5].value)
-        if eqn_number is None:
-            raise Exception(f"Equation number not found for {prefix}")
-        units = b.params.get_metadata().derived_units.__getitem__(end_units)
-        eqn_obj = None
 
-        if eqn_number in equation_map:
-            eqn_obj = equation_map[eqn_number]
-        else:
-            raise Exception(f"Equation {eqn_number} not found")
-            
-        res = None
-
-        if eqn_type == "enth":
-            res = eqn_obj.enth(prefix, b, cobj, T)
-        elif eqn_type == "entr":
-            res = eqn_obj.entr(prefix, b, cobj, T)
-        elif eqn_type == "regular":
-            res = eqn_obj.return_expression(prefix, b, cobj, T)
-        else:
-            raise Exception("Invalid equation type")
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, "cp_mol_liq_comp")
         
-        print(res)
-        return res * units
+        if value(eqno) is None:
+            raise Exception(f"Equation number not found for {prefix}")
+        
+        final_units = b.params.get_metadata().derived_units.__getitem__(end_units)
+        
+        if str(value(eqno)) in equation_map:
+            eqn_obj = equation_map[str(value(eqno))]
+            res = None
+
+            if eqn_type == "enth":
+                res = eqn_obj.enth(prefix, b, cobj, T)
+            elif eqn_type == "entr":
+                res = eqn_obj.entr(prefix, b, cobj, T)
+            elif eqn_type == "regular":
+                res = eqn_obj.return_expression(prefix, b, cobj, T)
+            else:
+                raise Exception("Invalid equation type")
+            
+            raise Exception(pyunits.get_units(units))
+            
+            return pyunits.convert(value(res) * units, final_units)
+
+        else:
+            raise Exception(f"Equation {eqno} not found")
 
     @staticmethod
     def get_params(cobj, prefix):
@@ -337,7 +340,6 @@ class eqn_16:
         def integrand(T):
             return value(eqn_16.return_expression(prefix, b, cobj, T))
         h = quad(integrand, Tr, T)[0] + Tr
-        print(h)
         return h
 
     @staticmethod
@@ -347,8 +349,7 @@ class eqn_16:
         Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
         def integrand(T):
             return value(eqn_16.return_expression(prefix, b, cobj, T))
-        s = quad(integrand, Tr, T)[0] / (T + Tr)
-        print(s)
+        s = quad(integrand, Tr, T)[0] / T + Tr
         return s
 
 class eqn_10:

@@ -117,6 +117,7 @@ class components_parser(BuildBase):
         
         components_output = {}
         for compound in compounds:
+            print(compound)
             components_output[compound["CompoundID"].value] = serialise_component(compound)
         return components_output
 
