@@ -11,11 +11,18 @@ def convert_string_to_float(string: str) -> float | str:
     except:
         return string
 
+def convert_string_to_int(string: str) -> int | str:
+    try:
+        return int(string)
+    except:
+        return string
+
 
 unit_dict = {
     "K": pyunits.K,
     "Pa": pyunits.Pa,
     "m3/kmol": pyunits.m**3 / pyunits.kmol,
+    "kmol/m3": pyunits.kmol / pyunits.m**3,
     "_": pyunits.dimensionless,
     "kg/kmol": pyunits.kg / pyunits.kmol,
     "J/kmol": pyunits.J / pyunits.kmol,
@@ -78,10 +85,12 @@ def parse_coeff(element: ET.Element) -> Coefficients:
         child = element.find(key)
         if child is not None:
             value = child.get('value')
-            if value is not None:
+            if value is not None and key != 'eqno':
                 self[key] = convert_string_to_float(value)
+            elif value is not None and key == 'eqno':
+                self[key] = convert_string_to_int(value)
         else:
-            self[key] = None
+            self[key] = 0.0
     self['units'] = get_unit_from_string(element.get('units'))
     return self
 

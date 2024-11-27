@@ -9,119 +9,52 @@ IDAES naming conventions followed for compatibility with modular property packag
 from idaes.core.util.misc import set_param_from_config
 from pyomo.environ import log, exp, units as pyunits
 from scipy.integrate import quad
-from pyomo.environ import Var
+from pyomo.environ import Var, value, units
 from abc import abstractmethod
+from typing import List, Literal
 
 class ChemSep(object):
 
     class cp_mol_ig_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.cp_mol_ig_comp_coeff_A = Var(
-                doc="Parameter A for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="A")
-
-            cobj.cp_mol_ig_comp_coeff_B = Var(
-                doc="Parameter B for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 2,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="B")
-
-            cobj.cp_mol_ig_comp_coeff_C = Var(
-                doc="Parameter C for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 3,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="C")
-
-            cobj.cp_mol_ig_comp_coeff_D = Var(
-                doc="Parameter D for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 4,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="D")
-
-            cobj.cp_mol_ig_comp_coeff_E = Var(
-                doc="Parameter E for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 5,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="E")
+            ChemSepEqn.build_parameters(
+                prefix="cp_mol_ig_comp", 
+                doc="ideal gas molar heat capacity", 
+                cobj=cobj)
 
         @staticmethod
         def return_expression(b, cobj, T):
-            T = pyunits.convert(T, to_units=pyunits.K)
-            cp = (
-                cobj.cp_mol_ig_comp_coeff_A +
-                cobj.cp_mol_ig_comp_coeff_B*T +
-                cobj.cp_mol_ig_comp_coeff_C*T**2 +
-                cobj.cp_mol_ig_comp_coeff_D*T**3 +
-                cobj.cp_mol_ig_comp_coeff_E*T**4
+            return ChemSepEqn.return_expression(
+                prefix="cp_mol_ig_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="regular", 
+                end_units="HEAT_CAPACITY_MOLE"
             )
-
-            units = b.params.get_metadata().derived_units
-            return pyunits.convert(cp, units.HEAT_CAPACITY_MOLE)
 
     class enth_mol_ig_comp:
         @staticmethod
         def build_parameters(cobj):
-            # Custom variables for each component
-            cobj.enth_mol_ig_comp_coeff_A = Var(
-                doc="Parameter A for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K,
-            )
-            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="A")
+            if not hasattr(cobj, "cp_mol_ig_comp_coeff_A"):
+                ChemSep.cp_mol_ig_comp.build_parameters(cobj)
+            
+            units = cobj.parent_block().get_metadata().derived_units
 
-            cobj.enth_mol_ig_comp_coeff_B = Var(
-                doc="Parameter B for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 2,
+            cobj.enth_mol_form_vap_comp_ref = Var(
+                doc="Vapor phase molar enthalpy of formation",
+                units=units.ENERGY_MOLE,
             )
-            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="B")
 
-            cobj.enth_mol_ig_comp_coeff_C = Var(
-                doc="Parameter C for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 3,
-            )
-            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="C")
-
-            cobj.enth_mol_ig_comp_coeff_D = Var(
-                doc="Parameter D for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 4,
-            )
-            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="D")
-
-            cobj.enth_mol_ig_comp_coeff_E = Var(
-                doc="Parameter E for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 5,
-            )
-            set_param_from_config(cobj, param="enth_mol_ig_comp_coeff", index="E")
-
+            set_param_from_config(cobj, param="enth_mol_form_vap_comp_ref")
 
         @staticmethod
         def return_expression(b, cobj, T):
-            # Specific enthalpy
-            T = pyunits.convert(T, to_units=pyunits.K)
-            Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-
-            units = b.params.get_metadata().derived_units
-
-            h_form = (
-                cobj.enth_mol_form_vap_comp_ref
-                if b.params.config.include_enthalpy_of_formation
-                else 0 * units.ENERGY_MOLE
+            return ChemSepEqn.return_expression(
+                prefix="cp_mol_ig_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="enth", 
+                end_units="ENERGY_MOLE"
             )
-
-            h = (
-                pyunits.convert(
-                    (cobj.cp_mol_ig_comp_coeff_A * (T - Tr)
-                     + (cobj.cp_mol_ig_comp_coeff_B / 2) * (T**2 - Tr**2)
-                     + (cobj.cp_mol_ig_comp_coeff_C / 3) * (T**3 - Tr**3)
-                     + (cobj.cp_mol_ig_comp_coeff_D / 4) * (T**4 - Tr**4)
-                     + (cobj.cp_mol_ig_comp_coeff_E / 5) * (T**5 - Tr**5)),
-                    units.ENERGY_MOLE,
-                ) + h_form
-            )
-
-            return h
 
     class entr_mol_ig_comp:
         @staticmethod
@@ -141,107 +74,46 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
-            # Specific entropy
-            T = pyunits.convert(T, to_units=pyunits.K)
-            Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-
-            units = b.params.get_metadata().derived_units
-
-            s = (
-                pyunits.convert(
-                    (cobj.cp_mol_ig_comp_coeff_A * log(T / Tr)
-                     + cobj.cp_mol_ig_comp_coeff_B * (T - Tr)
-                     + (cobj.cp_mol_ig_comp_coeff_C / 2) * (T ** 2 - Tr ** 2)
-                     + (cobj.cp_mol_ig_comp_coeff_D / 3) * (T ** 3 - Tr ** 3)
-                     + (cobj.cp_mol_ig_comp_coeff_E / 4) * (T ** 4 - Tr ** 4)),
-                    units.ENTROPY_MOLE,
-                ) + cobj.entr_mol_form_vap_comp_ref
+            return ChemSepEqn.return_expression(
+                prefix="cp_mol_ig_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="entr", 
+                end_units="ENTROPY_MOLE"
             )
-
-            return s
-
+            
     class pressure_sat_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.pressure_sat_comp_coeff_A = Var(
-                doc="Antoine A coefficient for calculating P-sat",
-                units=pyunits.dimensionless
-            )
-            set_param_from_config(cobj, param="pressure_sat_comp_coeff", index="A")
-
-            cobj.pressure_sat_comp_coeff_B = Var(
-                doc="Antoine B coefficient for calculating P-sat",
-                units=pyunits.K
-            )
-            set_param_from_config(cobj, param="pressure_sat_comp_coeff", index="B")
-
-            cobj.pressure_sat_comp_coeff_C = Var(
-                doc="Antoine C coefficient for calculating P-sat",
-                units=pyunits.K
-            )
-            set_param_from_config(cobj, param="pressure_sat_comp_coeff", index="C")
+            ChemSepEqn.build_parameters(
+                prefix="pressure_sat_comp", 
+                doc="calculating P-sat", 
+                cobj=cobj)
 
         @staticmethod
         def return_expression(b, cobj, T, dT=False):
-            psat = (
-                    exp(
-                        cobj.pressure_sat_comp_coeff_A - cobj.pressure_sat_comp_coeff_B /
-                        (pyunits.convert(T, to_units=pyunits.K) + cobj.pressure_sat_comp_coeff_C))
-                    ) * pyunits.Pa
-
-            units = b.params.get_metadata().derived_units
-            return pyunits.convert(psat, to_units=units.PRESSURE)
+            return ChemSepEqn.return_expression(
+                prefix="pressure_sat_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="regular", 
+                end_units="PRESSURE"
+            )
     
     class cp_mol_liq_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.cp_mol_liq_comp_coeff_A = Var(
-                doc="Parameter A for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-1,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="A")
-
-            cobj.cp_mol_liq_comp_coeff_B = Var(
-                doc="Parameter B for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-2,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="B")
-
-            cobj.cp_mol_liq_comp_coeff_C = Var(
-                doc="Parameter C for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-3,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="C")
-
-            cobj.cp_mol_liq_comp_coeff_D = Var(
-                doc="Parameter D for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-4,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="D")
-
-            cobj.cp_mol_liq_comp_coeff_E = Var(
-                doc="Parameter E for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-5,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="E")
+            ChemSepEqn.build_parameters(
+                prefix="cp_mol_liq_comp", 
+                doc="liquid phase molar heat capacity", 
+                cobj=cobj)
 
         @staticmethod
         def return_expression(b, cobj, T):
-            # Specific heat capacity
-            T = pyunits.convert(T, to_units=pyunits.K)
-
-            cp = (
-                cobj.cp_mol_liq_comp_coeff_A +
-                exp(
-                    cobj.cp_mol_liq_comp_coeff_B / T
-                    + cobj.cp_mol_liq_comp_coeff_C
-                    + cobj.cp_mol_liq_comp_coeff_D * T
-                    + cobj.cp_mol_liq_comp_coeff_E * T**2
-                )
+            return ChemSepEqn.return_expression(
+                prefix="cp_mol_liq_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="regular", 
+                end_units="HEAT_CAPACITY_MOLE"
             )
-
-            units = b.params.get_metadata().derived_units
-            return pyunits.convert(cp, units.HEAT_CAPACITY_MOLE)
 
     class enth_mol_liq_comp:
         @staticmethod
@@ -260,22 +132,12 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
-            # Specific enthalpy
-            T = pyunits.convert(T, to_units=pyunits.K)
-            Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-
-            units = b.params.get_metadata().derived_units
-
-            integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
-
-            h = (
-                pyunits.convert(
-                    quad(integrand, Tr, T) + Tr,
-                    units.ENERGY_MOLE,
-                )
+            return ChemSepEqn.return_expression(
+                prefix="cp_mol_liq_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="enth", 
+                end_units="ENERGY_MOLE"
             )
-
-            return h
 
     class entr_mol_liq_comp:
         @staticmethod
@@ -293,22 +155,12 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
-            # Specific entropy
-            T = pyunits.convert(T, to_units=pyunits.K)
-            Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
-
-            units = b.params.get_metadata().derived_units
-
-            integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
-
-            s = (
-                pyunits.convert(
-                    quad(integrand, Tr, T)/T + Tr,
-                    units.ENERGY_MOLE,
-                )
+            return ChemSepEqn.return_expression(
+                prefix="cp_mol_liq_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="entr", 
+                end_units="ENTROPY_MOLE"
             )
-
-            return s
 
     class dens_mol_liq_comp:
         @staticmethod
@@ -320,32 +172,61 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
+            return ChemSepEqn.return_expression(
+                prefix="dens_mol_liq_comp",
+                b=b, cobj=cobj, T=T, 
+                eqn_type="regular", 
+                end_units="DENSITY_MOLE"
+            )
 
-            rho = eqn_100.return_expression(
-                    prefix="dens_mol_liq_comp", 
-                    b=b, cobj=cobj, T=T)
-            units = b.params.get_metadata().derived_units
-            return pyunits.convert(rho, units.DENSITY_MOLE)
-    
+EqnType = Literal["entr"] | Literal["enth"] | Literal["regular"]
 
 class ChemSepEqn:
 
     @staticmethod
-    def eqn_from_str(eqn_str) -> ChemSepEqn:
-        if eqn_str == "100":
-            return eqn_100
-        elif eqn_str == "106":
-            return eqn_106
-        elif eqn_str == "004":
-            return eqn_004
-        elif eqn_str == "016":
-            return eqn_016
-        elif eqn_str == "010":
-            return eqn_010
-        elif eqn_str == "105":
-            return eqn_105
+    def return_expression(prefix, b, cobj, T, eqn_type, end_units):
+        """
+        Generic return expression method which calls the appropriate equation method
+
+        Args:
+            prefix : str
+                Prefix of the associated parameters
+            b : Block
+                Block object
+            cobj : Component
+                Component object
+            T : float
+                Temperature equation is evaluated at
+            eqn_str : str
+                Equation string
+            units : Any
+                Units
+        
+        Returns:
+            float : Result of the equation
+        """
+        eqn_number = str(ChemSepEqn.get_params(cobj, prefix)[5].value)
+        if eqn_number is None:
+            raise Exception(f"Equation number not found for {prefix}")
+        units = b.params.get_metadata().derived_units.__getitem__(end_units)
+        eqn_obj = None
+
+        if eqn_number in equation_map:
+            eqn_obj = equation_map[eqn_number]
         else:
-            raise ConfigurationError(f"Equation {eqn_str} not found")
+            raise Exception(f"Equation {eqn_number} not found")
+            
+        res = None
+
+        if eqn_type == "enth":
+            res = eqn_obj.enth(prefix, b, cobj, T)
+        elif eqn_type == "entr":
+            res = eqn_obj.entr(prefix, b, cobj, T)
+        else:
+            res = eqn_obj.return_expression(prefix, b, cobj, T)
+        
+        print(res)
+        return res * units
 
     @staticmethod
     def get_params(cobj, prefix):
@@ -355,68 +236,181 @@ class ChemSepEqn:
     
     @staticmethod
     def build_parameters(prefix, doc, cobj):
-        coeff_names = ['A', 'B', 'C', 'D', 'E', "units"]
+        coeff_names = ['A', 'B', 'C', 'D', 'E', "eqno", "units"]
         for name in coeff_names:
             setattr(cobj, f"{prefix}_coeff_{name}", Var(
                 doc=f"Parameter {name} for {doc}",
                 units=None,
             ))
             set_param_from_config(cobj, param=f"{prefix}_coeff", index=name)
-    
-    @staticmethod
-    def return_expression(prefix, b, cobj, T):
 
-
-    @abstractmethod
-    def return_expression(prefix, b, cobj, T):
-        raise ConfigurationError("solve_eqn not implemented")
-
-class eqn_100(ChemSepEqn):
+class eqn_100:
 
     @staticmethod
     def return_expression(prefix, b, cobj, T):
         # Ensuring temperature is in Kelvin
         T = pyunits.convert(T, to_units=pyunits.K)
         # Retrieving A-E coefficients based on prefix
-        A, B, C, D, E, units = ChemSepEqn.get_params(cobj, prefix)
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
         # Equation 100 taken from Chem Sep Book
         rho = (A + B * T + C * T^2 + D * T^3 + E * T^4) * units
         # Getting the final units
         return rho
+    
+    def enth(prefix, b, cobj, T):
+        # Specific enthalpy (eq_100)
+        T = pyunits.convert(T, to_units=pyunits.K)
+        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
 
-class eqn_106(ChemSepEqn):
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+
+        h_form = (
+            cobj.enth_mol_form_vap_comp_ref
+            if b.params.config.include_enthalpy_of_formation
+            else 0
+        )
+
+        h = (A * (T - Tr)
+            + (B / 2) * (T**2 - Tr**2)
+            + (C / 3) * (T**3 - Tr**3)
+            + (D / 4) * (T**4 - Tr**4)
+            + (E / 5) * (T**5 - Tr**5)
+        ) + h_form
+
+        return h
+
+    def entr(prefix, b, cobj, T):
+        # Specific entropy (eq_100)
+        T = pyunits.convert(T, to_units=pyunits.K)
+        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+
+        s = (A * log(T / Tr)
+            + B * (T - Tr)
+            + (C / 2) * (T ** 2 - Tr ** 2)
+            + (D / 3) * (T ** 3 - Tr ** 3)
+            + (E / 4) * (T ** 4 - Tr ** 4)
+        ) + cobj.entr_mol_form_vap_comp_ref
+
+        return s
+
+class eqn_106:
 
     @staticmethod
     def return_expression(prefix, b, cobj, T):
         # Ensuring temperature is in Kelvin
         T = pyunits.convert(T, to_units=pyunits.K)
         # Retrieving A-E coefficients based on prefix
-        A, B, C, D, E, units = ChemSepEqn.get_params(cobj, prefix)
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
         # Equation 106 taken from Chem Sep Book
         rho = params.A + params.B * T + params.C * T^2 + params.D * T^3 + params.E * T^4
         units = b.params.get_metadata().derived_units
         return pyunits.convert(rho, units.DENSITY_MOLE)
 
-class eqn_004(ChemSepEqn):
+class eqn_4:
 
     @staticmethod
     def build_parameters(prefix, doc, cobj):
         pass
 
-class eqn_016(ChemSepEqn):
+class eqn_16:
+
+    @staticmethod
+    def return_expression(prefix, b, cobj, T):
+        T = pyunits.convert(T, to_units=pyunits.K)
+
+        cp = (
+            cobj.cp_mol_liq_comp_coeff_A +
+            exp(
+                cobj.cp_mol_liq_comp_coeff_B / T
+                + cobj.cp_mol_liq_comp_coeff_C
+                + cobj.cp_mol_liq_comp_coeff_D * T
+                + cobj.cp_mol_liq_comp_coeff_E * T**2
+            )
+        )
+
+        units = b.params.get_metadata().derived_units
+        return pyunits.convert(cp, units.HEAT_CAPACITY_MOLE)
+        # # Ensuring temperature is in Kelvin
+        # T = pyunits.convert(T, to_units=pyunits.K)
+        # # Retrieving A-E coefficients based on prefix
+        # A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+        # # Equation 16 taken from Chem Sep Book
+        # eqn = (A + exp( B / T + C + D * T + E * T**2))
+        # print(eqn)
+        # return eqn
+    
+    def enth(prefix, b, cobj, T):
+        T = pyunits.convert(T, to_units=pyunits.K)
+        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+
+        units = b.params.get_metadata().derived_units
+
+        integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
+
+        h = (
+            pyunits.convert(
+                quad(integrand, Tr, T) + Tr,
+                units.ENERGY_MOLE,
+            )
+        )
+
+        return h
+        # # Specific enthalpy (eq_16)
+        # T = pyunits.convert(T, to_units=pyunits.K)
+        # Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+        # def integrand(T):
+        #     return eqn_16.return_expression(prefix, b, cobj, T)
+        # return pyunits.convert(quad(integrand, Tr, T) + Tr, units.ENERGY_MOLE)
+
+    def entr(prefix, b, cobj, T):
+        # Specific entropy
+        T = pyunits.convert(T, to_units=pyunits.K)
+        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+
+        units = b.params.get_metadata().derived_units
+
+        integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
+
+        s = (
+            pyunits.convert(
+                quad(integrand, Tr, T)/T + Tr,
+                units.ENERGY_MOLE,
+            )
+        )
+
+        return s
+        # # Specific entropy (eq_16)
+        # T = pyunits.convert(T, to_units=pyunits.K)
+        # Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+        # def integrand(T):
+        #     return eqn_16.return_expression(prefix, b, cobj, T)
+        # return pyunits.convert(quad(integrand, Tr, T) / T + Tr, units.ENTROPY_MOLE)
+
+class eqn_10:
+
+    @staticmethod
+    def return_expression(prefix, b, cobj, T):
+        # Ensuring temperature is in Kelvin
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        # Retrieving A-E coefficients based on prefix
+        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+        # Calculating final result
+        eqn = (exp(A - B / (T + C)))
+        return eqn
+
+class eqn_105:
 
     @staticmethod
     def build_parameters(prefix, doc, cobj):
         pass
 
-class eqn_010(ChemSepEqn):
-
-    @staticmethod
-    def build_parameters(prefix, doc, cobj):
-        pass
-
-class eqn_105(ChemSepEqn):
-
-    @staticmethod
-    def build_parameters(prefix, doc, cobj):
-        pass
+equation_map = {
+    "100": eqn_100,
+    "106": eqn_106,
+    "4": eqn_4,
+    "16": eqn_16,
+    "10": eqn_10,
+    "105": eqn_105,
+}

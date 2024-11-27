@@ -37,15 +37,16 @@ class components_parser(BuildBase):
 
         def build_coeff(compound: Compound, config_key: str, compound_key: str, config: Dict[str, Any]):
             config[config_key] = ChemSep
-            config["parameter_data"].update({f"{config_key}_coeff": {
-                "units": compound[compound_key]["units"],
-                "eqno": compound[compound_key]["eqno"],
-                "A": (compound[compound_key]["A"]),
-                "B": (compound[compound_key]["B"]),
-                "C": (compound[compound_key]["C"]),
-                "D": (compound[compound_key]["D"]),
-                "E": (compound[compound_key]["E"]),
-            }})
+            if compound_key is not None:
+                config["parameter_data"].update({f"{config_key}_coeff": {
+                    "units": compound[compound_key]["units"],
+                    "eqno": compound[compound_key]["eqno"],
+                    "A": (compound[compound_key]["A"]),
+                    "B": (compound[compound_key]["B"]),
+                    "C": (compound[compound_key]["C"]),
+                    "D": (compound[compound_key]["D"]),
+                    "E": (compound[compound_key]["E"]),
+                }})
             return config
 
         def serialise_component(compound: Compound) -> Dict[str, Any]:
@@ -62,12 +63,13 @@ class components_parser(BuildBase):
 
             keys = [
                 ["cp_mol_ig_comp", "IdealGasHeatCapacityCp"],
-                ["entr_mol_ig_comp", "RPPHeatCapacityCp"],
-                ["enth_mol_ig_comp", "RPPHeatCapacityCp"],
+                ["entr_mol_ig_comp", None],
+                ["enth_mol_ig_comp", None],
                 ["pressure_sat_comp", "AntoineVaporPressure"],
                 ["dens_mol_liq_comp", "LiquidDensity"],
-                ["entr_mol_liq_comp", "LiquidHeatCapacityCp"],
-                ["enth_mol_liq_comp", "LiquidHeatCapacityCp"]
+                ["cp_mol_liq_comp", "LiquidHeatCapacityCp"],
+                ["entr_mol_liq_comp", None],
+                ["enth_mol_liq_comp", None]
             ]
 
             for key in keys:
