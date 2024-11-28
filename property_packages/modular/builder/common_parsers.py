@@ -35,53 +35,39 @@ class components_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
 
-        def build_coeff(compound: Compound, config_key: str, compound_key: str, config: Dict[str, Any]):
-            config[config_key] = ChemSep
-
-           
-
-            if compound_key is not None:
-                print(f"Thingy: {config_key} other {compound[compound_key]["eqno"]}")
-                config["parameter_data"].update({f"{config_key}_coeff": {
-                    "units": compound[compound_key]["units"],
-                    "eqno": compound[compound_key]["eqno"],
-                    "A": (compound[compound_key]["A"]),
-                    "B": (compound[compound_key]["B"]),
-                    "C": (compound[compound_key]["C"]),
-                    "D": (compound[compound_key]["D"]),
-                    "E": (compound[compound_key]["E"]),
-                }})
-            return config
-
         def serialise_component(compound: Compound) -> Dict[str, Any]:
-            # configuration default to all components 
             config = {
                 "type": Component,
+                "entr_mol_ig_comp": ChemSep,
+                "enth_mol_ig_comp": ChemSep,
+                "entr_mol_liq_comp": ChemSep,
+                "enth_mol_liq_comp": ChemSep,
                 "parameter_data": {
-                    "mw": (compound["MolecularWeight"].value, pyunits.kg/pyunits.kilomol),
+                    "mw": (compound["MolecularWeight"].value, pyunits.kg / pyunits.kilomol),
                     "pressure_crit": (compound["CriticalPressure"].value, pyunits.Pa),
                     "temperature_crit": (compound["CriticalTemperature"].value, pyunits.K),
                     "omega": compound["AcentricityFactor"].value,
                 }
             }
 
-            print("====================================")
-            print(compound["RPPHeatCapacityCp"]["eqno"])
-            print("====================================")
-
             keys = [
                 ["cp_mol_ig_comp", "RPPHeatCapacityCp"],
-                ["entr_mol_ig_comp", None],
-                ["enth_mol_ig_comp", None],
                 ["pressure_sat_comp", "AntoineVaporPressure"],
                 ["dens_mol_liq_comp", "LiquidDensity"],
-                ["cp_mol_liq_comp", "LiquidHeatCapacityCp"],
-                ["entr_mol_liq_comp", None],
-                ["enth_mol_liq_comp", None]
+                ["cp_mol_liq_comp", "LiquidHeatCapacityCp"]
             ]
 
             for key in keys:
-                config = build_coeff(compound, key[0], key[1], config)
+                config[key[0]] = ChemSep
+                config["parameter_data"].update({f"{key[0]}_coeff": {
+                    "units": compound[key[1]]["units"],
+                    "eqno": compound[key[1]]["eqno"],
+                    "A": (compound[key[1]]["A"]),
+                    "B": (compound[key[1]]["B"]),
+                    "C": (compound[key[1]]["C"]),
+                    "D": (compound[key[1]]["D"]),
+                    "E": (compound[key[1]]["E"]),
+                }})
 
             # Unique logic
             valid_phase = valid_phases(compound)
@@ -90,26 +76,12 @@ class components_parser(BuildBase):
             else:
                 config["valid_phase_types"] = valid_phase
 
-            if compound["HeatOfFormation"] is not None:
-                config["parameter_data"].update({
-                    "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol)
-                })
-
-            if compound["AbsEntropy"] is not None:
-                config["parameter_data"].update({
-                    "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K)
-                })
-
-            if compound["LiquidHeatCapacityCp"] is not None:
-                config["parameter_data"].update({
-                    "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol)
-                })
-                config["parameter_data"].update({
-                    "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
-                }) 
-            else: 
-                # Compound only exists in vapor phase
-                config["parameter_data"].update({"valid_phase_types": PT.vaporphase})
+            config["parameter_data"].update({
+                "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol),
+                "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K),
+                "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol),
+                "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K),
+            })
 
             return config
 
@@ -122,7 +94,6 @@ class components_parser(BuildBase):
         
         components_output = {}
         for compound in compounds:
-            print(compound)
             components_output[compound["CompoundID"].value] = serialise_component(compound)
         return components_output
 

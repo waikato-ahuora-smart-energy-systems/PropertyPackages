@@ -36,10 +36,13 @@ def test_units():
     m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
     iscale.calculate_scaling_factors(m.fs.props)
     iscale.calculate_scaling_factors(m.fs.state[1])
-    
+
     assert_units_consistent(m)
 
-    #build_package("peng-robinson", ["benzene"], ["Liq", "Vap"])
+    m.fs.state[1].enth_mol_phase
+    m.fs.state[1].entr_mol_phase
 
-    #return m
+    assert value(m.fs.state[1].enth_mol_phase["Vap"]) == 4
+
+    
 

@@ -383,22 +383,47 @@ class eqn_4:
     @staticmethod
     def entr(b, cobj, T, prefix, units):
         # Specific entropy (eq_4)
-        T = value(pyunits.convert(T, to_units=pyunits.K))
-        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
-        integrand = lambda T: value(eqn_4.return_expression(b, cobj, T, prefix, "HEAT_CAPACITY_MOLE"))
-        s = quad(integrand, Tr, T)[0] / T + Tr
+        T = pyunits.convert(T, to_units=pyunits.K)
+        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
+
+        raise Exception(f"eq_units: {eqno}")
+
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
         converted_units = ChemSepEqn.get_units_from_unittype(b, units)
-        return s * converted_units
+
+        s = ((D / 3) * (T**3 - Tr**3)
+            + (C / 2) * (T**2 - Tr**2)
+            + B * (T - Tr)
+            + A * log(T / Tr)) * converted_units + cobj.entr_mol_form_vap_comp_ref
+
+        return s
     
     @staticmethod
     def enth(b, cobj, T, prefix, units):
         # Specific enthalpy (eq_4)
         T = value(pyunits.convert(T, to_units=pyunits.K))
         Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
-        integrand = lambda T: value(eqn_4.return_expression(b, cobj, T, prefix, "HEAT_CAPACITY_MOLE"))
-        h = quad(integrand, Tr, T)[0] + Tr
+
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
+
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
         converted_units = ChemSepEqn.get_units_from_unittype(b, units)
-        return h * converted_units
+
+        h_form = (
+            cobj.enth_mol_form_vap_comp_ref
+            if b.params.config.include_enthalpy_of_formation
+            else 0 * converted_units
+        )
+
+        h = pyunits.convert(
+            ((D / 4) * (T**4 - Tr**4)
+            + (C / 3) * (T**3 - Tr**3)
+            + (B / 2) * (T**2 - Tr**2)
+            + A * (T - Tr)) * eq_units, converted_units) + h_form
+
+        return h
 
 class eqn_16:
 
