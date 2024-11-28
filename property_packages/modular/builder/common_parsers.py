@@ -37,7 +37,11 @@ class components_parser(BuildBase):
 
         def build_coeff(compound: Compound, config_key: str, compound_key: str, config: Dict[str, Any]):
             config[config_key] = ChemSep
+
+           
+
             if compound_key is not None:
+                print(f"Thingy: {config_key} other {compound[compound_key]["eqno"]}")
                 config["parameter_data"].update({f"{config_key}_coeff": {
                     "units": compound[compound_key]["units"],
                     "eqno": compound[compound_key]["eqno"],
@@ -61,8 +65,12 @@ class components_parser(BuildBase):
                 }
             }
 
+            print("====================================")
+            print(compound["RPPHeatCapacityCp"]["eqno"])
+            print("====================================")
+
             keys = [
-                ["cp_mol_ig_comp", "IdealGasHeatCapacityCp"],
+                ["cp_mol_ig_comp", "RPPHeatCapacityCp"],
                 ["entr_mol_ig_comp", None],
                 ["enth_mol_ig_comp", None],
                 ["pressure_sat_comp", "AntoineVaporPressure"],
@@ -104,9 +112,6 @@ class components_parser(BuildBase):
                 config["parameter_data"].update({"valid_phase_types": PT.vaporphase})
 
             return config
-        
-        def coeffs(compound: Compound, key: str) -> Dict[str, Any]:
-            pass
 
         def valid_phases(compound: Compound) -> PT:
             # Assumption: Anything above hydrogen can exist as both liquid and vapor

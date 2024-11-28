@@ -25,11 +25,12 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
+            raise Exception("Does not need")
             return ChemSepEqn.return_expression(
                 prefix="cp_mol_ig_comp",
                 b=b, cobj=cobj, T=T, 
-                eqn_type="regular", 
-                end_units="HEAT_CAPACITY_MOLE"
+                eqn_type="heatcp", 
+                units="HEAT_CAPACITY_MOLE"
             )
 
     class enth_mol_ig_comp:
@@ -53,7 +54,7 @@ class ChemSep(object):
                 prefix="cp_mol_ig_comp",
                 b=b, cobj=cobj, T=T, 
                 eqn_type="enth", 
-                end_units="ENERGY_MOLE"
+                units="ENERGY_MOLE"
             )
 
     class entr_mol_ig_comp:
@@ -78,7 +79,7 @@ class ChemSep(object):
                 prefix="cp_mol_ig_comp",
                 b=b, cobj=cobj, T=T, 
                 eqn_type="entr", 
-                end_units="ENTROPY_MOLE"
+                units="ENTROPY_MOLE"
             )
             
     class pressure_sat_comp:
@@ -94,8 +95,8 @@ class ChemSep(object):
             return ChemSepEqn.return_expression(
                 prefix="pressure_sat_comp",
                 b=b, cobj=cobj, T=T, 
-                eqn_type="regular", 
-                end_units="PRESSURE"
+                eqn_type="heatcp", 
+                units="PRESSURE"
             )
     
     class cp_mol_liq_comp:
@@ -108,11 +109,12 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
+            raise Exception("Does not need")
             return ChemSepEqn.return_expression(
                 prefix="cp_mol_liq_comp",
                 b=b, cobj=cobj, T=T, 
-                eqn_type="regular", 
-                end_units="HEAT_CAPACITY_MOLE"
+                eqn_type="heatcp", 
+                units="HEAT_CAPACITY_MOLE"
             )
 
     class enth_mol_liq_comp:
@@ -132,11 +134,12 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
+            raise Exception("Does not need")
             return ChemSepEqn.return_expression(
                 prefix="cp_mol_liq_comp",
                 b=b, cobj=cobj, T=T, 
                 eqn_type="enth", 
-                end_units="ENERGY_MOLE"
+                units="ENERGY_MOLE"
             )
 
     class entr_mol_liq_comp:
@@ -155,11 +158,12 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T):
+            raise Exception("Does not need")
             return ChemSepEqn.return_expression(
                 prefix="cp_mol_liq_comp",
                 b=b, cobj=cobj, T=T, 
                 eqn_type="entr", 
-                end_units="ENTROPY_MOLE"
+                units="ENTROPY_MOLE"
             )
 
     class dens_mol_liq_comp:
@@ -175,63 +179,90 @@ class ChemSep(object):
             return ChemSepEqn.return_expression(
                 prefix="dens_mol_liq_comp",
                 b=b, cobj=cobj, T=T, 
-                eqn_type="regular", 
-                end_units="DENSITY_MOLE"
+                eqn_type="heatcp", 
+                units="DENSITY_MOLE"
             )
 
-EqnType = Literal["entr"] | Literal["enth"] | Literal["regular"]
+EqnType = Literal["entr"] | Literal["enth"] | Literal["heatcp"]
+UnitsType = Literal["HEAT_CAPCITY_MOLE"] | Literal["ENERGY_MOLE"] | Literal["ENTROPY_MOLE"] | Literal["DENSITY_MOLE"]
+PrefixType = Literal["cp_mol_ig_comp"] | ["enth_mol_ig_comp"] | ["entr_mol_ig_comp"] | ["pressure_sat_comp"] | ["cp_mol_liq_comp"] | ["enth_mol_liq_comp"] | ["entr_mol_liq_comp"] | ["dens_mol_liq_comp"]
 
 class ChemSepEqn:
 
     @staticmethod
-    def return_expression(prefix, b, cobj, T, eqn_type, end_units):
+    def get_unit_from_string(unit_str):
+
+        unit_dict = {
+            "K": pyunits.K,
+            "Pa": pyunits.Pa,
+            "m3/kmol": pyunits.m**3 / pyunits.kmol,
+            "kmol/m3": pyunits.kmol / pyunits.m**3,
+            "kg/kmol": pyunits.kg / pyunits.kmol,
+            "J/kmol": pyunits.J / pyunits.kmol,
+            "J/kmol/K": pyunits.J / (pyunits.kmol * pyunits.K),
+            "m": pyunits.m,
+            "_": pyunits.dimensionless,
+            "J0.5/m1.5": pyunits.J**0.5 / pyunits.m**1.5,
+            "Coulomb.m": pyunits.C * pyunits.m, # TODO: update
+            "m2/kmol": pyunits.m**2 / pyunits.kmol,
+            "W/m/K": pyunits.W / (pyunits.m * pyunits.K),
+            "N/m": pyunits.N / pyunits.m,
+            "kg0.25.m3/s0.5/kmol": pyunits.kg**0.25 * pyunits.m**3 / (pyunits.s**0.5 * pyunits.kmol),
+            "m3/kmol": pyunits.m**3 / pyunits.kmol,
+            "Pa.s": pyunits.Pa * pyunits.s,
+        }
+
+        try:
+            unit_str = value(unit_str)
+        except:
+            unit_str = unit_str
+
+        if unit_str in unit_dict:
+            return unit_dict[unit_str]
+        else:
+            raise Exception(f"Unit {unit_str} not found")
+            return None
+
+    @staticmethod
+    def get_units_from_unittype(b, units: UnitsType):
+        return b.params.get_metadata().derived_units.__getitem__(units)
+
+    @staticmethod
+    def return_expression(b, cobj, T, prefix: PrefixType, eqn_type: EqnType, units: UnitsType):
         """
         Generic return expression method which calls the appropriate equation method
 
         Args:
-            prefix : str
-                Prefix of the associated parameters
-            b : Block
-                Block object
-            cobj : Component
-                Component object
-            T : float
-                Temperature equation is evaluated at
-            eqn_str : str
-                Equation string
-            units : Any
-                Units
-        
+            prefix : PrefixType
+                Prefix of the associated coefficients
+
+            eqn_str : EqnType
+                Identifier for the equation type
+            
+            units : UnitsType
+                Final units for the expression
+    
         Returns:
-            float : Result of the equation
+            Pyomo expression
         """
 
-        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, "cp_mol_liq_comp")
+        A, B, C, D, E, eqno, _ = ChemSepEqn.get_params(cobj, prefix)
         
         if value(eqno) is None:
             raise Exception(f"Equation number not found for {prefix}")
-        
-        final_units = b.params.get_metadata().derived_units.__getitem__(end_units)
-        
-        if str(value(eqno)) in equation_map:
-            eqn_obj = equation_map[str(value(eqno))]
-            res = None
-
-            if eqn_type == "enth":
-                res = eqn_obj.enth(prefix, b, cobj, T)
-            elif eqn_type == "entr":
-                res = eqn_obj.entr(prefix, b, cobj, T)
-            elif eqn_type == "regular":
-                res = eqn_obj.return_expression(prefix, b, cobj, T)
-            else:
-                raise Exception("Invalid equation type")
-            
-            raise Exception(pyunits.get_units(units))
-            
-            return pyunits.convert(value(res) * units, final_units)
-
         else:
-            raise Exception(f"Equation {eqno} not found")
+            if str(value(eqno)) in equation_map:
+                eqn_obj = equation_map[str(value(eqno))]
+                if eqn_type == "enth":
+                    return eqn_obj.enth(b, cobj, T, prefix, units)
+                elif eqn_type == "entr":
+                    return eqn_obj.entr(b, cobj, T, prefix, units)
+                elif eqn_type == "heatcp":
+                    return eqn_obj.return_expression(b, cobj, T, prefix, units)
+                else:
+                    raise Exception(f"Invalid equation type: {eqn_type}")
+            else:
+                raise Exception(f"Equation {eqno} not found")
 
     @staticmethod
     def get_params(cobj, prefix):
@@ -249,42 +280,64 @@ class ChemSepEqn:
             ))
             set_param_from_config(cobj, param=f"{prefix}_coeff", index=name)
 
+"""
+
+Equations taken from ChemSep book
+
+http://www.chemsep.org/book/docs/book2.pdf
+
+All implementations except should evaluate the equations as according to the book
+using dimensionless coefficients A-E and temperature T. This value should then be
+converted to the appropriate final units as defined within the database. Before, 
+finally being converted to the desired units. Derived from the block using the
+identifier passed in.
+
+"""
+
+
 class eqn_100:
 
     @staticmethod
-    def return_expression(prefix, b, cobj, T):
+    def return_expression(b, cobj, T, prefix, units):
         # Ensuring temperature is in Kelvin
         T = pyunits.convert(T, to_units=pyunits.K)
-        # Retrieving A-E coefficients based on prefix
-        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
-        # Equation 100 taken from Chem Sep Book
-        rho = (A + B * T + C * T^2 + D * T^3 + E * T^4) * units
-        # Getting the final units
-        return rho
-    
-    def enth(prefix, b, cobj, T):
-        # Specific enthalpy (eq_100)
-        T = pyunits.convert(T, to_units=pyunits.K)
-        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
 
-        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+        # Retrieving A-E coefficients based on prefix
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
+
+        # Equation 100 taken from Chem Sep Book
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+        rho = (A + B * T + C * T^2 + D * T^3 + E * T^4) * eq_units
+
+        # Getting the final units
+        return pyunits.convert(rho, converted_units)
+    
+    def enth(b, cobj, T, prefix, units):
+        # Specific enthalpy (eq_100)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
+
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
+
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
 
         h_form = (
             cobj.enth_mol_form_vap_comp_ref
             if b.params.config.include_enthalpy_of_formation
-            else 0
+            else 0 * converted_units
         )
 
         h = (A * (T - Tr)
             + (B / 2) * (T**2 - Tr**2)
             + (C / 3) * (T**3 - Tr**3)
             + (D / 4) * (T**4 - Tr**4)
-            + (E / 5) * (T**5 - Tr**5)
-        ) + h_form
+            + (E / 5) * (T**5 - Tr**5)) * converted_units + h_form
 
         return h
 
-    def entr(prefix, b, cobj, T):
+    def entr(b, cobj, T, prefix, units):
         # Specific entropy (eq_100)
         T = pyunits.convert(T, to_units=pyunits.K)
         Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
@@ -303,7 +356,7 @@ class eqn_100:
 class eqn_106:
 
     @staticmethod
-    def return_expression(prefix, b, cobj, T):
+    def return_expression(b, cobj, T, prefix, units):
         # Ensuring temperature is in Kelvin
         T = pyunits.convert(T, to_units=pyunits.K)
         # Retrieving A-E coefficients based on prefix
@@ -316,46 +369,86 @@ class eqn_106:
 class eqn_4:
 
     @staticmethod
-    def build_parameters(prefix, doc, cobj):
-        pass
+    def return_expression(b, cobj, T, prefix, units):
+        # Ensuring temperature is in Kelvin
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        # Retrieving A-E coefficients based on prefix
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+        # Equation 4 taken from Chem Sep Book
+        eqn = (A + B * T + C * T**2 + D * T**3) * eq_units
+        return pyunits.convert(eqn, converted_units)
+    
+    @staticmethod
+    def entr(b, cobj, T, prefix, units):
+        # Specific entropy (eq_4)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
+        integrand = lambda T: value(eqn_4.return_expression(b, cobj, T, prefix, "HEAT_CAPACITY_MOLE"))
+        s = quad(integrand, Tr, T)[0] / T + Tr
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+        return s * converted_units
+    
+    @staticmethod
+    def enth(b, cobj, T, prefix, units):
+        # Specific enthalpy (eq_4)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
+        integrand = lambda T: value(eqn_4.return_expression(b, cobj, T, prefix, "HEAT_CAPACITY_MOLE"))
+        h = quad(integrand, Tr, T)[0] + Tr
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+        return h * converted_units
 
 class eqn_16:
 
     @staticmethod
-    def return_expression(prefix, b, cobj, T):
+    def return_expression(b, cobj, T, prefix, units):
         # Ensuring temperature is in Kelvin
-        if pyunits.get_units(T) != pyunits.dimensionless:
+        if pyunits.get_units(T) != pyunits.dimensionless: # This check is required for the enthalpy calculation
             T = value(pyunits.convert(T, to_units=pyunits.K))
+        
         # Retrieving A-E coefficients based on prefix
-        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
+
+        # Converting string to pyomo units
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+
         # Equation 16 taken from Chem Sep Book
-        eqn = (A + exp( B / T + C + D * T + E * T**2))
-        return eqn
+        eqn = (A + exp( B / T + C + D * T + E * T**2)) * eq_units
+
+        if(prefix == "cp_mol_liq_comp"):
+            # Equation 16 taken from Chem Sep Book
+            raise Exception(eqn)
+
+        return pyunits.convert(eqn, converted_units)
 
     @staticmethod
-    def enth(prefix, b, cobj, T):
+    def enth(b, cobj, T, prefix, units):
         # Specific enthalpy (eq_16)
         T = value(pyunits.convert(T, to_units=pyunits.K))
         Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
-        def integrand(T):
-            return value(eqn_16.return_expression(prefix, b, cobj, T))
+        integrand = lambda T: value(eqn_16.return_expression(b, cobj, T, prefix, "HEAT_CAPACITY_MOLE"))
         h = quad(integrand, Tr, T)[0] + Tr
-        return h
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+        return h * converted_units
 
     @staticmethod
-    def entr(prefix, b, cobj, T):
+    def entr(b, cobj, T, prefix, units):
         # Specific entropy (eq_16)
         T = value(pyunits.convert(T, to_units=pyunits.K))
         Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
         def integrand(T):
-            return value(eqn_16.return_expression(prefix, b, cobj, T))
+            return value(eqn_16.return_expression(b, cobj, T, prefix, "HEAT_CAPACITY_MOLE"))
         s = quad(integrand, Tr, T)[0] / T + Tr
-        return s
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+        return s * converted_units
 
 class eqn_10:
 
     @staticmethod
-    def return_expression(prefix, b, cobj, T):
+    def return_expression(b, cobj, T, prefix, units):
         # Ensuring temperature is in Kelvin
         T = value(pyunits.convert(T, to_units=pyunits.K))
         # Retrieving A-E coefficients based on prefix
@@ -364,17 +457,10 @@ class eqn_10:
         eqn = (exp(A - B / (T + C)))
         return eqn
 
-class eqn_105:
-
-    @staticmethod
-    def build_parameters(prefix, doc, cobj):
-        pass
-
 equation_map = {
     "100": eqn_100,
-    "106": eqn_106,
-    "4": eqn_4,
-    "16": eqn_16,
     "10": eqn_10,
-    "105": eqn_105,
+    "16": eqn_16,
+    "106": eqn_106,
+    "4": eqn_4
 }
