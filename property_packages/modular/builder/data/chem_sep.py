@@ -300,7 +300,7 @@ class eqn_100:
     @staticmethod
     def return_expression(b, cobj, T, prefix, units):
         # Ensuring temperature is in Kelvin
-        T = pyunits.convert(T, to_units=pyunits.K)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
 
         # Retrieving A-E coefficients based on prefix
         A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
@@ -339,17 +339,20 @@ class eqn_100:
 
     def entr(b, cobj, T, prefix, units):
         # Specific entropy (eq_100)
-        T = pyunits.convert(T, to_units=pyunits.K)
-        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
 
-        A, B, C, D, E, eqno, units = ChemSepEqn.get_params(cobj, prefix)
+        A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
 
-        s = (A * log(T / Tr)
+        eq_units = ChemSepEqn.get_unit_from_string(eq_units)
+        converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+
+        s = pyunits.convert((A * log(T / Tr)
             + B * (T - Tr)
             + (C / 2) * (T ** 2 - Tr ** 2)
             + (D / 3) * (T ** 3 - Tr ** 3)
             + (E / 4) * (T ** 4 - Tr ** 4)
-        ) + cobj.entr_mol_form_vap_comp_ref
+        ) * eq_units, converted_units) + cobj.entr_mol_form_vap_comp_ref
 
         return s
 
@@ -372,10 +375,12 @@ class eqn_4:
     def return_expression(b, cobj, T, prefix, units):
         # Ensuring temperature is in Kelvin
         T = value(pyunits.convert(T, to_units=pyunits.K))
+
         # Retrieving A-E coefficients based on prefix
         A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
         eq_units = ChemSepEqn.get_unit_from_string(eq_units)
         converted_units = ChemSepEqn.get_units_from_unittype(b, units)
+
         # Equation 4 taken from Chem Sep Book
         eqn = (A + B * T + C * T**2 + D * T**3) * eq_units
         return pyunits.convert(eqn, converted_units)
@@ -383,20 +388,18 @@ class eqn_4:
     @staticmethod
     def entr(b, cobj, T, prefix, units):
         # Specific entropy (eq_4)
-        T = pyunits.convert(T, to_units=pyunits.K)
-        Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+        T = value(pyunits.convert(T, to_units=pyunits.K))
+        Tr = value(pyunits.convert(b.params.temperature_ref, to_units=pyunits.K))
 
         A, B, C, D, E, eqno, eq_units = ChemSepEqn.get_params(cobj, prefix)
-
-        raise Exception(f"eq_units: {eqno}")
 
         eq_units = ChemSepEqn.get_unit_from_string(eq_units)
         converted_units = ChemSepEqn.get_units_from_unittype(b, units)
 
-        s = ((D / 3) * (T**3 - Tr**3)
+        s = pyunits.convert(((D / 3) * (T**3 - Tr**3)
             + (C / 2) * (T**2 - Tr**2)
             + B * (T - Tr)
-            + A * log(T / Tr)) * converted_units + cobj.entr_mol_form_vap_comp_ref
+            + A * log(T / Tr)) * eq_units, converted_units) + cobj.entr_mol_form_vap_comp_ref
 
         return s
     
@@ -411,17 +414,23 @@ class eqn_4:
         eq_units = ChemSepEqn.get_unit_from_string(eq_units)
         converted_units = ChemSepEqn.get_units_from_unittype(b, units)
 
-        h_form = (
-            cobj.enth_mol_form_vap_comp_ref
-            if b.params.config.include_enthalpy_of_formation
-            else 0 * converted_units
-        )
+        aunits = b.params.get_metadata().derived_units
 
-        h = pyunits.convert(
-            ((D / 4) * (T**4 - Tr**4)
-            + (C / 3) * (T**3 - Tr**3)
-            + (B / 2) * (T**2 - Tr**2)
-            + A * (T - Tr)) * eq_units, converted_units) + h_form
+        raise Exception(aunits.ENERGY_MOLE)
+
+        #raise Exception(eq_units)
+
+        # h_form = (
+        #     cobj.enth_mol_form_vap_comp_ref
+        #     if b.params.config.include_enthalpy_of_formation
+        #     else 0 * converted_units
+        # )
+
+        h = pyunits.convert((
+                (D / 4) * (T**4 - Tr**4)
+                + (C / 3) * (T**3 - Tr**3)
+                + (B / 2) * (T**2 - Tr**2)
+                + A * (T - Tr)) * eq_units, converted_units) + cobj.enth_mol_form_vap_comp_ref
 
         return h
 
