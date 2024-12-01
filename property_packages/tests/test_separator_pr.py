@@ -29,14 +29,18 @@ from idaes.models.properties.modular_properties.examples.CO2_H2O_Ideal_VLE impor
 # DOF = Number of Model Variables - Number of Model Constraints
 from idaes.core.util.model_statistics import degrees_of_freedom
 
+from pyomo.environ import ConcreteModel, SolverFactory, value, units
+
 # Import the build function to create a property package
 from ..build_package import build_package
 
+from .separator_config import config
 
 def test_separator():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False)
-    m.fs.properties = build_package("peng-robinson", ["water", "carbon dioxide"], ["Liq", "Vap"])
+    #m.fs.properties = build_package("peng-robinson", ["water", "carbon dioxide"], ["Liq", "Vap"])
+    m.fs.properties = GenericParameterBlock(**config)
 
     m.fs.sep_1 = Separator(
         property_package=m.fs.properties,
@@ -56,14 +60,13 @@ def test_separator():
 
     m.fs.sep_1.split_fraction[0, "a1"].fix(0.2)
     m.fs.sep_1.split_fraction[0, "b1"].fix(0.5)
-    # Directly setting the split fraction of c1 will cause the DOF check to fail
 
     assert degrees_of_freedom(m) == 0
 
     m.fs.sep_1.initialize()
 
-    solver = get_solver()
-    results = solver.solve(m)
+    solver = SolverFactory('ipopt')
+    solver.solve(m, tee=True)
 
     m.fs.sep_1.report()
 

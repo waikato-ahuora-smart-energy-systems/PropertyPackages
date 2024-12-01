@@ -36,21 +36,17 @@ def assert_approx(value, expected_value, error_margin):
     tolerance = abs(percent_error * expected_value)
     assert approx(value, abs=tolerance) == expected_value
 
-def test_mixer():
+def test():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False)
-    m.fs.props = build_package("peng-robinson", ["benzene", "toluene"], ["Liq", "Vap"])
+    m.fs.props = build_package("peng-robinson", ["carbon dioxide", "benzene"], ["Liq", "Vap"])
     m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
 
-    m.fs.state[1].flow_mol.fix(200)
+    m.fs.state[1].flow_mol.fix(1)
+    m.fs.state[1].mole_frac_comp["carbon dioxide"].fix(0.5)
     m.fs.state[1].mole_frac_comp["benzene"].fix(0.5)
-    m.fs.state[1].mole_frac_comp["toluene"].fix(0.5)
-
     m.fs.state[1].pressure.fix(101325)
-    m.fs.state[1].temperature.fix(354.61)
-
-    m.fs.state[1].enth_mol_phase
-    m.fs.state[1].entr_mol_phase
+    m.fs.state[1].temperature.fix(300)
 
     m.fs.state.initialize()
 

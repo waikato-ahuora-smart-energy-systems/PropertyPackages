@@ -291,3 +291,54 @@ class ChemSep(object):
             )
 
             return s
+
+    class dens_mol_liq_comp:
+        @staticmethod
+        def build_parameters(cobj):
+            cobj.dens_mol_liq_comp_coeff_A = Var(
+                doc="Parameter A for liquid phase molar density",
+                units=pyunits.kmol / pyunits.m**3,
+            )
+            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="A")
+
+            cobj.dens_mol_liq_comp_coeff_B = Var(
+                doc="Parameter B for liquid phase molar density",
+                units=pyunits.dimensionless,
+            )
+            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="B")
+
+            cobj.dens_mol_liq_comp_coeff_C = Var(
+                doc="Parameter C for liquid phase molar density",
+                units=pyunits.dimensionless,
+            )
+            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="C")
+
+            cobj.dens_mol_liq_comp_coeff_D = Var(
+                doc="Parameter D for liquid phase molar density",
+                units=pyunits.dimensionless,
+            )
+            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="D")
+
+            cobj.dens_mol_liq_comp_coeff_E = Var(
+                doc="Parameter E for liquid phase molar density",
+                units=pyunits.dimensionless,
+            )
+            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="E")
+
+        @staticmethod
+        def return_expression(b, cobj, T):
+            # Molar density
+            Tr = pyunits.convert(b.params.temperature_ref, to_units=pyunits.K)
+
+            rho = (
+                cobj.dens_mol_liq_comp_coeff_A * (1 - Tr) ^
+                (
+                    cobj.dens_mol_liq_comp_coeff_B
+                    + cobj.dens_mol_liq_comp_coeff_C * Tr
+                    + cobj.dens_mol_liq_comp_coeff_D * Tr**2
+                    + cobj.dens_mol_liq_comp_coeff_E * Tr**3
+                )
+            )
+
+            units = b.params.get_metadata().derived_units
+            return pyunits.convert(rho, units.MOLAR_DENSITY)

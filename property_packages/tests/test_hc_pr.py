@@ -91,7 +91,6 @@ def initialize_model(model):
     model.props.initialize(optarg={"tol": 1e-6})
 
 class TestParamBlock(object):
-    @pytest.mark.unit
     def test_build(self):
         model = ConcreteModel()
         model.params = build_package("peng-robinson", ["methane", "hydrogen", "ethane", "propane", 

@@ -121,8 +121,17 @@ class components_parser(BuildBase):
                         "3": (compound["LiquidDensity"]["C"], pyunits.K),
                         "4": (compound["LiquidDensity"]["D"], None),
                     }})
+                elif compound["LiquidDensity"]["eqno"] == 106:
+                    config["dens_mol_liq_comp"] = ChemSep
+                    config["parameter_data"].update({"dens_mol_liq_comp_coeff": {
+                        "A": (compound["LiquidDensity"]["A"], pyunits.kmol / pyunits.m**3),
+                        "B": (compound["LiquidDensity"]["B"], None),
+                        "C": (compound["LiquidDensity"]["C"], None),
+                        "D": (compound["LiquidDensity"]["D"], None),
+                        "E": (compound["LiquidDensity"]["E"], None),
+                    }})
                 else:
-                    raise ValueError("No Liquid Density Equation Data")
+                    raise ValueError(f"No Liquid Density Equation Data {compound["LiquidDensity"]["eqno"]}")
             else:
                 raise ValueError("No Liquid Density Data")
 
