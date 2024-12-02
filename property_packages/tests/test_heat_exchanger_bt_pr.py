@@ -59,7 +59,5 @@ def test_heat_exchanger():
     solver = SolverFactory('ipopt')
     result = solver.solve(m)
 
-    m.fs.heat_exchanger.report()
-
     assert value(m.fs.heat_exchanger.shell.properties_out[0].temperature) == approx(373.13, abs=1e-2)
     assert_approx(value(m.fs.heat_exchanger.tube.properties_out[0].temperature), 369.24, 0.5)

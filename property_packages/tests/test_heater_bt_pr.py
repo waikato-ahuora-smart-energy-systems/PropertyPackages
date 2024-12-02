@@ -37,8 +37,6 @@ def test_heater():
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
 
-    m.fs.heater.heat_duty.display()
-
     assert_approx(value(_get_state_from_port(m.fs.heater.outlet,0).temperature), 363, 0.2)
     assert value(m.fs.heater.outlet.pressure[0]) == approx(101325)
     assert value(m.fs.heater.outlet.flow_mol[0]) == approx(1000/3600)

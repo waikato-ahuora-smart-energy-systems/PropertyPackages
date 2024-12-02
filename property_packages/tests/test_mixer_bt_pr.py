@@ -83,6 +83,3 @@ def test_mixer():
     assert value(inlet_2.flow_mol_phase["Liq"]) == approx(100, abs=1e-2)
     assert value(outlet.temperature) == approx(354.5, abs=1e-1)
     assert value(outlet.pressure) == approx(101325*2, abs=1e-2)
-
-
-    m.fs.mixer_1.report()

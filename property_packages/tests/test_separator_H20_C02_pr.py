@@ -31,28 +31,29 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
+from idaes.core.util.tables import _get_state_from_port
+
 # Import the build function to create a property package
 from ..build_package import build_package
 
-from .separator_config import config
+from pytest import approx
 
 def test_separator():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False)
     m.fs.properties = build_package("peng-robinson", ["water", "carbon dioxide"], ["Liq", "Vap"])
-    #m.fs.properties = GenericParameterBlock(**config)
 
     m.fs.sep_1 = Separator(
         property_package=m.fs.properties,
         split_basis=SplittingType.totalFlow,
-        outlet_list=["a1", "b1", "c1"],  # creates three outlet streams
+        outlet_list=["a1", "b1", "c1"],
         ideal_separation=False,
         has_phase_equilibrium=False,
     )
 
     assert degrees_of_freedom(m) == 7
 
-    m.fs.sep_1.inlet.flow_mol.fix(10) # converting to mol/s as unit basis is mol/s
+    m.fs.sep_1.inlet.flow_mol.fix(10) # mol/s
     m.fs.sep_1.inlet.mole_frac_comp[0, "water"].fix(0.9)
     m.fs.sep_1.inlet.mole_frac_comp[0, "carbon dioxide"].fix(0.1)
     m.fs.sep_1.inlet.pressure.fix(101325) # Pa
@@ -68,14 +69,23 @@ def test_separator():
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
 
-    m.fs.sep_1.report()
+    assert value(m.fs.sep_1.a1_state[0].flow_mol) == approx(2)
+    assert value(m.fs.sep_1.b1_state[0].flow_mol) == approx(5)
+    assert value(m.fs.sep_1.c1_state[0].flow_mol) == approx(3)
 
-    # assert results.solver.termination_condition == "optimal"
+    assert value(m.fs.sep_1.a1_state[0].mole_frac_comp["water"]) == approx(0.9)
+    assert value(m.fs.sep_1.a1_state[0].mole_frac_comp["carbon dioxide"]) == approx(0.1)
 
-    # assert value(m.fs.separator.outlet_1.flow_mol[0]) == 0.5
-    # assert value(m.fs.separator.outlet_1.mole_frac_comp[0, "H2O"]) == 1
-    # assert value(m.fs.separator.outlet_1.mole_frac_comp[0, "CO2"]) == 0
+    assert value(m.fs.sep_1.b1_state[0].mole_frac_comp["water"]) == approx(0.9)
+    assert value(m.fs.sep_1.b1_state[0].mole_frac_comp["carbon dioxide"]) == approx(0.1)
 
-    # assert value(m.fs.separator.outlet_2.flow_mol[0]) == 0.5
-    # assert value(m.fs.separator.outlet_2.mole_frac_comp[0, "H2O"]) == 0
-    # assert value(m.fs.separator.outlet_2.mole_frac_comp[0, "CO2"]) == 1
+    assert value(m.fs.sep_1.c1_state[0].mole_frac_comp["water"]) == approx(0.9)
+    assert value(m.fs.sep_1.c1_state[0].mole_frac_comp["carbon dioxide"]) == approx(0.1)
+
+    assert value(m.fs.sep_1.a1_state[0].pressure) == approx(101325)
+    assert value(m.fs.sep_1.b1_state[0].pressure) == approx(101325)
+    assert value(m.fs.sep_1.c1_state[0].pressure) == approx(101325)
+
+    assert value(m.fs.sep_1.a1_state[0].temperature) == approx(353)
+    assert value(m.fs.sep_1.b1_state[0].temperature) == approx(353)
+    assert value(m.fs.sep_1.c1_state[0].temperature) == approx(353)
