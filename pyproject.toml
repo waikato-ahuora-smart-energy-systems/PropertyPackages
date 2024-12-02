@@ -6,11 +6,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ahuora-compounds"
-version = "0.0.1"
+version = "0.0.2"
 
 authors = [
   { name="Example Author", email="author@example.com" },
 ]
+
 description = "Package for compounds and property packages"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -18,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+
 dependencies = [
     "typing-validation",
     "pydantic"
