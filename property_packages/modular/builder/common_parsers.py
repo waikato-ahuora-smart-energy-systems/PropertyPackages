@@ -131,7 +131,7 @@ class components_parser(BuildBase):
                         "E": (compound["LiquidDensity"]["E"], None),
                     }})
                 else:
-                    raise ValueError(f"No Liquid Density Equation Data {compound["LiquidDensity"]["eqno"]}")
+                    raise ValueError("No Liquid Density Equation Data")
             else:
                 raise ValueError("No Liquid Density Data")
 
