@@ -192,18 +192,18 @@ class TestParamBlock(object):
             ]
 
         assert model.params.phase_equilibrium_list == {
-            "PE1": {"methane": ("Vap", "Liq")},
-            "PE2": {"ethane": ("Vap", "Liq")},
-            "PE3": {"propane": ("Vap", "Liq")},
-            "PE4": {"n-butane": ("Vap", "Liq")},
-            "PE5": {"isobutane": ("Vap", "Liq")},
-            "PE6": {"ethylene": ("Vap", "Liq")},
-            "PE7": {"propylene": ("Vap", "Liq")},
-            "PE8": {"1-butene": ("Vap", "Liq")},
-            "PE9": {"1-pentene": ("Vap", "Liq")},
-            "PE10": {"1-hexene": ("Vap", "Liq")},
-            "PE11": {"1-heptene": ("Vap", "Liq")},
-            "PE12": {"1-octene": ("Vap", "Liq")},
+            "PE1": ["methane", ("Vap", "Liq")],
+            "PE2": ["ethane", ("Vap", "Liq")],
+            "PE3": ["propane", ("Vap", "Liq")],
+            "PE4": ["n-butane", ("Vap", "Liq")],
+            "PE5": ["isobutane", ("Vap", "Liq")],
+            "PE6": ["ethylene", ("Vap", "Liq")],
+            "PE7": ["propylene", ("Vap", "Liq")],
+            "PE8": ["1-butene", ("Vap", "Liq")],
+            "PE9": ["1-pentene", ("Vap", "Liq")],
+            "PE10": ["1-hexene", ("Vap", "Liq")],
+            "PE11": ["1-heptene", ("Vap", "Liq")],
+            "PE12": ["1-octene", ("Vap", "Liq")],
         }
 
         assert model.params.pressure_ref.value == 101325

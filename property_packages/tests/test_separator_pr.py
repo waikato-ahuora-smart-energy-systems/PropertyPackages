@@ -39,8 +39,8 @@ from .separator_config import config
 def test_separator():
     m = ConcreteModel()
     m.fs = FlowsheetBlock(dynamic=False)
-    #m.fs.properties = build_package("peng-robinson", ["water", "carbon dioxide"], ["Liq", "Vap"])
-    m.fs.properties = GenericParameterBlock(**config)
+    m.fs.properties = build_package("peng-robinson", ["water", "carbon dioxide"], ["Liq", "Vap"])
+    #m.fs.properties = GenericParameterBlock(**config)
 
     m.fs.sep_1 = Separator(
         property_package=m.fs.properties,

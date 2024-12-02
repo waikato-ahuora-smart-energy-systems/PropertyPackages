@@ -41,6 +41,7 @@ config = {
             'enth_mol_liq_comp': ChemSep,
             'entr_mol_ig_comp': RPP4,
             'entr_mol_liq_comp': ChemSep,
+            'valid_phase_types': PT.vaporPhase,
             'parameter_data': {
                 'cp_mol_ig_comp_coeff': {
                     'A': (19800.0, pyunits.J / pyunits.mol / pyunits.K),
@@ -76,7 +77,6 @@ config = {
                 },
                 'temperature_crit': (304.21, pyunits.K),
             },
-            'phase_equilibrium_form': {('Vap', 'Liq'): log_fugacity},
             'pressure_sat_comp': ChemSep,
             'type': Component,
         },
@@ -154,13 +154,13 @@ config = {
     },
 
     'phases_in_equilibrium': [('Vap', 'Liq')],
-
+    
     'pressure_ref': (101325, pyunits.Pa),
 
     'state_bounds': {
         'flow_mol': (0, 100, 1000, pyunits.mol / pyunits.s),
         'pressure': (50000.0, 100000.0, 1000000.0, pyunits.Pa),
-        'temperature': (216.58, 150, 350, pyunits.K),
+        'temperature': (216.58, 250, 400, pyunits.K),
     },
 
     'state_definition': FTPx,
