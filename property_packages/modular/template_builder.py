@@ -12,7 +12,7 @@ https://idaes-pse.readthedocs.io/en/stable/explanations/components/property_pack
 
 """
 
-def build_config(property_package_name, compound_names: List[str], valid_states: List[States]=["Liq", "Vap"]) -> dict[str,any]:
+def build_config(property_package_name, compound_names: List[str], valid_states: List[States]) -> dict[str,any]:
 
   # Build list of compound objects
 
