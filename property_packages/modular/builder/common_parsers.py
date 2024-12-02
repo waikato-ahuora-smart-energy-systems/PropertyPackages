@@ -274,6 +274,12 @@ class state_bounds_parser(BuildBase):
                 "temperature": (min_melting_point, 200, 400, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             }
+        elif (min_critical_temperature > 120):
+            return {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (min_melting_point, 150, 500, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            }
         else:
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
