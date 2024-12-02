@@ -121,6 +121,15 @@ class components_parser(BuildBase):
                         "3": (compound["LiquidDensity"]["C"], pyunits.K),
                         "4": (compound["LiquidDensity"]["D"], None),
                     }})
+                elif compound["LiquidDensity"]["eqno"] == 106:
+                    config["dens_mol_liq_comp"] = ChemSep
+                    config["parameter_data"].update({"dens_mol_liq_comp_coeff": {
+                        "A": (compound["LiquidDensity"]["A"], pyunits.kmol / pyunits.m**3),
+                        "B": (compound["LiquidDensity"]["B"], None),
+                        "C": (compound["LiquidDensity"]["C"], None),
+                        "D": (compound["LiquidDensity"]["D"], None),
+                        "E": (compound["LiquidDensity"]["E"], None),
+                    }})
                 else:
                     raise ValueError("No Liquid Density Equation Data")
             else:
@@ -177,8 +186,11 @@ class components_parser(BuildBase):
             return config
         
         def valid_phases(compound: Compound) -> PT:
+            if compound["NormalMeltingPointTemperature"].value > compound["NormalBoilingPointTemperature"].value:
+                # no liquid phase exists (sublimation)
+                return PT.vaporPhase
             # Assumption: Anything above hydrogen can exist as both liquid and vapor
-            if compound["NormalBoilingPointTemperature"].value >= 21:
+            elif compound["NormalBoilingPointTemperature"].value >= 21:           
                 return [PT.liquidPhase, PT.vaporPhase]
             else:
                 return PT.vaporPhase
@@ -229,13 +241,27 @@ class state_bounds_parser(BuildBase):
     """
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
+
         min_melting_point = min([compound["NormalMeltingPointTemperature"].value for compound in compounds])
         min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
 
-        if(min_critical_temperature > 500):
+        # TODO: Refactor this logic, need a more versatile approach
+        if (min_critical_temperature > 500):
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
                 "temperature": (min_melting_point, 300, 500, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            }
+        elif (min_critical_temperature > 300):
+            return {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (min_melting_point, 200, 400, pyunits.K),
+                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            }
+        elif (min_critical_temperature > 120):
+            return {
+                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+                "temperature": (min_melting_point, 150, 500, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             }
         else:
