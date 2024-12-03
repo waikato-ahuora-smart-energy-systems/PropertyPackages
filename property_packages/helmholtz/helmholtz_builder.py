@@ -6,6 +6,7 @@ from idaes.models.properties.general_helmholtz import (
     StateVars,
     AmountBasis
 )
+from .helmholtz_extended import HelmholtzExtendedParameterBlock
 from .parameters import register_compounds
 
 # Add the "parameters" directory to the path so that the Helmholtz EOS can find the parameter files.
@@ -22,7 +23,7 @@ def build_helmholtz_package(compound_list: List[str]):
         component = compound_list[0]
         if component in registered_components():
             # Build and return a helmholtz property package for this compound
-            return HelmholtzParameterBlock(pure_component=component,
+            return HelmholtzExtendedParameterBlock(pure_component=component,
                                             phase_presentation=PhaseType.MIX,
                                             state_vars=StateVars.PH,
                                             amount_basis=AmountBasis.MOLE)
