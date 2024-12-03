@@ -3,7 +3,7 @@ from .helmholtz.helmholtz_builder import build_helmholtz_package
 from property_packages.types import PackageName, States
 from typing import List, Optional
 
-def build_package(package_name: PackageName, compound_list: List[str], valid_states: List[States]): # type: ignore
+def build_package(package_name: PackageName, compound_list: List[str], valid_states: List[States]=["Liq", "Vap"]): # type: ignore
 
     if valid_states is None:
         valid_states = ["Liq", "Vap"]
