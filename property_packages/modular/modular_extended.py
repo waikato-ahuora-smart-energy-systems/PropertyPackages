@@ -1,6 +1,7 @@
 # extends the IDAES helmholtz property package to include additional properties and methods.
 from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
 from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
+from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock, _GenericStateBlock, GenericParameterData, GenericStateBlockData
 from idaes.core import declare_process_block_class
 from property_packages.utils.add_extra_expressions import add_extra_expressions
 from pyomo.environ import Constraint, Block
@@ -8,22 +9,33 @@ from pyomo.core.base.expression import Expression, ScalarExpression, _GeneralExp
 from pyomo.core.base.var import IndexedVar, ScalarVar, Var, _GeneralVarData,VarData
 import idaes.logger as idaeslog
 
+# NOTE:
+# THis only works for FTPx formulation right now.
 
-class _ExtendedStateBlock(_StateBlock):
+
+class _ExtendedGenericStateBlock(_GenericStateBlock):
     """
     This class contains methods which should be applied to Property Blocks as a
     whole, rather than individual elements of indexed Property Blocks.
     """
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs) 
+        super().__init__(*args, **kwargs)  # Missing argument
 
     def initialize(self, *args, **kwargs):
+        print("GETTING STATE")
         hold_state = kwargs.pop("hold_state", False)
         for i, v in self.items():
+            print(f"State block {i}")
+            print(f"block data: {v}")
             v.constraints.deactivate()
+        print("ACTIVATING CONSTRAINTS")
         res = super().initialize(*args, **kwargs)
         flags = {}
+        print("STATE BLOCKS")
+        print(self.items())
         for i, v in self.items():
+            print(f"STATE {i}")
+            print(f"BLOCK DATA {v}")
             v.constraints.activate()
             flags[i] = {}
             if hold_state:
@@ -32,7 +44,7 @@ class _ExtendedStateBlock(_StateBlock):
                     # We need to fix the flow_mol variable
                     flags[i]["flow_mol"] = True
                     v.flow_mol.fix()
-                avaliable_constraints = ["enth_mass","temperature","entr_mass","smooth_temperature","vapor_frac"]
+                avaliable_constraints = ["enth_mass","temperature","entr_mass","entr_mol","smooth_temperature","vapor_frac"]
                 if not v.enth_mol.is_fixed():
                     # check if any of the constraints exist
                     found_constraint = False
@@ -61,16 +73,18 @@ class _ExtendedStateBlock(_StateBlock):
                         # we need to fix the variable
                         flags[i]["pressure"] = True
                         v.pressure.fix() 
+        print("WE DONE")
         return flags
     
     def release_state(self, flags, outlvl=idaeslog.NOTSET):
+        print("RELEASING STATE")
         for i, v in self.items():
             for key in flags[i]:
                 getattr(v,key).unfix()
     
 
-@declare_process_block_class("HelmholtzExtendedStateBlock", block_class=_ExtendedStateBlock)
-class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData):
+@declare_process_block_class("GenericExtendedStateBlock", block_class=_ExtendedGenericStateBlock)
+class GenericExtendedStateBlockData(GenericStateBlockData):
 
     def build(self, *args):
         super().build(*args)
@@ -93,9 +107,9 @@ class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData):
         else:
             raise Exception(f"Variable {self} {name} is not a Var or Expression: {type(var)}")
 
-@declare_process_block_class("HelmholtzExtendedParameterBlock")
-class HelmholtzExtendedParameterBlockData(HelmholtzParameterBlockData):
+@declare_process_block_class("GenericExtendedParameterBlock")
+class GenericExtendedParameterData(GenericParameterData):
     def build(self):
         super().build()
         # set that we should use the extended state block
-        self._state_block_class = HelmholtzExtendedStateBlock # type: ignore because it'll get created with declare_process_block_class
+        self._state_block_class = GenericExtendedStateBlock # type: ignore because it'll get created with declare_process_block_class
