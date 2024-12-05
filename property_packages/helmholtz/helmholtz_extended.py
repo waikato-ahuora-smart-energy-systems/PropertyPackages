@@ -32,7 +32,7 @@ class _ExtendedStateBlock(_StateBlock):
                     # We need to fix the flow_mol variable
                     flags[i]["flow_mol"] = True
                     v.flow_mol.fix()
-                avaliable_constraints = ["enth_mass","temperature","total_energy_flow","entr_mass","entr_mol","smooth_temperature","vapor_frac"]
+                avaliable_constraints = ["enth_mass","temperature","total_energy_flow","entr_mass","entr_mol","smooth_temperature","custom_vapor_frac"]
                 if not v.enth_mol.is_fixed():
                     # check if any of the constraints exist
                     found_constraint = False
