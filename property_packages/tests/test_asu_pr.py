@@ -18,7 +18,7 @@ from idaes.core.util.model_statistics import (
 )
 from idaes.core.solvers import get_solver
 
-from idaes.models.properties.modular_properties.state_definitions import FTPx
+from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
@@ -70,7 +70,7 @@ class TestParamBlock(object):
                 ("Vap", "oxygen"),
             ]
 
-        assert model.params.config.state_definition == FTPx
+        assert model.params.config.state_definition == FPhx
 
         assertStructuredAlmostEqual(
             model.params.config.state_bounds,

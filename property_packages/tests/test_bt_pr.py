@@ -14,7 +14,7 @@ from pyomo.util.check_units import assert_units_consistent
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from pyomo.environ import  check_optimal_termination, ConcreteModel, Objective
 import idaes.core.util.scaling as iscale
-
+from idaes.core.util.model_statistics import degrees_of_freedom
 solver = get_solver(solver="ipopt")
 
 import idaes.logger as idaeslog
@@ -65,16 +65,20 @@ def test_T_sweep():
   m.fs.obj = Objective(expr=(m.fs.state[1].temperature - 510) ** 2)
   m.fs.state[1].temperature.setub(600)
 
+  # Tests a variety of pressures, and makes sure that the benzene-toluene mixture
+  # can move from liquid to vapor phase at each pressure
   for logP in [9.5, 10, 10.5, 11, 11.5, 12]:
       m.fs.obj.deactivate()
 
       m.fs.state[1].flow_mol.fix(100)
       m.fs.state[1].mole_frac_comp["benzene"].fix(0.5)
       m.fs.state[1].mole_frac_comp["toluene"].fix(0.5)
-      m.fs.state[1].temperature.fix(300)
       m.fs.state[1].pressure.fix(10 ** (0.5 * logP))
-
       m.fs.state.initialize()
+      m.fs.state[1].temperature.fix(300)
+
+      results = solver.solve(m)
+      assert m.fs.state[1].flow_mol_phase["Vap"].value <= 1e-2
 
       m.fs.state[1].temperature.unfix()
       m.fs.obj.activate()
@@ -84,17 +88,20 @@ def test_T_sweep():
       assert check_optimal_termination(results)
       assert m.fs.state[1].flow_mol_phase["Liq"].value <= 1e-2
 
+
 def test_P_sweep():
   m = get_m()
 
+  # Tests initiialization at a variety of temperatures.
   for T in range(370, 500, 25):
       m.fs.state[1].flow_mol.fix(100)
       m.fs.state[1].mole_frac_comp["benzene"].fix(0.5)
       m.fs.state[1].mole_frac_comp["toluene"].fix(0.5)
-      m.fs.state[1].temperature.fix(T)
       m.fs.state[1].pressure.fix(1e5)
       print(T)
       m.fs.state.initialize()
+      # Fix temperature (after initialisation, because otherwise the solver will complain about too few degrees of freedom)
+      m.fs.state[1].temperature.fix(T)
 
       results = solver.solve(m)
 
@@ -106,6 +113,8 @@ def test_P_sweep():
           assert check_optimal_termination(results)
 
           m.fs.state[1].pressure.value = m.fs.state[1].pressure.value + 1e5
+      # unfix temperature for next iteration
+      m.fs.state[1].temperature.unfix()
 
 def test_T350_P1_x5():
   m = get_m()
