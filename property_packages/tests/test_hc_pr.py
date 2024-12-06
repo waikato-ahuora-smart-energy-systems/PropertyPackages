@@ -164,6 +164,7 @@ class TestParamBlock(object):
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
                 "temperature": (13.95, 150, 350, pyunits.K),
+                "enth_mol": (1000, 30000, 150000, pyunits.J/pyunits.mol),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,

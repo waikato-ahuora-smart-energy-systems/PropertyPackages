@@ -77,6 +77,7 @@ class TestParamBlock(object):
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
                 "temperature": (54.361, 150, 500, pyunits.K),
+                "enth_mol": (1000, 30000, 150000, pyunits.J/pyunits.mol),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,
@@ -154,14 +155,14 @@ class TestStateBlock(object):
 
         assert len(sv) == 4
         for i in sv:
-            assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
+            assert i in ["flow_mol", "mole_frac_comp", "enth_mol", "pressure"]
 
     def test_define_port_members(self, model):
         sv = model.props[1].define_state_vars()
 
         assert len(sv) == 4
         for i in sv:
-            assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
+            assert i in ["flow_mol", "mole_frac_comp", "enth_mol", "pressure"]
 
     def test_define_display_vars(self, model):
         sv = model.props[1].define_display_vars()
@@ -171,7 +172,7 @@ class TestStateBlock(object):
             assert i in [
                 "Total Molar Flowrate",
                 "Total Mole Fraction",
-                "Temperature",
+                "Molar Enthalpy",
                 "Pressure",
             ]
 

@@ -54,7 +54,7 @@ def get_m():
   m.fs.props = build_package("peng-robinson", ["benzene", "toluene"], ["Liq", "Vap"])
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
   iscale.calculate_scaling_factors(m.fs.props)
-  iscale.calculate_scaling_factors(sb)
+  iscale.calculate_scaling_factors(m.fs.state[1])
   return m
 
 def test_T_sweep():
@@ -75,13 +75,19 @@ def test_T_sweep():
       sb.mole_frac_comp["benzene"].fix(0.5)
       sb.mole_frac_comp["toluene"].fix(0.5)
       sb.pressure.fix(10 ** (0.5 * logP))
+
+      assert degrees_of_freedom(sb) == 1
+
       m.fs.state.initialize()
       sb.temperature.fix(300)
+
+      assert degrees_of_freedom(sb) == 0
 
       results = solver.solve(m)
       assert sb.flow_mol_phase["Vap"].value <= 1e-2
 
       sb.temperature.unfix()
+      assert degrees_of_freedom(sb) == 1
       m.fs.obj.activate()
 
       results = solver.solve(m)
@@ -357,7 +363,7 @@ def test_basic_scaling():
   m = get_m()
   sb = m.fs.state[1]
   
-  assert len(sb.scaling_factor) == 23
+  assert len(sb.scaling_factor) == 23 
   assert sb.scaling_factor[sb.flow_mol] == 1e-2
   assert sb.scaling_factor[sb.flow_mol_phase["Liq"]] == 1e-2
   assert sb.scaling_factor[sb.flow_mol_phase["Vap"]] == 1e-2
