@@ -30,6 +30,11 @@ def test_heater_bt():
     m.fs.heater.inlet.temperature.fix(353)
     m.fs.heater.heat_duty.fix(459.10147722222354)
 
+    m.fs.heater.control_volume.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
+
     m.fs.heater.initialize()
 
     assert degrees_of_freedom(m) == 0
@@ -55,6 +60,11 @@ def test_heater_asu():
     m.fs.heater.inlet.pressure.fix(100000)
     m.fs.heater.inlet.temperature.fix(units.convert_temp_C_to_K(25))
     m.fs.heater.outlet.temperature.fix(units.convert_temp_C_to_K(50))
+
+    m.fs.heater.control_volume.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
 
     m.fs.heater.initialize()
 

@@ -6,7 +6,7 @@ from pyomo.environ import units as pyunits
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
 from idaes.core import LiquidPhase, VaporPhase, Component, PhaseType as PT
-from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE)
+from idaes.models.properties.modular_properties.phase_equil import (CubicComplementarityVLE)
 from idaes.models.properties.modular_properties.phase_equil.forms import log_fugacity
 from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
 from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
@@ -203,7 +203,7 @@ class components_parser(BuildBase):
 class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return {("Vap", "Liq"): SmoothVLE}
+        return {("Vap", "Liq"): CubicComplementarityVLE}
 
 class phases_parser(BuildBase):
     @staticmethod
