@@ -9,7 +9,7 @@ from pyomo.core.base.expression import Expression, ScalarExpression, _GeneralExp
 from pyomo.core.base.var import IndexedVar, ScalarVar, Var, _GeneralVarData,VarData
 import idaes.logger as idaeslog
 from pyomo.environ import SolverFactory
-
+from idaes.core.util.model_statistics import degrees_of_freedom
 # NOTE:
 # THis only works for FTPx formulation right now.
 
@@ -25,6 +25,22 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
         super().__init__(*args, **kwargs)  # Missing argument
 
     def initialize(self, *args, **kwargs):
+        if (degrees_of_freedom(self) == 0):
+            # TODO: this per block, rather than degrees of freedom for the whole model
+            print("skipping initialization")
+            for i,b in self.items():
+                s = SolverFactory('ipopt')
+                res = s.solve(b, tee=True)
+            return {}
+
+        print("Initial State")
+        for i,b in self.items():
+            for var in b.component_data_objects(Var):
+                if var.is_fixed():
+                    print(f"{var.name} = {var.value}")
+
+
+        
         hold_state = kwargs.pop("hold_state", False)
         deactivated_vars = {}
         for i, b in self.items():
@@ -41,8 +57,29 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                     
                 
         kwargs["hold_state"] = True # this is done to avoid release_state being called by super().initialize
+
+
+
+        print("State at deactivation")
+        for i,b in self.items():
+            for var in b.component_data_objects(Var):
+                if var.is_fixed():
+                    print(f"{var.name} = {var.value}")
+        print(degrees_of_freedom(self))
         res = super().initialize(*args, **kwargs)
+        print(degrees_of_freedom(self))
         super().release_state(res) # release the state after initialization, so we can just fix the variables we need to fix.
+        print(degrees_of_freedom(self))
+
+
+        for i,b in self.items():
+            for var in b.component_data_objects(Var):
+                if var.is_fixed():
+                    print(f"{var.name} = {var.value}")
+
+
+
+
         flags = {}
         print(self.items())
         # reactivate the variables that were deactivated

@@ -1,7 +1,7 @@
 # Build and solve a heater block.
 from ..build_package import build_package
 from pytest import approx
-
+from idaes.core.util.tables import _get_state_from_port
 # Import objects from pyomo package 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
@@ -45,7 +45,8 @@ def test_heat_exchanger_bt():
     m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "benzene"].fix(0.4)
     m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "toluene"].fix(0.6)
     m.fs.heat_exchanger.tube_inlet.pressure.fix(101325) # Pa
-    m.fs.heat_exchanger.tube_inlet.temperature[0].fix(350) # K
+    tube_inlet = _get_state_from_port(m.fs.heat_exchanger.tube_inlet,0)
+    tube_inlet.temperature.fix(350) # K
 
     assert degrees_of_freedom(m) == 2
 
@@ -90,7 +91,8 @@ def test_heat_exchanger_asu():
     m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "argon"].fix(0.33)
     m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
     m.fs.heat_exchanger.tube_inlet.pressure.fix(100000) # Pa
-    m.fs.heat_exchanger.tube_inlet.temperature[0].fix((25 + 273.15)*units.K)
+    tube_inlet = _get_state_from_port(m.fs.heat_exchanger.tube_inlet,0)
+    tube_inlet.temperature.fix((25 + 273.15)*units.K)
 
     assert degrees_of_freedom(m) == 2
 

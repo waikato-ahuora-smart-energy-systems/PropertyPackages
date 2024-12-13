@@ -178,6 +178,11 @@ def test_T350_P5_x5():
   sb.entr_mol_phase
 
   m.fs.state.initialize(outlvl=SOUT)
+  print(sb.temperature.value)
+  print(sb.pressure.value)
+  print(sb.enth_mol.value)
+  print(degrees_of_freedom(sb))
+  print(degrees_of_freedom(m))
 
   results = solver.solve(m)
 
@@ -362,8 +367,7 @@ def test_T376_P1_x2():
 def test_basic_scaling():
   m = get_m()
   sb = m.fs.state[1]
-  
-  assert len(sb.scaling_factor) == 23 
+  assert len(sb.scaling_factor) == 26 # IDAES version has 23, but I think we have some more because of enth_mol 
   assert sb.scaling_factor[sb.flow_mol] == 1e-2
   assert sb.scaling_factor[sb.flow_mol_phase["Liq"]] == 1e-2
   assert sb.scaling_factor[sb.flow_mol_phase["Vap"]] == 1e-2

@@ -23,6 +23,7 @@ from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
+import idaes.logger as idaeslog
 from ..build_package import build_package
 
 solver = get_solver("ipopt")
@@ -77,7 +78,7 @@ class TestParamBlock(object):
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
                 "temperature": (54.361, 150, 500, pyunits.K),
-                "enth_mol": (1000, 30000, 150000, pyunits.J/pyunits.mol),
+                "enth_mol": (-80000, 30000, 150000, pyunits.J/pyunits.mol),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,
@@ -190,7 +191,7 @@ class TestStateBlock(object):
         orig_fixed_vars = fixed_variables_set(model)
         orig_act_consts = activated_constraints_set(model)
 
-        model.props.initialize(optarg={"tol": 1e-6})
+        model.props.initialize(optarg={"tol": 1e-6},outlvl = idaeslog.DEBUG)
 
         assert degrees_of_freedom(model) == 0
 

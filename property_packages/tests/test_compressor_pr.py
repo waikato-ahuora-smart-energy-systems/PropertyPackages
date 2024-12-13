@@ -28,9 +28,10 @@ def test_compressor_asu():
         thermodynamic_assumption=ThermodynamicAssumption.isentropic,
         compressor=True)
 
+    sb = _get_state_from_port(m.fs.compressor.inlet,0)
     m.fs.compressor.inlet.flow_mol[0].fix(1*units.kilomol/units.hour)
     m.fs.compressor.inlet.pressure.fix(200000 * units.Pa) # doesn't work from 100,000
-    m.fs.compressor.inlet.temperature.fix((273.15+25) * units.K)
+    sb.temperature.fix((273.15+25) * units.K) # Temperature is not on port
     m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(0.33)
     m.fs.compressor.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
     m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
@@ -58,10 +59,11 @@ def test_expander_asu():
         property_package=m.fs.properties, 
         thermodynamic_assumption=ThermodynamicAssumption.adiabatic,
         compressor=False)
-
+    
+    sb = _get_state_from_port(m.fs.compressor.inlet,0)
     m.fs.compressor.inlet.flow_mol[0].fix(1*units.kilomol/units.hour)
     m.fs.compressor.inlet.pressure.fix(1000000 * units.Pa)
-    m.fs.compressor.inlet.temperature.fix((273.15+25) * units.K)
+    sb.temperature.fix((273.15+25) * units.K)
     m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(0.33)
     m.fs.compressor.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
     m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)

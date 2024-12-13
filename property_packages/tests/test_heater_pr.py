@@ -1,7 +1,7 @@
 # Build and solve a heater block.
 from ..build_package import build_package
 from pytest import approx
-
+from idaes.core.util.tables import _get_state_from_port
 # Import objects from pyomo package 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
@@ -27,7 +27,8 @@ def test_heater_bt():
     m.fs.heater.inlet.mole_frac_comp[0, "benzene"].fix(0.4)
     m.fs.heater.inlet.mole_frac_comp[0, "toluene"].fix(0.6)
     m.fs.heater.inlet.pressure.fix(101325)
-    m.fs.heater.inlet.temperature.fix(353)
+    inlet = _get_state_from_port(m.fs.heater.inlet,0)
+    inlet.temperature.fix(353)
     m.fs.heater.heat_duty.fix(459.10147722222354)
 
     m.fs.heater.initialize()
@@ -53,7 +54,8 @@ def test_heater_asu():
     m.fs.heater.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
     m.fs.heater.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
     m.fs.heater.inlet.pressure.fix(100000)
-    m.fs.heater.inlet.temperature.fix(units.convert_temp_C_to_K(25))
+    inlet = _get_state_from_port(m.fs.heater.inlet,0)
+    inlet.temperature.fix(units.convert_temp_C_to_K(25))
     m.fs.heater.outlet.temperature.fix(units.convert_temp_C_to_K(50))
 
     m.fs.heater.initialize()
@@ -72,8 +74,10 @@ def test_heater_asu():
     m.fs.heater2.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
     m.fs.heater2.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
     m.fs.heater2.inlet.pressure.fix(100000)
-    m.fs.heater2.inlet.temperature.fix(units.convert_temp_C_to_K(25))
-    m.fs.heater2.outlet.temperature.fix(units.convert_temp_C_to_K(-15))
+    inlet = _get_state_from_port(m.fs.heater2.inlet,0)
+    inlet.temperature.fix(units.convert_temp_C_to_K(25))
+    outlet = _get_state_from_port(m.fs.heater2.outlet,0)
+    outlet.temperature.fix(units.convert_temp_C_to_K(-15))
 
     m.fs.heater2.initialize()
 
