@@ -107,11 +107,11 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
 
         # if zero degrees of freedom, resovle the model with these constraints
         # Todo: resolve the model with whatever constraints are active, and guess the rest if degrees of freedom > 0
-        for i,b in self.items():
-            if degrees_of_freedom(b) == 0:
-                s = SolverFactory('ipopt')
-                res = s.solve(b, tee=True)
-                print("init:11o",res.solver.termination_condition)
+        # for i,b in self.items():
+        #     if degrees_of_freedom(b) == 0:
+        #         s = SolverFactory('ipopt')
+        #         res = s.solve(b, tee=True)
+        #         print("init:11o",res.solver.termination_condition)
 
         for i, b in self.items():
             print("activating constraints")
@@ -177,17 +177,17 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                         flags[i]["pressure"] = True
                         b.pressure.fix() 
         # Solve again with new constraints
-        print("State at end initialization,hold state = ", hold_state,"dof", degrees_of_freedom(self))
-        for i,b in self.items():
-            if degrees_of_freedom(b) == 0:
-                print("solving again")
-                s = SolverFactory('ipopt')
-                res = s.solve(b, tee=True)
-                print("init:end",res.solver.termination_condition)
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
+        # print("State at end initialization,hold state = ", hold_state,"dof", degrees_of_freedom(self))
+        # for i,b in self.items():
+        #     if degrees_of_freedom(b) == 0:
+        #         print("solving again")
+        #         s = SolverFactory('ipopt')
+        #         res = s.solve(b, tee=True)
+        #         print("init:end",res.solver.termination_condition)
+        # for i,b in self.items():
+        #     for var in b.component_data_objects(Var):
+        #         if var.is_fixed():
+        #             print(f"{var.name} = {var.value}")
         print("-----")
         print("Flags",flags)
 
@@ -224,12 +224,12 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                 if var.is_fixed():
                     print(f"{var.name} = {var.value}")
         # REsolve block
-        for i,b in self.items():
-            if degrees_of_freedom(b) == 0:
-                print("release_state solving again")
-                s = SolverFactory('ipopt')
-                res = s.solve(b, tee=True)
-                print("release:end", b.name ,res.solver.termination_condition)
+        # for i,b in self.items():
+        #     if degrees_of_freedom(b) == 0:
+        #         print("release_state solving again")
+        #         s = SolverFactory('ipopt')
+        #         res = s.solve(b, tee=True)
+        #         print("release:end", b.name ,res.solver.termination_condition)
         print("------------------------------------")
         print("release state end", self)
         print(degrees_of_freedom(self))
