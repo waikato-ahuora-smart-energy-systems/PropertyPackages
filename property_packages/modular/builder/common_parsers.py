@@ -246,34 +246,13 @@ class state_bounds_parser(BuildBase):
         min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
 
         # TODO: Refactor this logic, need a more versatile approach
-        if (min_critical_temperature > 500):
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 300, 500, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-                "enth_mol": (-80000, 30000, 150000, pyunits.J/pyunits.mol),
-            }
-        elif (min_critical_temperature > 300):
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 200, 400, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-                "enth_mol": (-80000, 30000, 150000, pyunits.J/pyunits.mol),
-            }
-        elif (min_critical_temperature > 120):
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 150, 500, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-                "enth_mol": (-80000, 30000, 150000, pyunits.J/pyunits.mol),
-            }
-        else:
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 150, 350, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-                "enth_mol": (-80000, 30000, 150000, pyunits.J/pyunits.mol),
-            }
+        return {
+            "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+            "temperature": (max(min_melting_point-50,1), 300, 500, pyunits.K),
+            "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+            "enth_mol": (-300000, 30000, 150000, pyunits.J/pyunits.mol),
+        }
+
 
 class state_definition_parser(BuildBase):
     @staticmethod

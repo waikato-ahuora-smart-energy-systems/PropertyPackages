@@ -77,8 +77,8 @@ class TestParamBlock(object):
             model.params.config.state_bounds,
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (54.361, 150, 500, pyunits.K),
-                "enth_mol": (-80000, 30000, 150000, pyunits.J/pyunits.mol),
+                "temperature": (4.360999999999997, 300, 500, pyunits.K),
+                "enth_mol": (-300000, 30000, 150000, pyunits.J/pyunits.mol),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,
@@ -140,9 +140,9 @@ class TestStateBlock(object):
         assert model.props[1].pressure.lb == 5e4
 
         assert isinstance(model.props[1].temperature, Var)
-        assert value(model.props[1].temperature) == 150
+        assert value(model.props[1].temperature) == 300
         assert model.props[1].temperature.ub == 500
-        assert model.props[1].temperature.lb == 54.361
+        assert_approx(model.props[1].temperature.lb, 4.361,0.1)
 
         assert isinstance(model.props[1].mole_frac_comp, Var)
         assert len(model.props[1].mole_frac_comp) == 3
