@@ -25,31 +25,13 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
         super().__init__(*args, **kwargs)  # Missing argument
 
     def initialize(self, *args, **kwargs):
-        print("------------------------------------")
-        print("Starting initialization of ", self, "dof", degrees_of_freedom(self)) 
-        print("------------------------------------")
-
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
         if (degrees_of_freedom(self) == 0):
             # TODO: this per block, rather than degrees of freedom for the whole model
-            print("trying initial solve")
             for i,b in self.items():
-                print(degrees_of_freedom(b))
                 s = SolverFactory('ipopt')
                 res = s.solve(b, tee=False)
                 print(res.solver.termination_condition)
             #return {} # Trying just to still run normal initialization anyways
-
-        print("Initial State")
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-
-
         
         hold_state = kwargs.pop("hold_state", False)
         deactivated_vars = {}
@@ -70,39 +52,15 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
 
 
 
-        print("State at deactivation")
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        print("Dof before:", degrees_of_freedom(self))
-        print("-----")
-
         res = super().initialize(*args, **kwargs)
-        print("dof after initialise:" , degrees_of_freedom(self))
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        print("-----")
         super().release_state(res) # release the state after initialization, so we can just fix the variables we need to fix.
-        print("Dof after release:",degrees_of_freedom(self))
-
-        print("State after initialization")
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        print("-----")
 
 
 
         flags = {}
-        [print(v) for v in self.items()]
         # reactivate the variables that were deactivated
         for i, b in self.items():
             for name, value, in deactivated_vars[i].items():
-                print("reactivating",name)
                 getattr(b,name).fix(value)
 
         # if zero degrees of freedom, resovle the model with these constraints
@@ -114,7 +72,6 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
         #         print("init:11o",res.solver.termination_condition)
 
         for i, b in self.items():
-            print("activating constraints")
             b.constraints.activate()
             flags[i] = {}
             if hold_state:
@@ -176,68 +133,14 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                         # we need to fix the variable
                         flags[i]["pressure"] = True
                         b.pressure.fix() 
-        # Solve again with new constraints
-        # print("State at end initialization,hold state = ", hold_state,"dof", degrees_of_freedom(self))
-        # for i,b in self.items():
-        #     if degrees_of_freedom(b) == 0:
-        #         print("solving again")
-        #         s = SolverFactory('ipopt')
-        #         res = s.solve(b, tee=True)
-        #         print("init:end",res.solver.termination_condition)
-        # for i,b in self.items():
-        #     for var in b.component_data_objects(Var):
-        #         if var.is_fixed():
-        #             print(f"{var.name} = {var.value}")
-        print("-----")
-        print("Flags",flags)
-
-        print("------------------------------------")
-        print("init state end", self)
-        print(degrees_of_freedom(self))
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        print("------------------------------------")
         return flags
     
     def release_state(self, flags, outlvl=idaeslog.NOTSET):
-        print("------------------------------------")
-        print("release state,", self, flags)
-        print(degrees_of_freedom(self))
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        print("------------------------------------")
-
-        
-        print([b.name for i,b in self.items()])
         for i, v in self.items():
             if i not in flags:
                 continue
             for key in flags[i]:
                 getattr(v,key).unfix()
-        print("release state end")
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        # REsolve block
-        # for i,b in self.items():
-        #     if degrees_of_freedom(b) == 0:
-        #         print("release_state solving again")
-        #         s = SolverFactory('ipopt')
-        #         res = s.solve(b, tee=True)
-        #         print("release:end", b.name ,res.solver.termination_condition)
-        print("------------------------------------")
-        print("release state end", self)
-        print(degrees_of_freedom(self))
-        for i,b in self.items():
-            for var in b.component_data_objects(Var):
-                if var.is_fixed():
-                    print(f"{var.name} = {var.value}")
-        print("------------------------------------")
 
     
 
