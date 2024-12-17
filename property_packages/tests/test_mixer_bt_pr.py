@@ -52,14 +52,16 @@ def test_mixer():
     m.fs.mixer_1.inlet_1.mole_frac_comp[0, "benzene"].fix(0.999)
     m.fs.mixer_1.inlet_1.mole_frac_comp[0, "toluene"].fix(0.001)
     m.fs.mixer_1.inlet_1.pressure.fix(101325*2) # Pa
-    m.fs.mixer_1.inlet_1.temperature.fix(353) # K
+    inlet_1 = _get_state_from_port(m.fs.mixer_1.inlet_1,0)
+    inlet_1.temperature.fix(353) # K
 
     # Toluene stream
     m.fs.mixer_1.inlet_2.flow_mol.fix(100) # converting to mol/s as unit basis is mol/s
     m.fs.mixer_1.inlet_2.mole_frac_comp[0, "benzene"].fix(0.001)
     m.fs.mixer_1.inlet_2.mole_frac_comp[0, "toluene"].fix(0.999)
     m.fs.mixer_1.inlet_2.pressure.fix(101325*4) # Pa
-    m.fs.mixer_1.inlet_2.temperature.fix(356) # K
+    inlet_2 = _get_state_from_port(m.fs.mixer_1.inlet_2,0)
+    inlet_2.temperature.fix(356) # K
 
     assert degrees_of_freedom(m) == 0
 
@@ -81,5 +83,6 @@ def test_mixer():
     assert value(inlet_1.flow_mol_phase["Liq"]) == approx(100, abs=1e-2)
     assert value(inlet_2.flow_mol_phase["Vap"]) == approx(0, abs=1e-2)
     assert value(inlet_2.flow_mol_phase["Liq"]) == approx(100, abs=1e-2)
-    assert value(outlet.temperature) == approx(354.5, abs=1e-1)
+    outlet_sb = _get_state_from_port(m.fs.mixer_1.outlet,0)
+    assert value(outlet_sb.temperature) == approx(354.5, abs=1e-1)
     assert value(outlet.pressure) == approx(101325*2, abs=1e-2)

@@ -56,7 +56,8 @@ def test_heater_asu():
     m.fs.heater.inlet.pressure.fix(100000)
     inlet = _get_state_from_port(m.fs.heater.inlet,0)
     inlet.temperature.fix(units.convert_temp_C_to_K(25))
-    m.fs.heater.outlet.temperature.fix(units.convert_temp_C_to_K(50))
+    outlet = _get_state_from_port(m.fs.heater.outlet,0)
+    outlet.temperature.fix(units.convert_temp_C_to_K(50))
 
     m.fs.heater.initialize()
 
