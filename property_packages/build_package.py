@@ -11,6 +11,8 @@ def build_package(package_name: PackageName, compound_list: List[str], valid_sta
     match package_name:
         case "peng-robinson":
             return build_config("peng-robinson", compound_list, valid_states)
+        case "coolprop":
+            return build_config("coolprop", compound_list, valid_states)
         case "helmholtz":
             return build_helmholtz_package(compound_list)
         case "nrtl":

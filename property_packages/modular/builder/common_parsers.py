@@ -13,7 +13,14 @@ from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
 from property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
 from property_packages.types import States
+from idaes.models.properties.modular_properties.pure.ConstantProperties import Constant
 import csv
+
+from idaes.models.properties.modular_properties.coolprop.coolprop_wrapper import (
+    CoolPropWrapper,
+    CoolPropExpressionError,
+    CoolPropPropertyError,
+)
 
 class base_units_parser(BuildBase):
     @staticmethod
@@ -319,3 +326,42 @@ class pr_kappa_parser(BuildBase):
                 kappa_parameters[(compound2["CompoundID"].value, compound1["CompoundID"].value)] = kappa_value
 
         return {"PR_kappa": kappa_parameters}
+
+class cool_prop_components_parser(BuildBase):
+    
+    @staticmethod
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
+    
+        def serialise_component(compound: Compound) -> Dict[str, Any]:
+
+            # configuration default to all components 
+            return {
+                "type": Component,
+                "dens_mol_liq_comp": CoolPropWrapper,
+                "enth_mol_liq_comp": CoolPropWrapper,
+                "enth_mol_ig_comp": Constant,
+                "entr_mol_liq_comp": CoolPropWrapper,
+                "entr_mol_ig_comp": Constant,
+                "pressure_sat_comp": CoolPropWrapper,
+                "phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
+                "parameter_data": {
+                    "mw": CoolPropWrapper,
+                    "dens_mol_crit": CoolPropWrapper,
+                    "pressure_crit": CoolPropWrapper,
+                    "temperature_crit": CoolPropWrapper,
+                    "omega": CoolPropWrapper,
+                    "cp_mol_ig_comp_coeff": 0,
+                    "enth_mol_form_ig_comp_ref": 0,
+                    "entr_mol_form_ig_comp_ref": 0,
+                    "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol),
+                    "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K),
+                    "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol),
+                    "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K)
+                }
+            }
+        
+        components_output = {}
+        for compound in compounds:
+            components_output[compound["CompoundID"].value] = serialise_component(compound)
+        return components_output
+    
