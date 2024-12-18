@@ -63,8 +63,6 @@ def relative_error(a, e):
     return f"{abs((a - e)/(e))*100:.3f}%"
     #return {a, e}
 
-
-
 def test_cs_vs_cp():
 
     m = ConcreteModel()

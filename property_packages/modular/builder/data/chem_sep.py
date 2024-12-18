@@ -8,44 +8,39 @@ IDAES naming conventions followed for compatibility with modular property packag
 
 from pyomo.environ import log, exp, units as pyunits
 from idaes.core.util.misc import set_param_from_config
+from compounds.CompoundDB import get_compound
 from pyomo.environ import units as u
 from pyomo.environ import Var, value
 from scipy.integrate import quad
 
+name_map = {
+    "enth_mol_form_vap_comp_ref": "HeatOfFormation",
+    "entr_mol_form_vap_comp_ref": "AbsEntropy",
+    "enth_mol_form_liq_comp_ref": 0,
+    "entr_mol_form_liq_comp_ref": 0,
+    "mw": "MolecularWeight",
+    "omega": "AcentricityFactor",
+    "pressure_crit": "CriticalPressure",
+    "temperature_crit": "CriticalTemperature",
+}
+
 class ChemSep(object):
+
+    _cached_components = {}
+
+    @staticmethod
+    def get_parameter_value(name, param):
+        map_prop = name_map[param]
+        if map_prop is None:
+            raise Exception("Unrecognized parameter in ChemSep wrapper")
+        else:
+            return ChemSep._get_property(name, map_prop)
 
     class cp_mol_ig_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.cp_mol_ig_comp_coeff_A = Var(
-                doc="Parameter A for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="A")
-
-            cobj.cp_mol_ig_comp_coeff_B = Var(
-                doc="Parameter B for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 2,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="B")
-
-            cobj.cp_mol_ig_comp_coeff_C = Var(
-                doc="Parameter C for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 3,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="C")
-
-            cobj.cp_mol_ig_comp_coeff_D = Var(
-                doc="Parameter D for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 4,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="D")
-
-            cobj.cp_mol_ig_comp_coeff_E = Var(
-                doc="Parameter E for ideal gas molar heat capacity",
-                units=pyunits.J / pyunits.kilomol / pyunits.K ** 5,
-            )
-            set_param_from_config(cobj, param="cp_mol_ig_comp_coeff", index="E")
+            ChemSep._create_params(cobj, "cp_mol_ig_comp_coeff")
+            ChemSep._set_params(cobj, "cp_mol_ig_comp_coeff")
 
         @staticmethod
         def return_expression(b, cobj, T):
@@ -145,23 +140,8 @@ class ChemSep(object):
     class pressure_sat_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.pressure_sat_comp_coeff_A = Var(
-                doc="Antoine A coefficient for calculating P-sat",
-                units=pyunits.dimensionless
-            )
-            set_param_from_config(cobj, param="pressure_sat_comp_coeff", index="A")
-
-            cobj.pressure_sat_comp_coeff_B = Var(
-                doc="Antoine B coefficient for calculating P-sat",
-                units=pyunits.K
-            )
-            set_param_from_config(cobj, param="pressure_sat_comp_coeff", index="B")
-
-            cobj.pressure_sat_comp_coeff_C = Var(
-                doc="Antoine C coefficient for calculating P-sat",
-                units=pyunits.K
-            )
-            set_param_from_config(cobj, param="pressure_sat_comp_coeff", index="C")
+            ChemSep._create_params(cobj, "pressure_sat_comp_coeff")
+            ChemSep._set_params(cobj, "pressure_sat_comp_coeff")
 
         @staticmethod
         def return_expression(b, cobj, T, dT=False):
@@ -177,35 +157,8 @@ class ChemSep(object):
     class cp_mol_liq_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.cp_mol_liq_comp_coeff_A = Var(
-                doc="Parameter A for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-1,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="A")
-
-            cobj.cp_mol_liq_comp_coeff_B = Var(
-                doc="Parameter B for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-2,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="B")
-
-            cobj.cp_mol_liq_comp_coeff_C = Var(
-                doc="Parameter C for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-3,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="C")
-
-            cobj.cp_mol_liq_comp_coeff_D = Var(
-                doc="Parameter D for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-4,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="D")
-
-            cobj.cp_mol_liq_comp_coeff_E = Var(
-                doc="Parameter E for liquid phase molar heat capacity",
-                units=pyunits.J * pyunits.kmol**-1 * pyunits.K**-5,
-            )
-            set_param_from_config(cobj, param="cp_mol_liq_comp_coeff", index="E")
+            ChemSep._create_params(cobj, "cp_mol_liq_comp_coeff")
+            ChemSep._set_params(cobj, "cp_mol_liq_comp_coeff")
 
         @staticmethod
         def return_expression(b, cobj, T):
@@ -295,35 +248,8 @@ class ChemSep(object):
     class dens_mol_liq_comp:
         @staticmethod
         def build_parameters(cobj):
-            cobj.dens_mol_liq_comp_coeff_A = Var(
-                doc="Parameter A for liquid phase molar density",
-                units=pyunits.kmol / pyunits.m**3,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="A")
-
-            cobj.dens_mol_liq_comp_coeff_B = Var(
-                doc="Parameter B for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="B")
-
-            cobj.dens_mol_liq_comp_coeff_C = Var(
-                doc="Parameter C for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="C")
-
-            cobj.dens_mol_liq_comp_coeff_D = Var(
-                doc="Parameter D for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="D")
-
-            cobj.dens_mol_liq_comp_coeff_E = Var(
-                doc="Parameter E for liquid phase molar density",
-                units=pyunits.dimensionless,
-            )
-            set_param_from_config(cobj, param="dens_mol_liq_comp_coeff", index="E")
+            ChemSep._create_params(cobj, "dens_mol_liq_comp_coeff")
+            ChemSep._set_params(cobj, "dens_mol_liq_comp_coeff")
 
         @staticmethod
         def return_expression(b, cobj, T):
@@ -342,3 +268,32 @@ class ChemSep(object):
 
             units = b.params.get_metadata().derived_units
             return pyunits.convert(rho, units.MOLAR_DENSITY)
+    
+    #----------------------------
+    # Internal Methods
+
+    @staticmethod
+    def _create_params(cobj, param):
+        for c in "ABCDE":
+            cobj.add_component(
+                param + "_" + c,
+                Var(
+                    doc=f"{param} parameter {c}",
+                    units=None,
+                ),
+            )
+    
+    @staticmethod
+    def _set_params(cobj, param):
+        for c in "ABCDE":
+            set_param_from_config(cobj, param=param, index=c)
+
+    @staticmethod
+    def _get_property(comp_name, prop_name, index=None):
+        print(comp_name)
+        if comp_name not in ChemSep._cached_components:
+            ChemSep._cached_components[comp_name] = get_compound(comp_name)
+        if index is not None:
+            return ChemSep._cached_components[comp_name][prop_name][index]
+        else:
+            return ChemSep._cached_components[comp_name][prop_name]

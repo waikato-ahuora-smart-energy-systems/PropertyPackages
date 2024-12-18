@@ -43,5 +43,7 @@ def build_config(property_package_name, compound_names: List[str], valid_states:
     # Call the parse method on each object and update the template
     new_template[key] = obj.serialise(compounds, valid_states)
   
+  pprint(new_template)
+  
   # Building property package and returning
   return GenericParameterBlock(**new_template)

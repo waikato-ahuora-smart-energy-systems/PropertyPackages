@@ -89,3 +89,7 @@ def test_separator():
     assert value(m.fs.sep_1.a1_state[0].temperature) == approx(353)
     assert value(m.fs.sep_1.b1_state[0].temperature) == approx(353)
     assert value(m.fs.sep_1.c1_state[0].temperature) == approx(353)
+
+    # assert value(m.fs.sep_1.a1_state[0].enth_mol) == approx(0.0) # -290584
+    # assert value(m.fs.sep_1.b1_state[0].enth_mol) == approx(0.0) # 
+    assert value(m.fs.sep_1.c1_state[0].enth_mol) == approx(0.0)
