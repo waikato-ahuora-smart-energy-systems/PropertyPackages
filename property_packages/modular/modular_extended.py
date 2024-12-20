@@ -25,12 +25,12 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
         super().__init__(*args, **kwargs)  # Missing argument
 
     def initialize(self, *args, **kwargs):
-        if (degrees_of_freedom(self) == 0):
-            # TODO: this per block, rather than degrees of freedom for the whole model
-            for i,b in self.items():
-                s = SolverFactory('ipopt')
-                res = s.solve(b, tee=False)
-                print(res.solver.termination_condition)
+        # if (degrees_of_freedom(self) == 0):
+        #     # TODO: this per block, rather than degrees of freedom for the whole model
+        #     for i,b in self.items():
+        #         s = SolverFactory('ipopt')
+        #         res = s.solve(b, tee=False)
+        #         print(res.solver.termination_condition)
             #return {} # Trying just to still run normal initialization anyways
         
         hold_state = kwargs.pop("hold_state", False)
