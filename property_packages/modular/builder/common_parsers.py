@@ -248,16 +248,16 @@ class state_bounds_parser(BuildBase):
         # TODO: Refactor this logic, need a more versatile approach
         return {
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-            "temperature": (max(min_melting_point-50,1), 300, 500, pyunits.K),
+            "temperature": (max(min_melting_point-50,1), 300, 3000, pyunits.K),
             "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-            "enth_mol": (-300000, 30000, 150000, pyunits.J/pyunits.mol),
+            # "enth_mol": (-300000, 30000, 150000, pyunits.J/pyunits.mol),
         }
 
 
 class state_definition_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> str:
-        return FPhx
+        return FTPx
 
 class temperature_ref_parser(BuildBase):
     @staticmethod

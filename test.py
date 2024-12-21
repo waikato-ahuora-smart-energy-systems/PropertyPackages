@@ -15,19 +15,33 @@ def report_vars(blk, file):
     with open(file, "w") as f:
         for c in blk.component_data_objects(Var, descend_into=True, active=True):
             f.write(f"{c}: {c.value} {"fixed" if c.fixed else "unfixed"}\n")
-    with open("file5.txt", "r") as f:
-        with open(f"{file}_diff", "w") as f2:
-            for c in blk.component_data_objects(Var, descend_into=True):
-                line = f.readline()
-                key, value, _ = line.split(" ")
-                if type(c.value) != float:
-                    diff = "None"
-                else:
-                    diff = abs(float(value) - c.value)
-                f2.write(f"{c}: {diff} {"fixed" if c.fixed else "unfixed"}\n")
+    # with open("file8.txt", "r") as f:
+    #     with open(f"{file}_diff", "w") as f2:
+    #         for c in blk.component_data_objects(Var, descend_into=True):
+    #             line = f.readline()
+    #             key, value, _ = line.split(" ")
+    #             if type(c.value) not in [float, int]:
+    #                 diff = "None - " + type(c.value).__name__
+    #             else:
+    #                 diff = abs(float(value) - c.value)
+    #             f2.write(f"{c}: {diff} {"fixed" if c.fixed else "unfixed"}\n")
 
-def add_report_vars_to_blk(blk, file):
-    blk.report_vars = lambda x = file: report_vars(blk, x)
+def report_constraints(blk, file):
+    with open(file, "w") as f:
+        for c in blk.component_data_objects(Constraint, descend_into=True, active=True):
+            f.write(f"{c}\n")
+
+def add_report_vars_to_blk(blk):
+    blk.report_vars = lambda x: report_vars(blk, x)
+def set_bubble(blk, val):
+    blk.temperature_bubble["Vap", "Liq"].value = val
+def set_dew(blk, val):
+    blk.temperature_dew["Vap", "Liq"].value = val
+def add_set_bubble_to_blk(blk, val):
+    blk.set_bubble = lambda: set_bubble(blk, val)
+        # set_bubble(blk, val),
+        # set_dew(blk, 92.46536639111942)
+    # )
 
 ### Build Model
 m = ConcreteModel()
@@ -37,15 +51,39 @@ m.fs.properties = build_package("peng-robinson", ["oxygen", "argon", "nitrogen"]
 m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
 
 sb = m.fs.state[0]
+add_report_vars_to_blk(sb)
+
+# report_vars(sb, "file21.txt")
+# report_constraints(sb, "file22.txt")
+# exit()
 sb.flow_mol.fix(1)
 sb.mole_frac_comp["oxygen"].fix(0.33)
 sb.mole_frac_comp["argon"].fix(0.33)
 sb.mole_frac_comp["nitrogen"].fix(0.33)
-# sb.enth_mol.fix(20000)
-sb.enth_mol.fix(-9)
+# sb.enth_mol.fix(30000)
+# sb.enth_mol.fix(-9)
 # sb.enth_mol.value = 100000
-# sb.temperature.fix(298.15)
-sb.pressure.fix(110000)
+# sb.enth_mol.fix(4000)
+# sb.temperature.fix(410)
+sb.temperature.fix(404)
+# sb._t1_Vap_Liq.value = 280
+# sb._teq["Vap","Liq"].value = 280
+sb.pressure.fix(200000)
+
+m.fs.state.initialize()
+# sb.enth_mol.fix(60000)
+# except:
+    # sb.report_vars("file17.txt")
+solver = SolverFactory("ipopt")
+solver.options["max_iter"] = 100
+solver.solve(m, tee=True)
+print(value(sb.enth_mol))
+sb.temperature.unfix()
+sb.enth_constraint = Constraint(expr = sb.enth_mol == 4000)
+solver.solve(m, tee=True)
+
+sb.report_vars("file23.txt")
+exit()
 
 # for i, v in sb.mole_frac_comp.items():
 #     sb.log_mole_frac_comp[i].value = log(v)
@@ -58,83 +96,130 @@ sb.pressure.fix(110000)
 # sb.temperature_dew["Vap", "Liq"].value = 85.64626567281583
 # sb.temperature_bubble["Vap", "Liq"].value = 7.251561660768924
 
-# sb.calculate_scaling_factors()
+sb.calculate_scaling_factors()
 # print("flow_mol_scale", get_scaling_factor(sb.flow_mol))
 
-# sb.flow_mol.value = 1
-# sb.mole_frac_comp["oxygen"].value = 0.33
-# sb.mole_frac_comp["argon"].value = 0.33
-# sb.mole_frac_comp["nitrogen"].value = 0.33
-# sb.pressure.value = 100000
-# sb.enth_mol.value = -8.6
-# sb.flow_mol_phase["Liq"].value = 0.04492645320343111 
-# sb.flow_mol_phase["Vap"].value = 0.955073546796569 
-# sb.mole_frac_phase_comp["Liq","oxygen"].value = 0.4920469916779807 
-# sb.mole_frac_phase_comp["Liq","argon"].value = 0.36636366805258 
-# sb.mole_frac_phase_comp["Liq","nitrogen"].value = 0.13158934026943928 
-# sb.mole_frac_phase_comp["Vap","oxygen"].value = 0.3223773445377108 
-# sb.mole_frac_phase_comp["Vap","argon"].value = 0.3282894609147667 
-# sb.mole_frac_phase_comp["Vap","nitrogen"].value = 0.33933319454752253 
-# sb.temperature.value = 298.14976092335405 
-# sb.phase_frac["Liq"].value = 0.04492645320343111 
-# sb.phase_frac["Vap"].value = 0.9550735467965689 
-# sb._teq["Vap","Liq"].value = 85.6462656725217 
-# sb._t1_Vap_Liq.value = 298.1497610092947 
-# sb.temperature_bubble["Vap","Liq"].value = 7.251481101358245 
-# sb._mole_frac_tbub["Vap","Liq","oxygen"].value = 0.7837418157206659 
-# sb._mole_frac_tbub["Vap","Liq","argon"].value = 0.10315729845781076 
-# sb._mole_frac_tbub["Vap","Liq","nitrogen"].value = 0.11310135409682268 
-# sb.log_mole_frac_comp["oxygen"].value = -1.1086652122703258 
-# sb.log_mole_frac_comp["argon"].value = -1.1086634525257204 
-# sb.log_mole_frac_comp["nitrogen"].value = -1.108663556211434 
-# sb.log_mole_frac_tbub["Vap","Liq","oxygen"].value = -0.24367515217305877 
-# sb.log_mole_frac_tbub["Vap","Liq","argon"].value = -2.2714918514296145 
-# sb.log_mole_frac_tbub["Vap","Liq","nitrogen"].value = -2.1794632110268286 
-# sb.temperature_dew["Vap","Liq"].value = 86.51987459210113 
-# sb._mole_frac_tdew["Vap","Liq","oxygen"].value = 0.5019690696002069 
-# sb._mole_frac_tdew["Vap","Liq","argon"].value = 0.368685898040895 
-# sb._mole_frac_tdew["Vap","Liq","nitrogen"].value = 0.12934503373478523 
-# sb.log_mole_frac_tdew["Vap","Liq","oxygen"].value = -0.6892167691974668 
-# sb.log_mole_frac_tdew["Vap","Liq","argon"].value = -0.9978102109224087 
-# sb.log_mole_frac_tdew["Vap","Liq","nitrogen"].value = -2.0452716854508997 
-# sb.log_mole_frac_phase_comp["Liq","oxygen"].value = -0.7091810555101541 
-# sb.log_mole_frac_phase_comp["Liq","argon"].value = -1.0041288103439043 
-# sb.log_mole_frac_phase_comp["Liq","nitrogen"].value = -2.028069264363777 
-# sb.log_mole_frac_phase_comp["Vap","oxygen"].value = -1.1320325421038222 
-# sb.log_mole_frac_phase_comp["Vap","argon"].value = -1.1138595569857048 
-# sb.log_mole_frac_phase_comp["Vap","nitrogen"].value = -1.0807727795353723 
-
-
-# sb.temperature_bubble["Vap","Liq"].value = 7.618121925180626 
-# sb._mole_frac_tbub["Vap","Liq","oxygen"].value = 0.4527322206422321 
-# sb._mole_frac_tbub["Vap","Liq","argon"].value = 0.2685391710602624 
-# sb._mole_frac_tbub["Vap","Liq","nitrogen"].value = 0.27872859468496625 
-# sb.log_mole_frac_comp["oxygen"].value = -1.0816657621185595 
-# sb.log_mole_frac_comp["argon"].value = -1.1086626017918755 
-# sb.log_mole_frac_comp["nitrogen"].value = -1.108662599498811 
-# sb.log_mole_frac_tbub["Vap","Liq","oxygen"].value = -0.7924544649616694 
-# sb.log_mole_frac_tbub["Vap","Liq","argon"].value = -1.3147586692624962 
-# sb.log_mole_frac_tbub["Vap","Liq","nitrogen"].value = -1.2775168739875298 
-# sb.temperature_dew["Vap","Liq"].value = 91.78871730120795 
-# sb._mole_frac_tdew["Vap","Liq","oxygen"].value = 0.4930555368058721 
-# sb._mole_frac_tdew["Vap","Liq","argon"].value = 0.36607675681388535 
-# sb._mole_frac_tdew["Vap","Liq","nitrogen"].value = 0.14086770638024265 
-# sb.log_mole_frac_tdew["Vap","Liq","oxygen"].value = -0.7071334605622126 
-# sb.log_mole_frac_tdew["Vap","Liq","argon"].value = -1.0049122494978062 
-# sb.log_mole_frac_tdew["Vap","Liq","nitrogen"].value = -1.9599340816608668 
-
-
-
+sb.flow_mol.value = 1
+sb.mole_frac_comp["oxygen"].value = 0.33
+sb.mole_frac_comp["argon"].value = 0.33
+sb.mole_frac_comp["nitrogen"].value = 0.33
+sb.pressure.value = 200000
+sb.enth_mol.value = 2800
+sb.flow_mol_phase["Liq"].value = 0
+sb.flow_mol_phase["Vap"].value = 1
+sb.mole_frac_phase_comp["Liq","oxygen"].value = 0.47079352385149564
+sb.mole_frac_phase_comp["Liq","argon"].value = 0.368908063480675
+sb.mole_frac_phase_comp["Liq","nitrogen"].value = 0.1502984126678293
+sb.mole_frac_phase_comp["Vap","oxygen"].value = 0.3218184161151369
+sb.mole_frac_phase_comp["Vap","argon"].value = 0.3277390324749561
+sb.mole_frac_phase_comp["Vap","nitrogen"].value = 0.340442551409907
+# sb.temperature.value = 404.04401232619784
+sb.phase_frac["Liq"].value = 0.05491913386860608
+sb.phase_frac["Vap"].value = 0.945080866131394
+sb._teq["Vap","Liq"].value = 92.4653654398964
+# sb._t1_Vap_Liq.value = 404.04401241707967
+sb.temperature_bubble["Vap","Liq"].value = 89.81904298694349
+sb._mole_frac_tbub["Vap","Liq","oxygen"].value = 0.17962142058397806
+sb._mole_frac_tbub["Vap","Liq","argon"].value = 0.2312975489647376
+sb._mole_frac_tbub["Vap","Liq","nitrogen"].value = 0.5890810304512843
+sb.log_mole_frac_comp["oxygen"].value = -1.1086626245216111
+sb.log_mole_frac_comp["argon"].value = -1.1086626245216111
+sb.log_mole_frac_comp["nitrogen"].value = -1.1086626245216111
+sb.log_mole_frac_tbub["Vap","Liq","oxygen"].value = -1.7169038619409782
+sb.log_mole_frac_tbub["Vap","Liq","argon"].value = -1.4640503065810992
+sb.log_mole_frac_tbub["Vap","Liq","nitrogen"].value = -0.5291915318704526
+sb.temperature_dew["Vap","Liq"].value = 92.46536544012616
+sb._mole_frac_tdew["Vap","Liq","oxygen"].value = 0.4839403861534417
+sb._mole_frac_tdew["Vap","Liq","argon"].value = 0.3714379049091942
+sb._mole_frac_tdew["Vap","Liq","nitrogen"].value = 0.14462170893736398
+sb.log_mole_frac_tdew["Vap","Liq","oxygen"].value = -0.7257935489559016
+sb.log_mole_frac_tdew["Vap","Liq","argon"].value = -0.9903735757419181
+sb.log_mole_frac_tdew["Vap","Liq","nitrogen"].value = -1.9336338495622085
+sb.log_mole_frac_phase_comp["Liq","oxygen"].value = -0.7533356593161652
+sb.log_mole_frac_phase_comp["Liq","argon"].value = -0.9972078164436171
+sb.log_mole_frac_phase_comp["Liq","nitrogen"].value = -1.8951325433712636
+sb.log_mole_frac_phase_comp["Vap","oxygen"].value = -1.1337678176115666
+sb.log_mole_frac_phase_comp["Vap","argon"].value = -1.1155376199799802
+sb.log_mole_frac_phase_comp["Vap","nitrogen"].value = -1.0775088859533726
 
 assert degrees_of_freedom(sb) == 0
+import time
 
 # report_statistics(m)
-
-add_report_vars_to_blk(sb, "file5.txt")
+# add_set_bubble_to_blk(sb, 5.25)
+add_report_vars_to_blk(sb)
 # try:
 m.fs.state.initialize()
 # except:
-sb.report_vars()
+    # sb.report_vars("file17.txt")
+solver = SolverFactory("ipopt")
+solver.options["max_iter"] = 100
+solver.solve(m, tee=True)
+sb.report_vars("file18.txt")
+
+print(value(sb.enth_mol))
+
+# from idaes.core.util import DiagnosticsToolbox
+# dt = DiagnosticsToolbox(sb)
+# dt.report_structural_issues()
+# exit()
+
+import numpy as np
+import matplotlib.pyplot as plt
+import json
+
+# Example setup
+mean = 403.1255
+std_dev = 0.002
+temp_pts = list(np.random.normal(mean, std_dev, 30))
+result_pts = {}
+
+# Main logic
+for pt in temp_pts:
+    sb.temperature.set_value(pt)  # Set the temperature in the solver
+    try:
+        solver.solve(m, tee=True)  # Attempt to solve
+        result_pts[pt] = {
+            "status": "success",
+            "enth_mol": value(sb.enth_mol)  # Fetch the result
+        }
+    except:
+        result_pts[pt] = {
+            "status": "failed",
+            "enth_mol": None  # No valid result for failures
+        }
+    print("done", pt)
+
+# Output the result dictionary for reference
+print(json.dumps(result_pts, indent=4))
+
+# Separate points based on status
+success_points = [(data["enth_mol"], point) for point, data in result_pts.items() if data["status"] == "success"]
+failed_points = [(data["enth_mol"], point) for point, data in result_pts.items() if data["status"] == "failed"]
+
+# Sort success points by x (enthalpy)
+success_points.sort()  # Sort by the first element (x)
+
+# Unpack points and temperatures for plotting
+success_x, success_y = zip(*success_points) if success_points else ([], [])
+failed_x, failed_y = zip(*failed_points) if failed_points else ([], [])
+
+# Plot the success points with a line
+plt.plot(success_x, success_y, color="green", label="Success", marker="o")  # Line with markers
+plt.scatter(failed_x, failed_y, color="red", label="Failed")  # Keep failed points as dots
+
+# Add labels, legend, and grid
+plt.xlabel("Enthalpy (Enth_mol)")
+plt.ylabel("Temperature")
+plt.title("Point Status with Temperature")
+plt.legend()
+plt.grid(True)
+
+# Show the plot
+plt.show()
+
+
+# sb.report_vars()
 exit()
 # report_vars(sb, "file2.txt")
 
