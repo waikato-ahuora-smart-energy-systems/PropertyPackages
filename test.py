@@ -11,6 +11,8 @@ from idaes.models.unit_models.heater import Heater
 from property_packages.build_package import build_package
 from idaes.core.util.scaling import get_scaling_factor, set_scaling_factor
 
+print('imported everything')
+
 def report_vars(blk, file):
     with open(file, "w") as f:
         for c in blk.component_data_objects(Var, descend_into=True, active=True):
@@ -47,30 +49,55 @@ def add_set_bubble_to_blk(blk, val):
 m = ConcreteModel()
 m.fs = FlowsheetBlock(dynamic=False)
 
-m.fs.properties = build_package("peng-robinson", ["oxygen", "argon", "nitrogen"])
-m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
+m.fs.properties = build_package("peng-robinson", ["oxygen", "nitrogen"])
+# m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
+m.fs.heater = Heater(property_package=m.fs.properties)
+sb1 = m.fs.heater.control_volume.properties_in[0]
+sb2 = m.fs.heater.control_volume.properties_out[0]
 
-sb = m.fs.state[0]
-add_report_vars_to_blk(sb)
+# sb1.flow_mol.fix(1)
+sb1.constrain("flow_mass", 1)
+sb1.mole_frac_comp["oxygen"].fix(1/2)
+sb1.mole_frac_comp["nitrogen"].fix(1/2)
+sb1.pressure.fix(100000)
+sb1.constrain("enth_mol", -10)
+sb2.constrain("enth_mol", 2400)
+# sb2.temperature.fix(400)
 
-# report_vars(sb, "file21.txt")
-# report_constraints(sb, "file22.txt")
+m.fs.heater.initialize()
+solver = SolverFactory("ipopt")
+solver.options["max_iter"] = 100
+solver.solve(m, tee=True)
+
+for c in sb1.component_data_objects(Block):
+    print(c)
+
+m.fs.heater.report()
+exit()
+
+# sb = m.fs.state[0]
+# add_report_vars_to_blk(sb)
+
+# # report_vars(sb, "file21.txt")
+# # report_constraints(sb, "file22.txt")
+# # exit()
+# sb.flow_mol.fix(1)
+# sb.mole_frac_comp["oxygen"].fix(0.5)
+# # sb.mole_frac_comp["argon"].fix(0.33)
+# sb.mole_frac_comp["nitrogen"].fix(0.5)
+# # sb.enth_mol.fix(30000)
+# # sb.enth_mol.fix(-9)
+# # sb.enth_mol.value = 100000
+# sb.constrain("enth_mol", -10)
+# # sb.enth_mol.fix(-10)
+# # sb.temperature.fix(410)
+# # sb.temperature.fix(404)
+# # sb._t1_Vap_Liq.value = 280
+# # sb._teq["Vap","Liq"].value = 280
+# sb.pressure.fix(100000)
+
+# m.fs.state.initialize()
 # exit()
-sb.flow_mol.fix(1)
-sb.mole_frac_comp["oxygen"].fix(0.33)
-sb.mole_frac_comp["argon"].fix(0.33)
-sb.mole_frac_comp["nitrogen"].fix(0.33)
-# sb.enth_mol.fix(30000)
-# sb.enth_mol.fix(-9)
-# sb.enth_mol.value = 100000
-# sb.enth_mol.fix(4000)
-# sb.temperature.fix(410)
-sb.temperature.fix(404)
-# sb._t1_Vap_Liq.value = 280
-# sb._teq["Vap","Liq"].value = 280
-sb.pressure.fix(200000)
-
-m.fs.state.initialize()
 # sb.enth_mol.fix(60000)
 # except:
     # sb.report_vars("file17.txt")

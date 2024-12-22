@@ -1,703 +1,92 @@
-# extends the IDAES helmholtz property package to include additional properties and methods.
-from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
-from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock, _GenericStateBlock, GenericParameterData, GenericStateBlockData
+from pyomo.environ import Block, Constraint
+from pyomo.core.base.expression import ScalarExpression
+from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData
 from idaes.core import declare_process_block_class
+from idaes.models.properties.modular_properties.base.generic_property import (
+    _GenericStateBlock,
+    GenericParameterData,
+    GenericStateBlockData,
+)
+import idaes.models.properties.modular_properties.base.utility as utility
 from property_packages.utils.add_extra_expressions import add_extra_expressions
-from pyomo.environ import Constraint, Block
-from pyomo.core.base.expression import Expression, ScalarExpression, _GeneralExpressionData, ExpressionData
-from pyomo.core.base.var import IndexedVar, ScalarVar, Var, _GeneralVarData,VarData
-import idaes.logger as idaeslog
-from pyomo.environ import SolverFactory
-from idaes.core.util.model_statistics import degrees_of_freedom
 
-from pyomo.environ import (
-    Block,
-    check_optimal_termination,
-    Constraint,
-    exp,
-    Expression,
-    log,
-    Set,
-    Param,
-    value,
-    Var,
-    units as pyunits,
-    Reference,
-)
-from pyomo.common.config import ConfigBlock, ConfigDict, ConfigValue, In, Bool
-from pyomo.util.calc_var_value import calculate_variable_from_constraint
+# increase max iterations for estimating values for bubble, dew, and
+# critical point initialization (ie. temperature_bubble, temperature_dew)
+utility.MAX_ITER = 1000
 
-# Import IDAES cores
-from idaes.core import (
-    declare_process_block_class,
-    PhysicalParameterBlock,
-    StateBlockData,
-    StateBlock,
-    MaterialFlowBasis,
-    ElectrolytePropertySet,
-)
-from idaes.core.base.components import Component, __all_components__
-from idaes.core.base.phases import (
-    Phase,
-    AqueousPhase,
-    LiquidPhase,
-    VaporPhase,
-    __all_phases__,
-)
-from idaes.core.util.initialization import (
-    fix_state_vars,
-    revert_state_vars,
-    solve_indexed_blocks,
-)
-from idaes.core.util.model_statistics import (
-    degrees_of_freedom,
-    number_activated_constraints,
-)
-from idaes.core.util.exceptions import (
-    BurntToast,
-    ConfigurationError,
-    PropertyPackageError,
-    PropertyNotSupportedError,
-    InitializationError,
-)
-from idaes.core.util.misc import add_object_reference
-from idaes.core.solvers import get_solver
-import idaes.logger as idaeslog
-import idaes.core.util.scaling as iscale
-from idaes.core.initialization.initializer_base import InitializerBase
 
-from idaes.models.properties.modular_properties.base.generic_reaction import (
-    equil_rxn_config,
-)
-from idaes.models.properties.modular_properties.base.utility import (
-    get_method,
-    get_phase_method,
-    GenericPropertyPackageError,
-    StateIndex,
-    identify_VL_component_list,
-    estimate_Tbub,
-    estimate_Tdew,
-    estimate_Pbub,
-    estimate_Pdew,
-)
-from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (
-    LogBubbleDew,
-)
-from idaes.models.properties.modular_properties.phase_equil.henry import HenryType
+def fix_state_vars(blk):
+    """
+    Fix all state variables at their current values,
+    except if a constraint exists that defines the variable.
 
-# -------
-from .modular_custom_utils import (
-    _init_Tbub,
-    _init_Tdew,
-    _init_Pbub,
-    _init_Pdew
-)
+    This method is analogous to the fix_state_vars method in
+    idaes.core.util.initialization, but it allows us to handle
+    the case where we have constraints that define the state.
+
+    Args:
+        blk : An IDAES StateBlock object in which to fix the state variables
+
+    Returns:
+        A dict keyed by block index, state variable name (as defined by
+        define_state_variables) and variable index indicating the fixed status
+        of each variable before the fix_state_vars method was applied.
+    """
+
+    flags = {}
+    for k, b in blk.items():
+        available_constraints = [
+            "enth_mol",
+            "enth_mass",
+            "entr_mol",
+            "entr_mass",
+            "smooth_temperature",
+        ]
+        for name, var in b.define_state_vars().items():
+            fix_var = True
+            if name == "flow_mol":
+                for prop_name in ["flow_mass", "flow_vol"]:
+                    if hasattr(b.constraints, prop_name):
+                        fix_var = False
+                        break
+            elif name in ["temperature", "pressure"]:
+                if not var.is_fixed():
+                    # check if any of the constraints exist
+                    for prop_name in available_constraints:
+                        if hasattr(b.constraints, prop_name):
+                            # don't fix this variable - it is defined by a constraint
+                            available_constraints.remove(prop_name)
+                            fix_var = False
+                            break
+            for i in var:
+                flags[k, name, i] = var[i].is_fixed()
+                if fix_var:
+                    var[i].fix()
+    return flags
 
 
 class _ExtendedGenericStateBlock(_GenericStateBlock):
-    """
-    This class contains methods which should be applied to Property Blocks as a
-    whole, rather than individual elements of indexed Property Blocks.
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)  # Missing argument
 
     def initialize(blk, *args, **kwargs):
-        from idaes.models.properties.modular_properties.base import utility
-        utility.MAX_ITER = 1000
-        # return blk._custom_super_initialize(*args, **kwargs)
-        flags = {}
-        hold_state = kwargs.get("hold_state", False)
-        # if not hold_state or True:
-        #     for k, b in blk.items():
-        #         avaliable_constraints = ["enth_mass","entr_mass","temperature","entr_mol","smooth_temperature","vapor_frac"]
-        #         for name, var in b.define_state_vars().items():
-        #             fix_var = True
-        #             if name == "flow_mol":
-        #                 if hasattr(b.constraints, "flow_mass"):
-        #                     fix_var = False
-        #             elif name in ["enth_mol", "pressure"]:
-        #                 if not var.is_fixed():
-        #                     # check if any of the constraints exist
-        #                     for prop_name in avaliable_constraints:
-        #                         # check if it's a constraint that 
-        #                         if hasattr(b.constraints,prop_name):
-        #                             # we don't need to fix the variable
-        #                             # but we need to remove this from the list of constraints (it can't be used to define pressure)
-        #                             avaliable_constraints.remove(prop_name)
-        #                             fix_var = False
-        #                             break
-        #                         if hasattr(b, prop_name):
-        #                             # check if it's a variable that needs to be unfixed
-        #                             if type(getattr(b,prop_name)) in (ScalarVar,):
-        #                                 extra_var = getattr(b,prop_name)
-        #                                 if extra_var.is_fixed():
-        #                                     # we need to move this from the list of constraints,
-        #                                     # it's used to define the state
-        #                                     avaliable_constraints.remove(prop_name)
-        #                                     fix_var = False
-        #                                     break
-        #             if fix_var:
-        #                 for i in var:
-        #                     if not var[i].is_fixed():
-        #                         # fix the state variable at its current value
-        #                         flags[k, name, i] = True
-        #                         var[i].fix()
-            # from idaes.core.util.initialization import fix_state_vars
-            # fix_state_vars(blk)
-        
-            # blk[0].report_vars("file10.txt")
-            # blk[0].constraints.deactivate()
-            # num_vars = 0
-            # for c in blk[0].component_data_objects(Var, descend_into=True, active=True):
-            #     num_vars += 1
-            #     if not c.fixed:
-            #         continue
-            #     print(f"{c}: {c.value}")
-            # num_constraints = 0
-            # for c in blk[0].component_data_objects(Constraint, descend_into=True, active=True):
-            #     num_constraints += 1
-            #     print(c)
-            # print("number of constraints", num_constraints)
-            # print("number of variables", num_vars)
-        # else:
-        #     blk[0].report_vars("fffile11.txt")
+        flag_dict = fix_state_vars(blk)
 
-        # state_vars_fixed = True
+        # Set state_vars_fixed to True to avoid fixing state variables
+        # during the initialize method, since this would overdefine
+        # the block if we are using constraints
         kwargs["state_vars_fixed"] = True
-        # print(degrees_of_freedom(blk[0]))
-        # for i, v in blk.constraints.item():
-        #     print(i, v)
-        # res = 
-        # try:
-        # blk[0].report_vars("file15.txt")
-        blk._custom_super_initialize(*args, **kwargs)
-        # except Exception as e:
-        #     blk[0].report_vars("file13.txt")
-        #     raise Exception("failed?") from e
-        return flags
-        # super().release_state(res)  # release the state after initialization, so we can just fix the variables we need to fix.
 
-        # # reactivate the variables that were deactivated
-        # for i, b in blk.items():
-        #     for name, value, in deactivated_vars[i].items():
-        #         getattr(b,name).fix(value)
+        # Call the base class initialize method
+        super().initialize(*args, **kwargs)
 
-        # if zero degrees of freedom, resovle the model with these constraints
-        # Todo: resolve the model with whatever constraints are active, and guess the rest if degrees of freedom > 0
-        # for i,b in self.items():
-        #     if degrees_of_freedom(b) == 0:
-        #         s = SolverFactory('ipopt')
-        #         res = s.solve(b, tee=True)
-        #         print("init:11o",res.solver.termination_condition)
-
-        # for i, b in blk.items():
-        #     b.constraints.activate()
-        #     flags[i] = {}
-        #     if hold_state:
-        #         # Fix the required state variables for zero degrees of freedom, and return a dictionary of the flags.
-        #         if not hasattr(b.constraints,"flow_mass") and not b.flow_mol.is_fixed():
-        #             # We need to fix the flow_mol variable
-        #             flags[i]["flow_mol"] = True
-        #             b.flow_mol.fix()
-        #         avaliable_constraints = ["enth_mass","entr_mass","temperature","entr_mol","smooth_temperature","vapor_frac"]
-        #         if not b.enth_mol.is_fixed():
-        #             # check if any of the constraints exist
-        #             found_constraint = False
-        #             for prop_name in avaliable_constraints:
-        #                 # check if it's a constraint that 
-        #                 if hasattr(b.constraints,prop_name):
-        #                     # we don't need to fix the variable
-        #                     # but we need to remove this from the list of constraints (it can't be used to define pressure)
-        #                     avaliable_constraints.remove(prop_name)
-        #                     found_constraint = True
-        #                     break
-        #                 if hasattr(b,prop_name):
-        #                     # check if it's a variable that needs to be unfixed
-        #                     if type(getattr(b,prop_name)) in (ScalarVar,):
-        #                         var = getattr(b,prop_name)
-        #                         if var.is_fixed():
-        #                             # we need to move this from the list of constraints,
-        #                             # it's used to define the state
-        #                             avaliable_constraints.remove(prop_name)
-        #                             found_constraint = True
-        #                             break
-
-        #             if not found_constraint:
-        #                 # we need to fix the variable
-        #                 flags[i]["enth_mol"] = True
-        #                 print("fixing enthalpy")
-        #                 b.enth_mol.fix()
-        #         if not b.pressure.is_fixed():
-        #             # check if any of the constraints exist
-        #             found_constraint = False
-        #             for prop_name in avaliable_constraints:
-        #                 if hasattr(b.constraints,prop_name):
-        #                     # we don't need to fix the variable
-        #                     # but we need to remove this from the list of constraints (it can't be used to define pressure)
-        #                     avaliable_constraints.remove(prop_name)
-        #                     found_constraint = True
-        #                     break
-        #                 if hasattr(b,prop_name):
-        #                     # check if it's a variable that needs to be unfixed
-        #                     if type(getattr(b,prop_name)) in (ScalarVar,):
-        #                         var = getattr(b,prop_name)
-        #                         if var.is_fixed():
-        #                             # we need to move this from the list of constraints,
-        #                             # it's used to define the state
-        #                             avaliable_constraints.remove(prop_name)
-        #                             found_constraint = True
-        #                             break
-        #             if not found_constraint:
-        #                 # we need to fix the variable
-        #                 flags[i]["pressure"] = True
-        #                 b.pressure.fix()
-        
-        # n_cons = 0
-        # dof = 0
-        # skip = False
-        # for k in blk.values():
-        #     if degrees_of_freedom(k) < 0:
-        #         # Skip solve if DoF < 0 - this is probably due to a
-        #         # phase-component flow state with flash
-        #         skip = True
-        #     n_cons += number_activated_constraints(k)
-        #     dof += degrees_of_freedom(k)
-        # if n_cons > 0 and not skip:
-        #     if dof > 0:
-        #         raise InitializationError(
-        #             f"{blk.name} Unexpected degrees of freedom during "
-        #             f"initialization at property initialization step: {dof}."
-        #         )
-        #     with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
-        #         res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
-        #     init_log.info(
-        #         "Property initialization: {}.".format(idaeslog.condition(res))
-        #     )
-        # else:
-        #     raise Exception()
-        
-        return flags
-    
-    def release_state(self, flags, outlvl=idaeslog.NOTSET):
-        for i, v in self.items():
-            if i not in flags:
-                continue
-            for key in flags[i]:
-                getattr(v,key).unfix()
-
-    def _custom_super_initialize(
-        blk,
-        state_args=None,
-        state_vars_fixed=False,
-        hold_state=False,
-        outlvl=idaeslog.NOTSET,
-        solver=None,
-        optarg=None,
-    ):
-        """
-        Initialization routine for property package.
-        Keyword Arguments:
-            state_args : a dict of initial values for the state variables
-                    defined by the property package.
-            outlvl : sets output level of initialization routine
-            optarg : solver options dictionary object (default=None, use
-                     default solver options)
-            state_vars_fixed: Flag to denote if state vars have already been
-                              fixed.
-                              - True - states have already been fixed by the
-                                       control volume 1D. Control volume 0D
-                                       does not fix the state vars, so will
-                                       be False if this state block is used
-                                       with 0D blocks.
-                             - False - states have not been fixed. The state
-                                       block will deal with fixing/unfixing.
-            solver : str indicating which solver to use during
-                     initialization (default = None, use default solver)
-            hold_state : flag indicating whether the initialization routine
-                         should unfix any state variables fixed during
-                         initialization (default=False).
-                         - True - states variables are not unfixed, and
-                                 a dict of returned containing flags for
-                                 which states were fixed during
-                                 initialization.
-                        - False - state variables are unfixed after
-                                 initialization by calling the
-                                 release_state method
-        Returns:
-            If hold_states is True, returns a dict containing flags for
-            which states were fixed during initialization.
-        """
-        init_log = idaeslog.getInitLogger(blk.name, outlvl, tag="properties")
-        solve_log = idaeslog.getSolveLogger(blk.name, outlvl, tag="properties")
-
-        init_log.info("Starting initialization")
-
-        res = None
-
-        for k in blk.values():
-            # Deactivate the constraints specific for outlet block i.e.
-            # when defined state is False
-            if k.config.defined_state is False:
-                try:
-                    k.sum_mole_frac_out.deactivate()
-                except AttributeError:
-                    pass
-
-                if hasattr(k, "inherent_equilibrium_constraint") and (
-                    not k.params._electrolyte
-                    or k.params.config.state_components == StateIndex.true
-                ):
-                    k.inherent_equilibrium_constraint.deactivate()
-
-        # Fix state variables if not already fixed
-        if state_vars_fixed is False:
-            flag_dict = fix_state_vars(blk, state_args)
-            # Confirm DoF for sanity
-            for k in blk.values():
-                if k.always_flash:
-                    # If not always flash, DoF is probably less than zero
-                    # We will handle this elsewhere
-                    dof = degrees_of_freedom(k)
-                    if dof != 0:
-                        raise BurntToast(
-                            "Degrees of freedom were not zero [{}] "
-                            "after trying to fix state variables. "
-                            "Something broke in the generic property "
-                            "package code - please inform the IDAES "
-                            "developers.".format(dof)
-                        )
+        if kwargs.get("hold_state") is True:
+            return flag_dict
         else:
-            # When state vars are fixed, check that DoF is 0
-            for k in blk.values():
-                if degrees_of_freedom(k) != 0:
-                    # PYLINT-TODO
-                    # pylint: disable-next=broad-exception-raised
-                    raise Exception(
-                        "State vars fixed but degrees of "
-                        "freedom for state block is not zero "
-                        "during initialization."
-                    )
+            blk.release_state(flag_dict)
 
-        # Create solver
-        opt = get_solver(solver, optarg)
 
-        # ---------------------------------------------------------------------
-        # If present, initialize bubble, dew , and critical point calculations
-        for k in blk.values():
-            T_units = k.params.get_metadata().default_units.TEMPERATURE
-
-            # List of bubble and dew point constraints
-            cons_list = [
-                "eq_pressure_dew",
-                "eq_pressure_bubble",
-                "eq_temperature_dew",
-                "eq_temperature_bubble",
-                "eq_mole_frac_tbub",
-                "eq_mole_frac_tdew",
-                "eq_mole_frac_pbub",
-                "eq_mole_frac_pdew",
-                "log_mole_frac_tbub_eqn",
-                "log_mole_frac_tdew_eqn",
-                "log_mole_frac_pbub_eqn",
-                "log_mole_frac_pdew_eqn",
-                "mole_frac_comp_eq",
-                "log_mole_frac_comp_eqn",
-            ]
-
-            # Critical point
-            with k.lock_attribute_creation_context():
-                # Only need to look for one, as it is all-or-nothing
-                if hasattr(k, "pressure_crit"):
-                    # Initialize critical point properties
-                    _initialize_critical_props(k)
-                    # Add critical point constraints to cons_list
-                    cons_list += k.list_critical_property_constraint_names()
-
-            # Bubble temperature initialization
-            if hasattr(k, "_mole_frac_tbub"):
-                _init_Tbub(k, T_units)
-
-            # Dew temperature initialization
-            if hasattr(k, "_mole_frac_tdew"):
-                _init_Tdew(k, T_units)
-
-            # Bubble pressure initialization
-            if hasattr(k, "_mole_frac_pbub"):
-                _init_Pbub(k)
-
-            # Dew pressure initialization
-            if hasattr(k, "_mole_frac_pdew"):
-                _init_Pdew(k)
-
-            # Solve bubble, dew, and critical point constraints
-            for c in k.component_objects(Constraint):
-                # Deactivate all constraints not associated with bubble, dew,
-                # or critical points
-                if c.local_name not in cons_list:
-                    c.deactivate()
-
-        # If StateBlock has active constraints (i.e. has bubble, dew, or critical
-        # point calculations), solve the block to converge these
-        n_cons = 0
-        dof = 0
-        for k in blk.values():
-            n_cons += number_activated_constraints(k)
-            dof += degrees_of_freedom(k)
-        if n_cons > 0:
-            if dof > 0:
-                raise InitializationError(
-                    f"{blk.name} Unexpected degrees of freedom during "
-                    f"initialization at bubble, dew, and critical point step: {dof}."
-                )
-            with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
-                res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
-            init_log.info(
-                "Bubble, dew, and critical point initialization: {}.".format(
-                    idaeslog.condition(res)
-                )
-            )
-        # ---------------------------------------------------------------------
-        # Calculate _teq if required
-        # Using iterator k outside of for loop - this should be OK as we just need
-        # a valid StateBlockData an assume they are all the same.
-        if k.params.config.phases_in_equilibrium is not None and (
-            not k.config.defined_state or k.always_flash
-        ):
-            for k in blk.values():
-                for pp in k.params._pe_pairs:
-                    k.params.config.phase_equilibrium_state[pp].calculate_teq(k, pp)
-
-            init_log.info("Equilibrium temperature initialization completed.")
-
-        # ---------------------------------------------------------------------
-        # Initialize flow rates and compositions
-        for k in blk.values():
-
-            k.params.config.state_definition.state_initialization(k)
-
-            if k.params._electrolyte:
-                if k.params.config.state_components == StateIndex.true:
-                    # First calculate initial values for apparent species flows
-                    for p, j in k.params.apparent_phase_component_set:
-                        calculate_variable_from_constraint(
-                            k.flow_mol_phase_comp_apparent[p, j],
-                            k.true_to_appr_species[p, j],
-                        )
-                    # Need to calculate all flows before doing mole fractions
-                    for p, j in k.params.apparent_phase_component_set:
-                        sum_flow = sum(
-                            k.flow_mol_phase_comp_apparent[p, jj]
-                            for jj in k.params.apparent_species_set
-                            if (p, jj) in k.params.apparent_phase_component_set
-                        )
-                        if value(sum_flow) == 0:
-                            x = 1
-                        else:
-                            x = value(k.flow_mol_phase_comp_apparent[p, j] / sum_flow)
-                        lb = k.mole_frac_phase_comp_apparent[p, j].lb
-                        if lb is not None and x <= lb:
-                            k.mole_frac_phase_comp_apparent[p, j].set_value(lb)
-                        else:
-                            k.mole_frac_phase_comp_apparent[p, j].set_value(x)
-                elif k.params.config.state_components == StateIndex.apparent:
-                    # First calculate initial values for true species flows
-                    for p, j in k.params.true_phase_component_set:
-                        calculate_variable_from_constraint(
-                            k.flow_mol_phase_comp_true[p, j],
-                            k.appr_to_true_species[p, j],
-                        )
-                    # Need to calculate all flows before doing mole fractions
-                    for p, j in k.params.true_phase_component_set:
-                        sum_flow = sum(
-                            k.flow_mol_phase_comp_true[p, jj]
-                            for jj in k.params.true_species_set
-                            if (p, jj) in k.params.true_phase_component_set
-                        )
-                        if value(sum_flow) == 0:
-                            x = 1
-                        else:
-                            x = value(k.flow_mol_phase_comp_true[p, j] / sum_flow)
-                        lb = k.mole_frac_phase_comp_true[p, j].lb
-                        if lb is not None and x <= lb:
-                            k.mole_frac_phase_comp_true[p, j].set_value(lb)
-                        else:
-                            k.mole_frac_phase_comp_true[p, j].set_value(x)
-
-            # If state block has phase equilibrium, use the average of all
-            # _teq's as an initial guess for T
-            if (
-                k.params.config.phases_in_equilibrium is not None
-                and isinstance(k.temperature, Var)
-                and not k.temperature.fixed
-            ):
-                k.temperature.value = value(
-                    sum(k._teq[i] for i in k.params._pe_pairs) / len(k.params._pe_pairs)
-                )
-
-        if outlvl > 0:  # TODO: Update to use logger Enum
-            init_log.info("State variable initialization completed.")
-
-        # ---------------------------------------------------------------------
-        n_cons = 0
-        dof = 0
-        skip = False
-        Tfix = {}  # In enth based state defs, need to also fix T until later
-        for k, b in blk.items():
-            if b.params.config.phase_equilibrium_state is not None and (
-                not b.config.defined_state or b.always_flash
-            ):
-                if not b.temperature.fixed:
-                    b.temperature.fix()
-                    Tfix[k] = True
-                for c in b.component_objects(Constraint):
-                    # Activate common constraints
-                    if c.local_name in (
-                        "total_flow_balance",
-                        "component_flow_balances",
-                        "sum_mole_frac",
-                        "phase_fraction_constraint",
-                        "mole_frac_phase_comp_eq",
-                        "mole_frac_comp_eq",
-                    ):
-                        c.activate()
-                    if c.local_name == "log_mole_frac_phase_comp_eqn":
-                        c.activate()
-                        for p, j in b.params._phase_component_set:
-                            calculate_variable_from_constraint(
-                                b.log_mole_frac_phase_comp[p, j],
-                                b.log_mole_frac_phase_comp_eqn[p, j],
-                            )
-                    elif c.local_name == "equilibrium_constraint":
-                        # For systems where the state variables fully define the
-                        # phase equilibrium, we cannot activate the equilibrium
-                        # constraint at this stage.
-                        if "flow_mol_phase_comp" not in b.define_state_vars():
-                            c.activate()
-
-                for pp in b.params._pe_pairs:
-                    # Activate formulation specific constraints
-                    b.params.config.phase_equilibrium_state[
-                        pp
-                    ].phase_equil_initialization(b, pp)
-
-            n_cons += number_activated_constraints(b)
-            dof += degrees_of_freedom(b)
-            if degrees_of_freedom(b) < 0:
-                # Skip solve if DoF < 0 - this is probably due to a
-                # phase-component flow state with flash
-                skip = True
-
-        if n_cons > 0 and not skip:
-            if dof > 0:
-                raise InitializationError(
-                    f"{blk.name} Unexpected degrees of freedom during "
-                    f"initialization at phase equilibrium step: {dof}."
-                )
-            with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
-                res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
-            init_log.info(
-                "Phase equilibrium initialization: {}.".format(idaeslog.condition(res))
-            )
-
-        # ---------------------------------------------------------------------
-        # Initialize other properties
-        for k, b in blk.items():
-            for c in b.component_objects(Constraint):
-                # Activate all constraints except flagged do_not_initialize
-                if c.local_name not in (
-                    b.params.config.state_definition.do_not_initialize
-                ):
-                    c.activate()
-            if k in Tfix:
-                b.temperature.unfix()
-
-            # Initialize log-form variables
-            log_form_vars = [
-                "act_phase_comp",
-                "act_phase_comp_apparent",
-                "act_phase_comp_true",
-                "conc_mol_phase_comp",
-                "conc_mol_phase_comp_apparent",
-                "conc_mol_phase_comp_true",
-                "mass_frac_phase_comp",
-                "mass_frac_phase_comp_apparent",
-                "mass_frac_phase_comp_true",
-                "molality_phase_comp",
-                "molality_phase_comp_apparent",
-                "molality_phase_comp_true",
-                "mole_frac_comp",  # Might have already been initialized
-                "mole_frac_phase_comp",  # Might have already been initialized
-                "mole_frac_phase_comp_apparent",
-                "mole_frac_phase_comp_true",
-                "pressure_phase_comp",
-                "pressure_phase_comp_apparent",
-                "pressure_phase_comp_true",
-            ]
-
-            for prop in log_form_vars:
-                if b.is_property_constructed("log_" + prop):
-                    comp = getattr(b, prop)
-                    lcomp = getattr(b, "log_" + prop)
-                    for k2, v in lcomp.items():
-                        c = value(comp[k2])
-                        if c <= 0:
-                            c = 1e-8
-                        lc = log(c)
-                        v.set_value(value(lc))
-
-        # n_cons = 0
-        # dof = 0
-        # skip = False
-        # for k in blk.values():
-        #     if degrees_of_freedom(k) < 0:
-        #         # Skip solve if DoF < 0 - this is probably due to a
-        #         # phase-component flow state with flash
-        #         skip = True
-        #     n_cons += number_activated_constraints(k)
-        #     dof += degrees_of_freedom(k)
-        # assert degrees_of_freedom(blk) == 0
-        # if n_cons > 0 and not skip:
-        #     if dof > 0:
-        #         raise InitializationError(
-        #             f"{blk.name} Unexpected degrees of freedom during "
-        #             f"initialization at property initialization step: {dof}."
-        #         )
-        #     blk[0].report_vars(f"file_{blk}.txt")
-        #     # blk[0].temperature.value = 500
-        #     with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
-        #         res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
-        #     init_log.info(
-        #         "Property initialization: {}.".format(idaeslog.condition(res))
-        #     )
-
-        # ---------------------------------------------------------------------
-        # Return constraints to initial state
-        for k in blk.values():
-            for c in k.component_objects(Constraint):
-                if c.local_name in (k.params.config.state_definition.do_not_initialize):
-                    print("activating constraint", c.local_name)
-                    c.activate()
-
-        if res is not None and not check_optimal_termination(res):
-            raise InitializationError(
-                f"{blk.name} failed to initialize successfully. Please check "
-                f"the output logs for more information."
-            )
-
-        if state_vars_fixed is False:
-            if hold_state is True:
-                return flag_dict
-            else:
-                blk.release_state(flag_dict)
-
-        init_log.info(
-            "Property package initialization: {}.".format(idaeslog.condition(res))
-        )
-    
-
-@declare_process_block_class("GenericExtendedStateBlock", block_class=_ExtendedGenericStateBlock)
+@declare_process_block_class(
+    "GenericExtendedStateBlock", block_class=_ExtendedGenericStateBlock
+)
 class GenericExtendedStateBlockData(GenericStateBlockData):
 
     def build(self, *args):
@@ -706,24 +95,23 @@ class GenericExtendedStateBlockData(GenericStateBlockData):
         add_extra_expressions(self)
         # Add a block for constraints, so we can disable or enable them in bulk
         self.constraints = Block()
-    
-    def constrain(self,name:str,value:float):
+
+    def constrain(self, name: str, value: float):
         # Value must be a float. TODO: Handle unit conversion.
-        var = getattr(self,name)
+        var = getattr(self, name)
         if type(var) == ScalarExpression:
             self.constraints.add_component(name, Constraint(expr=var == value))
         elif type(var) in (ScalarVar, _GeneralVarData, VarData):
             var.fix(value)
-        elif type(var) in ( _GeneralExpressionData, ExpressionData) :
-            # allowed, but we don't need to fix it (eg. mole_frac_comp in helmholtz)
-            print(f"Variable {self} {name} is an Expression: {type(var)}")
-            pass
         else:
-            raise Exception(f"Variable {self} {name} is not a Var or Expression: {type(var)}")
+            raise Exception(
+                f"Variable {self} {name} is not a Var or Expression: {type(var)}"
+            )
+
 
 @declare_process_block_class("GenericExtendedParameterBlock")
 class GenericExtendedParameterData(GenericParameterData):
     def build(self):
         super().build()
         # set that we should use the extended state block
-        self._state_block_class = GenericExtendedStateBlock # type: ignore because it'll get created with declare_process_block_class
+        self._state_block_class = GenericExtendedStateBlock  # type: ignore because it'll get created with declare_process_block_class
