@@ -16,7 +16,7 @@ print('imported everything')
 def report_vars(blk, file):
     with open(file, "w") as f:
         for c in blk.component_data_objects(Var, descend_into=True, active=True):
-            f.write(f"{c}: {c.value} {"fixed" if c.fixed else "unfixed"}\n")
+            f.write(f"{c}: {c.value} {'fixed' if c.fixed else 'unfixed'}\n")
     # with open("file8.txt", "r") as f:
     #     with open(f"{file}_diff", "w") as f2:
     #         for c in blk.component_data_objects(Var, descend_into=True):

@@ -2,6 +2,7 @@ from pyomo.environ import Block, Constraint
 from pyomo.core.base.expression import ScalarExpression
 from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData
 from idaes.core import declare_process_block_class
+from idaes.core.util.exceptions import ConfigurationError
 from idaes.models.properties.modular_properties.base.generic_property import (
     _GenericStateBlock,
     GenericParameterData,
@@ -136,7 +137,9 @@ class GenericExtendedStateBlockData(GenericStateBlockData):
         # Value must be a float. TODO: Handle unit conversion.
         var = getattr(self, name)
         if type(var) == ScalarExpression:
-            self.constraints.add_component(name, Constraint(expr=var == value))
+            c = Constraint(expr=var == value)
+            c.abcdef = True
+            self.constraints.add_component(name, c)
         elif type(var) in (ScalarVar, _GeneralVarData, VarData):
             var.fix(value)
         else:
