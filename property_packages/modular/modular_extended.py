@@ -113,5 +113,4 @@ class GenericExtendedStateBlockData(GenericStateBlockData):
 class GenericExtendedParameterData(GenericParameterData):
     def build(self):
         super().build()
-        # set that we should use the extended state block
-        self._state_block_class = GenericExtendedStateBlock  # type: ignore because it'll get created with declare_process_block_class
+        self._state_block_class = GenericExtendedStateBlock  # noqa: F821

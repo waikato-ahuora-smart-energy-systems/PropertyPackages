@@ -97,5 +97,4 @@ class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData):
 class HelmholtzExtendedParameterBlockData(HelmholtzParameterBlockData):
     def build(self):
         super().build()
-        # set that we should use the extended state block
-        self._state_block_class = HelmholtzExtendedStateBlock # type: ignore because it'll get created with declare_process_block_class
+        self._state_block_class = HelmholtzExtendedStateBlock # noqa: F821

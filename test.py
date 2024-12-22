@@ -75,7 +75,7 @@ for c in sb1.component_data_objects(Block):
 m.fs.heater.report()
 exit()
 
-# sb = m.fs.state[0]
+sb = m.fs.state[0]
 # add_report_vars_to_blk(sb)
 
 # # report_vars(sb, "file21.txt")
