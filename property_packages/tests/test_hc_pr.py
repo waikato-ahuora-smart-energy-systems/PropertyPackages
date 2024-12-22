@@ -157,14 +157,13 @@ class TestParamBlock(object):
                 ("Vap", "1-octene"),
             ]
 
-        assert model.params.config.state_definition == FPhx
+        assert model.params.config.state_definition == FTPx
 
         unittest.assertStructuredAlmostEqual(
             model.params.config.state_bounds,
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (1, 300, 500, pyunits.K),
-                "enth_mol": (-300000, 30000, 150000, pyunits.J/pyunits.mol),
+                "temperature": (1, 300, 3000, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,
@@ -284,7 +283,7 @@ class TestStateBlock(object):
 
         assert isinstance(model.props[1].temperature, Var)
         assert value(model.props[1].temperature) == 295
-        assert model.props[1].temperature.ub == 500
+        assert model.props[1].temperature.ub == 3000
         assert model.props[1].temperature.lb == 1 # was 13.95
 
         assert isinstance(model.props[1].mole_frac_comp, Var)
@@ -302,14 +301,14 @@ class TestStateBlock(object):
 
         assert len(sv) == 4
         for i in sv:
-            assert i in ["flow_mol", "mole_frac_comp", "enth_mol", "pressure"]
+            assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
 
     def test_define_port_members(self, model):
         sv = model.props[1].define_state_vars()
 
         assert len(sv) == 4
         for i in sv:
-            assert i in ["flow_mol", "mole_frac_comp", "enth_mol", "pressure"]
+            assert i in ["flow_mol", "mole_frac_comp", "temperature", "pressure"]
 
     def test_define_display_vars(self, model):
         sv = model.props[1].define_display_vars()
@@ -319,7 +318,7 @@ class TestStateBlock(object):
             assert i in [
                 "Total Molar Flowrate",
                 "Total Mole Fraction",
-                "Molar Enthalpy",
+                "Temperature",
                 "Pressure",
             ]
 
@@ -345,14 +344,7 @@ class TestStateBlock(object):
             assert v in orig_fixed_vars
 
     def test_solve(self, model):
-        print(model.props[1].temperature.value)
-        print(model.props[1].enth_mol.value)
-        print(model.props[1].pressure.value)
-
         results = solver.solve(model)
-        print(model.props[1].temperature.value)
-        print(model.props[1].enth_mol.value)
-        print(model.props[1].pressure.value)
         assert_optimal_termination(results)
 
     def test_solution(self, model):

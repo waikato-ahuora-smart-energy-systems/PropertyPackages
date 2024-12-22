@@ -106,10 +106,8 @@ def test_P_sweep():
       sb.mole_frac_comp["benzene"].fix(0.5)
       sb.mole_frac_comp["toluene"].fix(0.5)
       sb.pressure.fix(1e5)
-      print(T)
-      m.fs.state.initialize()
-      # Fix temperature (after initialisation, because otherwise the solver will complain about too few degrees of freedom)
       sb.temperature.fix(T)
+      m.fs.state.initialize()
 
       results = solver.solve(m)
 
@@ -121,8 +119,6 @@ def test_P_sweep():
           assert check_optimal_termination(results)
 
           sb.pressure.value = sb.pressure.value + 1e5
-      # unfix temperature for next iteration
-      sb.temperature.unfix()
 
 def test_T350_P1_x5():
   m = get_m()
@@ -178,11 +174,6 @@ def test_T350_P5_x5():
   sb.entr_mol_phase
 
   m.fs.state.initialize(outlvl=SOUT)
-  print(sb.temperature.value)
-  print(sb.pressure.value)
-  print(sb.enth_mol.value)
-  print(degrees_of_freedom(sb))
-  print(degrees_of_freedom(m))
 
   results = solver.solve(m)
 
