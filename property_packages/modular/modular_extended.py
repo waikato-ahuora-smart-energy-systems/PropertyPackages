@@ -138,10 +138,12 @@ class GenericExtendedStateBlockData(GenericStateBlockData):
         var = getattr(self, name)
         if type(var) == ScalarExpression:
             c = Constraint(expr=var == value)
-            c.abcdef = True
+            c.defining_state_var = True
             self.constraints.add_component(name, c)
+            return c
         elif type(var) in (ScalarVar, _GeneralVarData, VarData):
             var.fix(value)
+            return var
         else:
             raise Exception(
                 f"Variable {self} {name} is not a Var or Expression: {type(var)}"

@@ -60,10 +60,17 @@ sb1.constrain("flow_mass", 1)
 sb1.mole_frac_comp["oxygen"].fix(1/2)
 sb1.mole_frac_comp["nitrogen"].fix(1/2)
 sb1.pressure.fix(100000)
-sb1.constrain("enth_mol", -10)
-sb2.constrain("enth_mol", 2400)
-# sb2.temperature.fix(400)
+sb1.temperature.fix(300)
+# sb1.constrain("enth_mol", -10)
+# sb2.constrain("enth_mol", 2400)
+sb2.temperature.fix(400)
 
+sb1.parent_block().initialize()
+
+# assert degrees_of_freedom(m.fs.heater.control_volume.properties_in) == 0
+# _GenericStateBlock.initialize(m.fs.heater.control_volume.properties_in[0])
+# m.fs.heater.control_volume.properties_in.initialize(state_vars_fixed=True)
+exit()
 m.fs.heater.initialize()
 solver = SolverFactory("ipopt")
 solver.options["max_iter"] = 100
