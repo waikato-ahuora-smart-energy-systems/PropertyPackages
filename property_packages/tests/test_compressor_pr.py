@@ -10,7 +10,6 @@ from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.models.unit_models.heater import Heater
 from idaes.models.unit_models.pressure_changer import Pump
-from idaes.core.util.tables import _get_state_from_port
 from idaes.models.unit_models.pressure_changer import PressureChanger, ThermodynamicAssumption
 
 def assert_approx(value, expected_value, error_margin):
@@ -60,10 +59,9 @@ def test_expander_asu():
         thermodynamic_assumption=ThermodynamicAssumption.adiabatic,
         compressor=False)
     
-    sb = _get_state_from_port(m.fs.compressor.inlet,0)
     m.fs.compressor.inlet.flow_mol[0].fix(1*units.kilomol/units.hour)
     m.fs.compressor.inlet.pressure.fix(1000000 * units.Pa)
-    sb.temperature.fix((273.15+25) * units.K)
+    m.fs.compressor.inlet.temperature.fix((273.15+25) * units.K)
     m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(0.33)
     m.fs.compressor.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
     m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)

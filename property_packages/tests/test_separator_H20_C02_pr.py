@@ -31,8 +31,6 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
-from idaes.core.util.tables import _get_state_from_port
-
 # Import the build function to create a property package
 from ..build_package import build_package
 
@@ -57,8 +55,7 @@ def test_separator():
     m.fs.sep_1.inlet.mole_frac_comp[0, "water"].fix(0.9)
     m.fs.sep_1.inlet.mole_frac_comp[0, "carbon dioxide"].fix(0.1)
     m.fs.sep_1.inlet.pressure.fix(101325) # Pa
-    sep_i = _get_state_from_port(m.fs.sep_1.inlet,0)
-    sep_i.temperature.fix(353) # K
+    m.fs.sep_1.inlet.temperature.fix(353) # K
 
     m.fs.sep_1.split_fraction[0, "a1"].fix(0.2)
     m.fs.sep_1.split_fraction[0, "b1"].fix(0.5)
@@ -87,7 +84,6 @@ def test_separator():
     assert value(m.fs.sep_1.b1_state[0].pressure) == approx(101325)
     assert value(m.fs.sep_1.c1_state[0].pressure) == approx(101325)
 
-    
     assert value(m.fs.sep_1.a1_state[0].temperature) == approx(353)
     assert value(m.fs.sep_1.b1_state[0].temperature) == approx(353)
     assert value(m.fs.sep_1.c1_state[0].temperature) == approx(353)

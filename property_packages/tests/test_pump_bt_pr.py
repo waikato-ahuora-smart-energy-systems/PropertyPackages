@@ -1,7 +1,6 @@
 # Build and solve a heater block.
 from ..build_package import build_package
 from pytest import approx
-import idaes.logger as idaeslog
 # Import objects from pyomo package 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
@@ -10,7 +9,6 @@ from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.models.unit_models.heater import Heater
 from idaes.models.unit_models.pressure_changer import Pump
-from idaes.core.util.tables import _get_state_from_port
 
 def assert_approx(value, expected_value, error_margin):
     percent_error = error_margin / 100
@@ -28,13 +26,12 @@ def test_pump():
     m.fs.pump.inlet.pressure.fix(101325)
     m.fs.pump.inlet.mole_frac_comp[0, "benzene"].fix(0.4)
     m.fs.pump.inlet.mole_frac_comp[0, "toluene"].fix(0.6)
-    sb = _get_state_from_port(m.fs.pump.inlet,0)
-    sb.temperature.fix(353)
+    m.fs.pump.inlet.temperature.fix(353)
 
     m.fs.pump.deltaP.fix(100000)
     m.fs.pump.efficiency_pump.fix(0.8)
 
-    m.fs.pump.initialize(outlvl=idaeslog.DEBUG)
+    m.fs.pump.initialize()
 
     assert degrees_of_freedom(m) == 0
 

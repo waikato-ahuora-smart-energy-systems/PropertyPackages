@@ -250,7 +250,6 @@ class state_bounds_parser(BuildBase):
             "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
             "temperature": (max(min_melting_point-50,1), 300, 3000, pyunits.K),
             "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-            # "enth_mol": (-300000, 30000, 150000, pyunits.J/pyunits.mol),
         }
 
 

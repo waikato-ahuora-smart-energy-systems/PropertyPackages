@@ -284,7 +284,7 @@ class TestStateBlock(object):
         assert isinstance(model.props[1].temperature, Var)
         assert value(model.props[1].temperature) == 295
         assert model.props[1].temperature.ub == 3000
-        assert model.props[1].temperature.lb == 1 # was 13.95
+        assert model.props[1].temperature.lb == 1
 
         assert isinstance(model.props[1].mole_frac_comp, Var)
         assert len(model.props[1].mole_frac_comp) == 13

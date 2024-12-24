@@ -18,12 +18,11 @@ from idaes.core.util.model_statistics import (
 )
 from idaes.core.solvers import get_solver
 
-from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
+from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
-import idaes.logger as idaeslog
 from ..build_package import build_package
 
 solver = get_solver("ipopt")
@@ -77,7 +76,7 @@ class TestParamBlock(object):
             model.params.config.state_bounds,
             {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (4.360999999999997, 300, 3000, pyunits.K),
+                "temperature": (4.361, 300, 3000, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             },
             item_callback=_as_quantity,
@@ -141,7 +140,7 @@ class TestStateBlock(object):
         assert isinstance(model.props[1].temperature, Var)
         assert value(model.props[1].temperature) == 300
         assert model.props[1].temperature.ub == 3000
-        assert_approx(model.props[1].temperature.lb, 4.361,0.1)
+        assert_approx(model.props[1].temperature.lb, 4.361, 0.1)
 
         assert isinstance(model.props[1].mole_frac_comp, Var)
         assert len(model.props[1].mole_frac_comp) == 3
@@ -190,7 +189,7 @@ class TestStateBlock(object):
         orig_fixed_vars = fixed_variables_set(model)
         orig_act_consts = activated_constraints_set(model)
 
-        model.props.initialize(optarg={"tol": 1e-6},outlvl = idaeslog.DEBUG)
+        model.props.initialize(optarg={"tol": 1e-6})
 
         assert degrees_of_freedom(model) == 0
 
