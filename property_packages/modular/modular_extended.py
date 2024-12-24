@@ -634,7 +634,7 @@ class GenericExtendedStateBlockData(GenericStateBlockData):
         # Add a block for constraints, so we can disable or enable them in bulk
         self.constraints = Block()
 
-    def constrain(self, name: str, value: float):
+    def constrain(self, name: str, value: float) -> Constraint | Var | None:
         # Value must be a float. TODO: Handle unit conversion.
         var = getattr(self, name)
         if type(var) == ScalarExpression:

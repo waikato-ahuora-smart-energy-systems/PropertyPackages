@@ -79,17 +79,19 @@ class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData):
         # Add a block for constraints, so we can disable or enable them in bulk
         self.constraints = Block()
     
-    def constrain(self,name:str,value:float):
+    def constrain(self, name: str, value: float) -> Constraint | Var | None:
         # Value must be a float. TODO: Handle unit conversion.
         var = getattr(self,name)
         if type(var) == ScalarExpression:
-            self.constraints.add_component(name, Constraint(expr=var == value))
+            c = Constraint(expr=var == value)
+            self.constraints.add_component(name, c)
+            return c
         elif type(var) in (ScalarVar, _GeneralVarData, VarData):
             var.fix(value)
+            return var
         elif type(var) in ( _GeneralExpressionData, ExpressionData) :
             # allowed, but we don't need to fix it (eg. mole_frac_comp in helmholtz)
-            print(f"Variable {self} {name} is an Expression: {type(var)}")
-            pass
+            return None
         else:
             raise Exception(f"Variable {self} {name} is not a Var or Expression: {type(var)}")
 
