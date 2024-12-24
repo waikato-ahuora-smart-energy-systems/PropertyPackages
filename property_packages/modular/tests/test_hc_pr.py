@@ -42,7 +42,7 @@ from idaes.models.properties.modular_properties.state_definitions import FTPx, F
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
-from ..build_package import build_package
+from property_packages.build_package import build_package
 
 # -----------------------------------------------------------------------------
 # Get default solver for testing

@@ -1,5 +1,5 @@
 # Build and solve a heater block.
-from ..build_package import build_package
+from property_packages.build_package import build_package
 from pytest import approx
 
 # Import objects from pyomo package 

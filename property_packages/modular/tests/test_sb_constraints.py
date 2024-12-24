@@ -1,4 +1,8 @@
-from ..template_builder import build_config
+"""
+Test initializing and solving a state block with constraints
+rather than fixing the state variables directly.
+"""
+
 from pytest import approx
 from pyomo.environ import (
     ConcreteModel,
@@ -9,6 +13,7 @@ from pyomo.environ import (
 )
 from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
+from ..template_builder import build_config
 
 
 def flowsheet():

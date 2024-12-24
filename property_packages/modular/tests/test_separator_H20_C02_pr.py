@@ -32,7 +32,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
 # Import the build function to create a property package
-from ..build_package import build_package
+from property_packages.build_package import build_package
 
 from pytest import approx
 
