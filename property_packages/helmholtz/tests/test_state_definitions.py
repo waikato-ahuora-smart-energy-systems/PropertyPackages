@@ -1,8 +1,10 @@
 from ..helmholtz_builder import build_helmholtz_package
 from pytest import approx
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
+from pyomo.core.base.constraint import Constraint, ScalarConstraint
 from idaes.core import FlowsheetBlock
 from idaes.models.unit_models import Compressor
+from idaes.core.util.model_statistics import degrees_of_freedom
 
 def flowsheet():
     m = ConcreteModel()
@@ -10,30 +12,57 @@ def flowsheet():
     m.fs.properties = build_helmholtz_package(["h2o"])
     return m
 
+
+def build_state(m):
+    m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
+    return m.fs.state[0]
+
+
+def initialize(m):
+    assert degrees_of_freedom(m) == 0
+    m.fs.state.initialize()
+    assert degrees_of_freedom(m) == 0
+
+
 def solve(m):
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
 
+
+def test_constrain():
+    m = flowsheet()
+    sb = build_state(m)
+    # fix flow_mol directly
+    c = sb.constrain("flow_mol", 1)
+    assert c == sb.flow_mol
+    assert c.value == 1
+    assert c.is_fixed()
+
+    # add a constraint for flow_mass
+    c = sb.constrain("flow_mass", 1)
+    assert type(c) == ScalarConstraint
+    assert c in sb.component_data_objects(Constraint)
+    assert getattr(sb.constraints, "flow_mass") == c
+
+
 def test_state_definition():
     m = flowsheet()
-    m.fs.sb = m.fs.properties.build_state_block(m.fs.time)
-    sb = m.fs.sb[0]
+    sb = build_state(m)
     sb.constrain("enth_mass", 1878.87)
     sb.constrain("pressure", 101325)
     sb.constrain("flow_mass", 1)
-    m.fs.sb.initialize()
+    initialize(m)
     solve(m)
     assert value(sb.temperature) == approx(273.5809)
 
 
 def test_state_definition_temp():
     m = flowsheet()
-    m.fs.sb = m.fs.properties.build_state_block(m.fs.time)
-    sb = m.fs.sb[0]
+    sb = build_state(m)
     sb.constrain("smooth_temperature", 273.5809)
     sb.constrain("pressure", 101325)
     sb.constrain("flow_mass", 1)
-    m.fs.sb.initialize()
+    initialize(m)
     solve(m)
     assert value(sb.enth_mass) == approx(1878.712)
 

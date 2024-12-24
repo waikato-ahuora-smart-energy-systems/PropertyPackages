@@ -11,6 +11,7 @@ from pyomo.environ import (
     units,
     assert_optimal_termination,
 )
+from pyomo.core.base.constraint import Constraint, ScalarConstraint
 from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
 from ..template_builder import build_config
@@ -40,6 +41,22 @@ def solve(m):
     solver = SolverFactory("ipopt")
     res = solver.solve(m, tee=True)
     assert_optimal_termination(res)
+
+
+def test_constrain():
+    m = flowsheet()
+    sb = build_state(m)
+    # fix flow_mol directly
+    c = sb.constrain("flow_mol", 1)
+    assert c == sb.flow_mol
+    assert c.value == 1
+    assert c.is_fixed()
+
+    # add a constraint for flow_mass
+    c = sb.constrain("flow_mass", 1)
+    assert type(c) == ScalarConstraint
+    assert c in sb.component_data_objects(Constraint)
+    assert getattr(sb.constraints, "flow_mass") == c
 
 
 def test_state_vars():
