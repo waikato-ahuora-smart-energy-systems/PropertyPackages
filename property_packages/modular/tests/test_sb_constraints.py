@@ -159,3 +159,20 @@ def test_flow_vol():
     solve(m)
     assert value(sb.flow_vol) == approx(9.660626354419042e-05)
     assert value(sb.flow_mol) == approx(1, rel=1e-3)
+
+
+def test_enthalpy_temperature():
+    # use enthalpy and temperature to define pressure
+    # TODO: this test is not currently working
+    # related: https://github.com/IDAES/idaes-pse/pull/1554
+    m = flowsheet()
+    sb = build_state(m)
+    sb.constrain("flow_mass", 1)
+    sb.constrain("temperature", 290)
+    sb.constrain("enth_mol", 30611.284116732746)
+    sb.mole_frac_comp["benzene"].fix(0.5)
+    sb.mole_frac_comp["toluene"].fix(0.5)
+    return  # fails to initialize
+    initialize(m)
+    solve(m)
+    assert value(sb.pressure) == approx(100000)
