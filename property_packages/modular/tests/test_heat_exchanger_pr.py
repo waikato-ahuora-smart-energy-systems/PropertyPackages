@@ -1,7 +1,6 @@
 # Build and solve a heater block.
-from ..build_package import build_package
+from property_packages.build_package import build_package
 from pytest import approx
-
 # Import objects from pyomo package 
 from pyomo.environ import ConcreteModel, SolverFactory, value, units
 
@@ -86,9 +85,9 @@ def test_heat_exchanger_asu():
     assert degrees_of_freedom(m) == 8
 
     m.fs.heat_exchanger.tube_inlet.flow_mol.fix(1*units.kilomol/units.hour) # mol/s
-    m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
-    m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "argon"].fix(0.33)
-    m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
+    m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "oxygen"].fix(1/3)
+    m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "argon"].fix(1/3)
+    m.fs.heat_exchanger.tube_inlet.mole_frac_comp[0, "nitrogen"].fix(1/3)
     m.fs.heat_exchanger.tube_inlet.pressure.fix(100000) # Pa
     m.fs.heat_exchanger.tube_inlet.temperature[0].fix((25 + 273.15)*units.K)
 
