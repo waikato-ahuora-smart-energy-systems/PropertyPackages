@@ -27,6 +27,6 @@ def test_helmholtz():
     m.fs.heater.initialize()
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
-    assert value(m.fs.heater.outlet.temperature[0]) == approx(298)
+    assert value(m.fs.heater.control_volume.properties_out[0].temperature) == approx(298)
     assert value(m.fs.heater.outlet.pressure[0]) == approx(101325)
     assert value(m.fs.heater.outlet.flow_mol[0]) == approx(1)
