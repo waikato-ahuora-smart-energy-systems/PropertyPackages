@@ -38,6 +38,6 @@ def test_pump():
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
 
-    assert_approx(value(_get_state_from_port(m.fs.pump.outlet,0).temperature), 353, 0.2)
+    assert_approx(value(m.fs.pump.outlet.temperature[0]), 353, 0.2)
     assert value(m.fs.pump.outlet.pressure[0]) == approx(201325)
     assert value(m.fs.pump.outlet.flow_mol[0]) == approx(100)

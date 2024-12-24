@@ -9,8 +9,6 @@ from pyomo.environ import ConcreteModel, SolverFactory, value, units
 from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.models.unit_models.heater import Heater
-from idaes.core.util.tables import _get_state_from_port
-
 
 
 def test_helmholtz():
@@ -29,6 +27,6 @@ def test_helmholtz():
     m.fs.heater.initialize()
     solver = SolverFactory('ipopt')
     solver.solve(m, tee=True)
-    assert value(_get_state_from_port(m.fs.heater.outlet,0).temperature) == approx(298)
+    assert value(m.fs.heater.outlet.temperature[0]) == approx(298)
     assert value(m.fs.heater.outlet.pressure[0]) == approx(101325)
     assert value(m.fs.heater.outlet.flow_mol[0]) == approx(1)
