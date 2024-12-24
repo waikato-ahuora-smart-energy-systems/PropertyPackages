@@ -47,9 +47,9 @@ def test_heater_asu():
     m.fs.heater = Heater(property_package=m.fs.properties)
 
     m.fs.heater.inlet.flow_mol.fix(units.convert(1 * units.kilomol/units.hour, units.mol/units.s)) # mol/s
-    m.fs.heater.inlet.mole_frac_comp[0, "argon"].fix(0.33)
-    m.fs.heater.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
-    m.fs.heater.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
+    m.fs.heater.inlet.mole_frac_comp[0, "argon"].fix(1/3)
+    m.fs.heater.inlet.mole_frac_comp[0, "nitrogen"].fix(1/3)
+    m.fs.heater.inlet.mole_frac_comp[0, "oxygen"].fix(1/3)
     m.fs.heater.inlet.pressure.fix(100000)
     m.fs.heater.inlet.temperature.fix(units.convert_temp_C_to_K(25))
     m.fs.heater.outlet.temperature.fix(units.convert_temp_C_to_K(50))
@@ -66,9 +66,9 @@ def test_heater_asu():
     m.fs.heater2 = Heater(property_package=m.fs.properties)
 
     m.fs.heater2.inlet.flow_mol.fix(units.convert(1 * units.kilomol/units.hour, units.mol/units.s)) # mol/s
-    m.fs.heater2.inlet.mole_frac_comp[0, "argon"].fix(0.33)
-    m.fs.heater2.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
-    m.fs.heater2.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
+    m.fs.heater2.inlet.mole_frac_comp[0, "argon"].fix(1/3)
+    m.fs.heater2.inlet.mole_frac_comp[0, "nitrogen"].fix(1/3)
+    m.fs.heater2.inlet.mole_frac_comp[0, "oxygen"].fix(1/3)
     m.fs.heater2.inlet.pressure.fix(100000)
     m.fs.heater2.inlet.temperature.fix(units.convert_temp_C_to_K(25))
     m.fs.heater2.outlet.temperature.fix(units.convert_temp_C_to_K(-15))

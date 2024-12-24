@@ -62,9 +62,9 @@ def test_expander_asu():
     m.fs.compressor.inlet.flow_mol[0].fix(1*units.kilomol/units.hour)
     m.fs.compressor.inlet.pressure.fix(1000000 * units.Pa)
     m.fs.compressor.inlet.temperature.fix((273.15+25) * units.K)
-    m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(0.33)
-    m.fs.compressor.inlet.mole_frac_comp[0, "oxygen"].fix(0.33)
-    m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(0.33)
+    m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(1/3)
+    m.fs.compressor.inlet.mole_frac_comp[0, "oxygen"].fix(1/3)
+    m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(1/3)
 
     m.fs.compressor.outlet.pressure.fix(100000*units.Pa)
 
