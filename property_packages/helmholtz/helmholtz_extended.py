@@ -126,8 +126,8 @@ class _ExtendedStateBlock(_StateBlock):
             try:
                 res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
             except ValueError as e:
-                # https://github.com/Pyomo/pyomo/pull/3445
-                if str(e).startswith("No variables appear")
+                if str(e).startswith("No variables appear"):
+                    # https://github.com/Pyomo/pyomo/pull/3445
                     pass
                 else:
                     raise e
