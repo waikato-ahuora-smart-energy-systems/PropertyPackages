@@ -50,7 +50,6 @@ from idaes.core.base.phases import (
     __all_phases__,
 )
 from idaes.core.util.initialization import (
-    fix_state_vars,
     revert_state_vars,
     solve_indexed_blocks,
 )
