@@ -71,7 +71,7 @@ def test_constrain_component():
     assert c.is_fixed()
 
     # constrain flow_mass by component
-    c = sb.constrain(sb.flow_mass, 10)
+    c = sb.constrain_component(sb.flow_mass, 10)
     assert type(c) == ScalarConstraint
     assert c in sb.component_data_objects(Constraint)
     assert getattr(sb.constraints, "flow_mass") == c
