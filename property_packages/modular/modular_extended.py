@@ -1,6 +1,6 @@
 from pyomo.environ import Block, Constraint
 from pyomo.core.base.expression import ScalarExpression
-from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData
+from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar
 from idaes.core import declare_process_block_class
 from idaes.core.util.exceptions import ConfigurationError
 from idaes.models.properties.modular_properties.base.generic_property import (
@@ -133,6 +133,7 @@ def fix_state_vars(blk, state_args=None):
             "entr_mol",
             "entr_mass",
             "smooth_temperature",
+            "total_energy_flow",
         ]
         for n, v in b.define_state_vars().items():
             fix_var = True
@@ -634,20 +635,28 @@ class GenericExtendedStateBlockData(GenericStateBlockData):
         # Add a block for constraints, so we can disable or enable them in bulk
         self.constraints = Block()
 
+
     def constrain(self, name: str, value: float) -> Constraint | Var | None:
-        # Value must be a float. TODO: Handle unit conversion.
+        """constrain a component by name to a value"""
         var = getattr(self, name)
-        if type(var) == ScalarExpression:
-            c = Constraint(expr=var == value)
+        return self.constrain_component(var, value)
+
+
+    def constrain_component(self, component: Var | Expression, value: float) -> Constraint | Var | None:
+        """
+        Constrain a component to a value
+        """
+        if type(component) == ScalarExpression:
+            c = Constraint(expr=component == value)
             c.defining_state_var = True
-            self.constraints.add_component(name, c)
+            self.constraints.add_component(component.local_name, c)
             return c
-        elif type(var) in (ScalarVar, _GeneralVarData, VarData):
-            var.fix(value)
-            return var
+        elif type(component) in (ScalarVar, _GeneralVarData, VarData, IndexedVar):
+            component.fix(value)
+            return component
         else:
             raise Exception(
-                f"Variable {self} {name} is not a Var or Expression: {type(var)}"
+                f"Component {component} is not a Var or Expression: {type(component)}"
             )
 
 
