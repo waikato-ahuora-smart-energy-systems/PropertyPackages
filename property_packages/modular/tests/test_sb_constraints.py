@@ -66,7 +66,7 @@ def test_constrain_component():
 
     # fix flow_mol by component
     c = sb.constrain_component(sb.flow_mol, 10)
-    assert c = sb.flow_mol
+    assert c == sb.flow_mol
     assert c.value == 10
     assert c.is_fixed()
 
