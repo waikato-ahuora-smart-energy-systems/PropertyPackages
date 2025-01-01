@@ -46,14 +46,32 @@ def solve(m):
 def test_constrain():
     m = flowsheet()
     sb = build_state(m)
-    # fix flow_mol directly
-    c = sb.constrain("flow_mol", 1)
+
+    # fix flow_mol by string
+    c = sb.constrain("flow_mol", 10)
     assert c == sb.flow_mol
-    assert c.value == 1
+    assert c.value == 10
     assert c.is_fixed()
 
-    # add a constraint for flow_mass
-    c = sb.constrain("flow_mass", 1)
+    # constrain flow_mass by string
+    c = sb.constrain("flow_mass", 10)
+    assert type(c) == ScalarConstraint
+    assert c in sb.component_data_objects(Constraint)
+    assert getattr(sb.constraints, "flow_mass") == c
+
+
+def test_constrain_component():
+    m = flowsheet()
+    sb = build_state(m)
+
+    # fix flow_mol by component
+    c = sb.constrain_component(sb.flow_mol, 10)
+    assert c = sb.flow_mol
+    assert c.value == 10
+    assert c.is_fixed()
+
+    # constrain flow_mass by component
+    c = sb.constrain(sb.flow_mass, 10)
     assert type(c) == ScalarConstraint
     assert c in sb.component_data_objects(Constraint)
     assert getattr(sb.constraints, "flow_mass") == c
