@@ -80,9 +80,10 @@ def test_initialise_compressor():
     inlet.constrain("smooth_temperature", 273.5809)
     inlet.constrain("pressure", 101325)
     inlet.constrain("flow_mass", 1)
+    m.fs.compressor.efficiency_isentropic.fix(1)
     m.fs.compressor.deltaP.fix(100000)
-    m.fs.compressor.initialize()
+    m.fs.compressor.initialize(outlvl=1)
     solve(m)
-    assert value(outlet.temperature) == approx(393.5689573)
+    assert value(outlet.temperature) == approx(273.58047830928655)
 
     
