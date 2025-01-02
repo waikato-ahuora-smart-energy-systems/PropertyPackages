@@ -1,4 +1,4 @@
-from pyomo.environ import SolverFactory
+from pyomo.environ import SolverFactory, check_optimal_termination
 
 from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
 from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
@@ -13,15 +13,10 @@ from property_packages.utils.fix_state_vars import fix_state_vars
 
 
 class _ExtendedStateBlock(_StateBlock):
-    """
-    This class contains methods which should be applied to Property Blocks as a
-    whole, rather than individual elements of indexed Property Blocks.
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs) 
 
     def initialize(blk, *args, **kwargs):
         outlvl = kwargs.get("outlvl", idaeslog.NOTSET)
+        init_log = idaeslog.getInitLogger(blk.name, outlvl, tag="properties")
         solve_log = idaeslog.getSolveLogger(blk.name, outlvl, tag="properties")
 
         flag_dict = fix_state_vars(blk, kwargs.get("state_args", None))
@@ -32,6 +27,8 @@ class _ExtendedStateBlock(_StateBlock):
                 f"{blk.name} Unexpected degrees of freedom during "
                 f"initialization at property initialization step: {dof}."
             )
+        
+        res = None
         opt = SolverFactory('ipopt')
         with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
             try:
@@ -42,11 +39,21 @@ class _ExtendedStateBlock(_StateBlock):
                     pass
                 else:
                     raise e
+        
+        if res is not None and not check_optimal_termination(res):
+            raise InitializationError(
+                f"{blk.name} failed to initialize successfully. Please check "
+                f"the output logs for more information."
+            )
 
         if kwargs.get("hold_state") is True:
             return flag_dict
         else:
             blk.release_state(flag_dict)
+        
+        init_log.info(
+            "Property package initialization: {}.".format(idaeslog.condition(res))
+        )
     
     def release_state(blk, flags, outlvl=idaeslog.NOTSET):
         revert_state_vars(blk, flags)
