@@ -1,6 +1,4 @@
-from pyomo.environ import Constraint, Block, SolverFactory
-from pyomo.core.base.var import IndexedVar, ScalarVar, Var, _GeneralVarData, VarData
-from pyomo.core.base.expression import Expression, ScalarExpression, _GeneralExpressionData, ExpressionData
+from pyomo.environ import SolverFactory
 
 from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
 from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
@@ -10,7 +8,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.core.util.exceptions import InitializationError
 import idaes.logger as idaeslog
 
-from property_packages.utils.add_extra_expressions import add_extra_expressions
+from property_packages.base.state_block_constraints import StateBlockConstraints
 from property_packages.utils.fix_state_vars import fix_state_vars
 
 
@@ -55,41 +53,12 @@ class _ExtendedStateBlock(_StateBlock):
 
 
 @declare_process_block_class("HelmholtzExtendedStateBlock", block_class=_ExtendedStateBlock)
-class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData):
+class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData, StateBlockConstraints):
 
     def build(self, *args):
-        super().build(*args)
-        # Add expressions for smooth_temperature, enthalpy in terms of mass, etc.
-        add_extra_expressions(self)
-        # Add a block for constraints, so we can disable or enable them in bulk
-        self.constraints = Block()
+        HelmholtzStateBlockData.build(self, *args)
+        StateBlockConstraints.build(self, *args)
 
-
-    def constrain(self, name: str, value: float) -> Constraint | Var | None:
-        """constrain a component by name to a value"""
-        # TODO: handle unit conversion
-        var = getattr(self, name)
-        return self.constrain_component(var, value)
-
-
-    def constrain_component(self, component: Var | Expression, value: float) -> Constraint | Var | None:
-        """
-        Constrain a component to a value
-        """
-        if type(component) == ScalarExpression:
-            c = Constraint(expr=component == value)
-            self.constraints.add_component(component.local_name, c)
-            return c
-        elif type(component) in (ScalarVar, _GeneralVarData, VarData, IndexedVar):
-            component.fix(value)
-            return component
-        elif type(component) in (_GeneralExpressionData, ExpressionData):
-            # allowed, but we don't need to fix it (eg. mole_frac_comp in helmholtz)
-            return None
-        else:
-            raise Exception(
-                f"Component {component} is not a Var or Expression: {type(component)}"
-            )
 
 @declare_process_block_class("HelmholtzExtendedParameterBlock")
 class HelmholtzExtendedParameterBlockData(HelmholtzParameterBlockData):

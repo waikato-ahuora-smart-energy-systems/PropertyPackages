@@ -1,6 +1,3 @@
-from pyomo.environ import Block, Constraint
-from pyomo.core.base.expression import ScalarExpression
-from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar
 from idaes.core import declare_process_block_class
 from idaes.core.util.exceptions import ConfigurationError
 from idaes.models.properties.modular_properties.base.generic_property import (
@@ -10,6 +7,7 @@ from idaes.models.properties.modular_properties.base.generic_property import (
 )
 import idaes.models.properties.modular_properties.base.utility as utility
 
+from property_packages.base.state_block_constraints import StateBlockConstraints
 from property_packages.utils.add_extra_expressions import add_extra_expressions
 from property_packages.utils.fix_state_vars import fix_state_vars
 
@@ -540,38 +538,11 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
 @declare_process_block_class(
     "GenericExtendedStateBlock", block_class=_ExtendedGenericStateBlock
 )
-class GenericExtendedStateBlockData(GenericStateBlockData):
+class GenericExtendedStateBlockData(GenericStateBlockData, StateBlockConstraints):
 
     def build(self, *args):
-        super().build(*args)
-        # Add expressions for smooth_temperature, enthalpy in terms of mass, etc.
-        add_extra_expressions(self)
-        # Add a block for constraints, so we can disable or enable them in bulk
-        self.constraints = Block()
-
-
-    def constrain(self, name: str, value: float) -> Constraint | Var | None:
-        """constrain a component by name to a value"""
-        var = getattr(self, name)
-        return self.constrain_component(var, value)
-
-
-    def constrain_component(self, component: Var | Expression, value: float) -> Constraint | Var | None:
-        """
-        Constrain a component to a value
-        """
-        if type(component) == ScalarExpression:
-            c = Constraint(expr=component == value)
-            c.defining_state_var = True
-            self.constraints.add_component(component.local_name, c)
-            return c
-        elif type(component) in (ScalarVar, _GeneralVarData, VarData, IndexedVar):
-            component.fix(value)
-            return component
-        else:
-            raise Exception(
-                f"Component {component} is not a Var or Expression: {type(component)}"
-            )
+        GenericStateBlockData.build(self, *args)
+        StateBlockConstraints.build(self, *args)
 
 
 @declare_process_block_class("GenericExtendedParameterBlock")
