@@ -1,5 +1,9 @@
-from pyomo.environ import SolverFactory, check_optimal_termination
-
+from pyomo.environ import (
+    Expression,
+    SolverFactory,
+    check_optimal_termination,
+    units
+)
 from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
 from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
 from idaes.core import declare_process_block_class
@@ -62,9 +66,18 @@ class _ExtendedStateBlock(_StateBlock):
 @declare_process_block_class("HelmholtzExtendedStateBlock", block_class=_ExtendedStateBlock)
 class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData, StateBlockConstraints):
 
-    def build(self, *args):
-        HelmholtzStateBlockData.build(self, *args)
-        StateBlockConstraints.build(self, *args)
+    def build(blk, *args):
+        HelmholtzStateBlockData.build(blk, *args)
+        StateBlockConstraints.build(blk, *args)
+
+        # rename temperature to old_temperature
+        old_temperature = blk.temperature
+        blk.del_component("temperature")
+        blk.add_component("old_temperature", old_temperature)
+        # create smooth temperature expression
+        blk.add_component("temperature", Expression(
+            expr=blk.old_temperature + (blk.enth_mol / (1 * units.J/units.mol))*0.000001 * units.K
+        ))
 
 
 @declare_process_block_class("HelmholtzExtendedParameterBlock")

@@ -40,7 +40,6 @@ def fix_state_vars(blk, state_args=None):
             "entr_mol",
             "entr_mass",
             "temperature",
-            "smooth_temperature",
             "total_energy_flow",
             "custom_vapor_frac",
         }

@@ -59,7 +59,7 @@ def test_state_definition():
 def test_state_definition_temp():
     m = flowsheet()
     sb = build_state(m)
-    sb.constrain("smooth_temperature", 273.5809)
+    sb.constrain("temperature", 273.5809)
     sb.constrain("pressure", 101325)
     sb.constrain("flow_mass", 1)
     initialize(m)
@@ -77,7 +77,7 @@ def test_initialise_compressor():
     m.fs.compressor = Compressor(property_package=m.fs.properties)
     inlet = m.fs.compressor.control_volume.properties_in[0]
     outlet = m.fs.compressor.control_volume.properties_out[0]
-    inlet.constrain("smooth_temperature", 273.5809)
+    inlet.constrain("temperature", 273.5809)
     inlet.constrain("pressure", 101325)
     inlet.constrain("flow_mass", 1)
     m.fs.compressor.efficiency_isentropic.fix(1)

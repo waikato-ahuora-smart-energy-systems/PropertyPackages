@@ -21,7 +21,7 @@ def test_helmholtz():
     m.fs.heater.inlet.flow_mol.fix(1)
     #m.fs.heater.inlet.vapor_frac.fix(0)
     #m.fs.heater.inlet.temperature.fix(298) # room temperature in K
-    m.fs.heater.inlet.enth_mol.fix(1878.87)
+    m.fs.heater.inlet.enth_mol.fix(1878.71)
     m.fs.heater.inlet.pressure.fix(101325)
     assert degrees_of_freedom(m) == 0
     m.fs.heater.initialize()
