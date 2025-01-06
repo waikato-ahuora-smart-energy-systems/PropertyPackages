@@ -1,5 +1,6 @@
 
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
+from .modular_extended import GenericExtendedParameterBlock
 from compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
 from property_packages.types import States
@@ -44,4 +45,4 @@ def build_config(property_package_name, compound_names: List[str], valid_states:
     new_template[key] = obj.serialise(compounds, valid_states)
   
   # Building property package and returning
-  return GenericParameterBlock(**new_template)
+  return GenericExtendedParameterBlock(**new_template)

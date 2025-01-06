@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from .base_parser import BuildBase
 from compounds.Compound import Compound
 from pyomo.environ import units as pyunits
-from idaes.models.properties.modular_properties.state_definitions import FTPx
+from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
 from idaes.core import LiquidPhase, VaporPhase, Component, PhaseType as PT
 from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE)
@@ -246,30 +246,12 @@ class state_bounds_parser(BuildBase):
         min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
 
         # TODO: Refactor this logic, need a more versatile approach
-        if (min_critical_temperature > 500):
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 300, 500, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-            }
-        elif (min_critical_temperature > 300):
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 200, 400, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-            }
-        elif (min_critical_temperature > 120):
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 150, 500, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-            }
-        else:
-            return {
-                "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 150, 350, pyunits.K),
-                "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
-            }
+        return {
+            "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
+            "temperature": (max(min_melting_point-50,1), 300, 3000, pyunits.K),
+            "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
+        }
+
 
 class state_definition_parser(BuildBase):
     @staticmethod
