@@ -14,6 +14,7 @@ from property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
 from property_packages.types import States
 from idaes.models.properties.modular_properties.pure.ConstantProperties import Constant
+import json
 import csv
 
 from idaes.models.properties.modular_properties.coolprop.coolprop_wrapper import (
@@ -210,7 +211,9 @@ class components_parser(BuildBase):
 class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return {("Vap", "Liq"): SmoothVLE}
+        if len(valid_states) == 2:
+            return {("Vap", "Liq"): SmoothVLE}
+        return None
 
 class phases_parser(BuildBase):
     @staticmethod
@@ -234,7 +237,9 @@ class phases_parser(BuildBase):
 class phases_in_equilibrium_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return [("Vap", "Liq")]
+        if len(valid_states) == 2:
+            return [("Vap", "Liq")]
+        return None
 
 class pressure_ref_parser(BuildBase):
     @staticmethod
@@ -331,10 +336,16 @@ class cool_prop_components_parser(BuildBase):
     
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
+
+        if len(compounds) > 1:
+            raise Exception("Cool-prop currently only supports single component systems")
+
+        valid_names = json.load(open(this_file_dir() + "/data/cool_prop.json", "r"))["liquids"]
     
         def serialise_component(compound: Compound) -> Dict[str, Any]:
 
-            # configuration default to all components 
+            # configuration default to all components
+
             return {
                 "type": Component,
                 "dens_mol_liq_comp": CoolPropWrapper,
@@ -343,7 +354,7 @@ class cool_prop_components_parser(BuildBase):
                 "entr_mol_liq_comp": CoolPropWrapper,
                 "entr_mol_ig_comp": Constant,
                 "pressure_sat_comp": CoolPropWrapper,
-                "phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
+                #"phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
                 "parameter_data": {
                     "mw": CoolPropWrapper,
                     "dens_mol_crit": CoolPropWrapper,
@@ -354,14 +365,15 @@ class cool_prop_components_parser(BuildBase):
                     "enth_mol_form_ig_comp_ref": 0,
                     "entr_mol_form_ig_comp_ref": 0,
                     "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol),
-                    "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K),
-                    "enth_mol_form_vap_comp_ref": (compound["HeatOfFormation"].value, pyunits.J/pyunits.kilomol),
-                    "entr_mol_form_vap_comp_ref": (-1 * compound["AbsEntropy"].value, pyunits.J/pyunits.kilomol/pyunits.K)
+                    "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
                 }
             }
         
         components_output = {}
         for compound in compounds:
-            components_output[compound["CompoundID"].value] = serialise_component(compound)
+            if compound["CompoundID"].value in valid_names:
+                components_output[compound["CompoundID"].value] = serialise_component(compound)
+            else:
+                raise ValueError(f"Compound {compound['CompoundID'].value} not found in CoolProp database")
         return components_output
     
