@@ -263,6 +263,52 @@ class temperature_ref_parser(BuildBase):
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         return (298.15, pyunits.K)
 
+class cool_prop_components_parser(BuildBase):
+    
+    @staticmethod
+    def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
+
+        # if len(compounds) > 1:robinson
+        #     raise Exception("Cool-prop currently only supports single component systems")
+
+        valid_names = json.load(open(this_file_dir() + "/data/cool_prop.json", "r"))["liquids"]
+    
+        def serialise_component(compound: Compound) -> Dict[str, Any]:
+
+            # configuration default to all components
+
+            return {
+                "type": Component,
+                "enth_mol_liq_comp": CoolPropWrapper,
+                "enth_mol_ig_comp": Constant,
+                "entr_mol_liq_comp": CoolPropWrapper,
+                "entr_mol_ig_comp": Constant,
+                "pressure_sat_comp": CoolPropWrapper,
+                #"phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
+                "parameter_data": {
+                    "mw": CoolPropWrapper,
+                    "dens_mol_crit": CoolPropWrapper,
+                    "pressure_crit": CoolPropWrapper,
+                    "temperature_crit": CoolPropWrapper,
+                    "omega": CoolPropWrapper,
+                    "cp_mol_ig_comp_coeff": 0,
+                    "enth_mol_form_ig_comp_ref": 0,
+                    "entr_mol_form_ig_comp_ref": 0,
+                    "enth_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol),
+                    "entr_mol_form_liq_comp_ref": (0, pyunits.J / pyunits.kilomol / pyunits.K)
+                }
+            }
+        
+        components_output = {}
+        for compound in compounds:
+            # if compound["CompoundID"].value.lower() in valid_names:
+            #     components_output[compound["CompoundID"].value] = serialise_component(compound)
+            # else:
+            #     raise ValueError(f"Compound {compound['CompoundID'].value} not found in CoolProp database")
+            components_output[compound["CompoundID"].value] = serialise_component(compound)
+        return components_output
+    
+
 class pr_kappa_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
