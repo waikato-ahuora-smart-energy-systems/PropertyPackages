@@ -1,14 +1,17 @@
 from enum import Enum
 from .pengrobinson import template as pr_template
+from .coolprop import template as cp_template
 
 class PropertyPackage(Enum):
     PengRobinson = "peng-robinson"
+    CoolProp = "coolprop"
     # ...
     # Add other packages
 
     def get_template(self):
         return {
-            PropertyPackage.PengRobinson: pr_template
+            PropertyPackage.PengRobinson: pr_template,
+            PropertyPackage.CoolProp: cp_template
             # ...
             # Add other mappings
         }.get(self, None)
