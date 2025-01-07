@@ -261,25 +261,25 @@ class state_bounds_parser(BuildBase):
         if (min_critical_temperature > 500):
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 300, 500, pyunits.K),
+                "temperature": (0, 300, 500, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             }
         elif (min_critical_temperature > 300):
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 200, 400, pyunits.K),
+                "temperature": (0, 200, 400, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             }
         elif (min_critical_temperature > 120):
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 150, 500, pyunits.K),
+                "temperature": (0, 150, 500, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             }
         else:
             return {
                 "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
-                "temperature": (min_melting_point, 150, 350, pyunits.K),
+                "temperature": (0, 150, 350, pyunits.K),
                 "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
             }
 
@@ -337,8 +337,8 @@ class cool_prop_components_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
 
-        if len(compounds) > 1:
-            raise Exception("Cool-prop currently only supports single component systems")
+        # if len(compounds) > 1:
+        #     raise Exception("Cool-prop currently only supports single component systems")
 
         valid_names = json.load(open(this_file_dir() + "/data/cool_prop.json", "r"))["liquids"]
     
@@ -348,7 +348,6 @@ class cool_prop_components_parser(BuildBase):
 
             return {
                 "type": Component,
-                "dens_mol_liq_comp": CoolPropWrapper,
                 "enth_mol_liq_comp": CoolPropWrapper,
                 "enth_mol_ig_comp": Constant,
                 "entr_mol_liq_comp": CoolPropWrapper,
@@ -371,9 +370,10 @@ class cool_prop_components_parser(BuildBase):
         
         components_output = {}
         for compound in compounds:
-            if compound["CompoundID"].value in valid_names:
-                components_output[compound["CompoundID"].value] = serialise_component(compound)
-            else:
-                raise ValueError(f"Compound {compound['CompoundID'].value} not found in CoolProp database")
+            # if compound["CompoundID"].value.lower() in valid_names:
+            #     components_output[compound["CompoundID"].value] = serialise_component(compound)
+            # else:
+            #     raise ValueError(f"Compound {compound['CompoundID'].value} not found in CoolProp database")
+            components_output[compound["CompoundID"].value] = serialise_component(compound)
         return components_output
     
