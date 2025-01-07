@@ -2,8 +2,6 @@ from pyomo.environ import Block, Constraint
 from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
 from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
 
-from property_packages.utils.add_extra_expressions import add_extra_expressions
-
 
 class StateBlockConstraints:
 
@@ -13,8 +11,8 @@ class StateBlockConstraints:
     """
 
     def build(blk, *args):
-        add_extra_expressions(blk)
         blk.constraints = Block()
+        blk.add_extra_expressions()
 
 
     def constrain(blk, name: str, value: float) -> Constraint | Var | None:
@@ -42,3 +40,21 @@ class StateBlockConstraints:
             raise Exception(
                 f"Component {component} is not a Var or Expression: {type(component)}"
             )
+
+
+    def add_extra_expressions(blk):
+        """
+        IDAES state blocks don't support all the properties
+        we need, so we add some extra expressions here.
+        
+        This method can be overridden in a subclass to add
+        additional expressions specific to the property package.
+        """
+        if not hasattr(blk, "enth_mass"):
+            blk.add_component("enth_mass", Expression(expr=(blk.flow_mol * blk.enth_mol) / blk.flow_mass))
+        if not hasattr(blk, "entr_mass"):
+            blk.add_component("entr_mass", Expression(expr=(blk.flow_mol * blk.entr_mol) / blk.flow_mass))
+        if not hasattr(blk, "entr_mol"):
+            blk.add_component("entr_mol", Expression(expr=(blk.flow_mol * blk.entr_mass) / blk.flow_mass))
+        if not hasattr(blk, "total_energy_flow"):
+            blk.add_component("total_energy_flow", Expression(expr=blk.flow_mass * blk.enth_mass))

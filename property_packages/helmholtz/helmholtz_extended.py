@@ -70,6 +70,9 @@ class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData, StateBlockConstra
         HelmholtzStateBlockData.build(blk, *args)
         StateBlockConstraints.build(blk, *args)
 
+    def add_extra_expressions(blk):
+        super().add_extra_expressions()
+
         # rename temperature to old_temperature
         old_temperature = blk.temperature
         blk.del_component("temperature")

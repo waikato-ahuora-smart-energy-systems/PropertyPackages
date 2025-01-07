@@ -1,3 +1,5 @@
+from pyomo.environ import Expression
+
 from idaes.core import declare_process_block_class
 from idaes.core.util.exceptions import ConfigurationError
 from idaes.models.properties.modular_properties.base.generic_property import (
@@ -8,7 +10,6 @@ from idaes.models.properties.modular_properties.base.generic_property import (
 import idaes.models.properties.modular_properties.base.utility as utility
 
 from property_packages.base.state_block_constraints import StateBlockConstraints
-from property_packages.utils.add_extra_expressions import add_extra_expressions
 from property_packages.utils.fix_state_vars import fix_state_vars
 
 
@@ -540,9 +541,21 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
 )
 class GenericExtendedStateBlockData(GenericStateBlockData, StateBlockConstraints):
 
-    def build(self, *args):
-        GenericStateBlockData.build(self, *args)
-        StateBlockConstraints.build(self, *args)
+    def build(blk, *args):
+        GenericStateBlockData.build(blk, *args)
+        StateBlockConstraints.build(blk, *args)
+    
+    def add_extra_expressions(blk):
+        super().add_extra_expressions()
+
+        # add vapor_frac expression
+        def rule_vapor_frac(blk):
+            if "Vap" not in blk.phase_list:
+                # No vapor phase
+                return 0
+            return blk.phase_frac["Vap"]
+        
+        blk.vapor_frac = Expression(expr=rule_vapor_frac)
 
 
 @declare_process_block_class("GenericExtendedParameterBlock")
