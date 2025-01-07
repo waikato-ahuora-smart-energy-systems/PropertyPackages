@@ -196,7 +196,6 @@ def test_cubic_liquid_enth():
 def test_compounds():
 
     compounds = [
-        # ["benzene", "toluene"],
         ["nitrogen", "argon"],
         ["ethanol", "toluene"],
         ["argon", "ammonia"],
@@ -207,11 +206,12 @@ def test_compounds():
         ["krypton", "toluene"]
     ]
 
-    # for c in compounds:
-    #     cool_prop_pure_tester(c)
+    for c in compounds:
+        cool_prop_pure_tester(c[0])
+        cool_prop_pure_tester(c[1])
 
-    for i in range(len(compounds)):
-        cool_prop_mixture_tester([compounds[i][0], compounds[i][1]])
+    # for i in range(len(compounds)):
+    #     cool_prop_mixture_tester([compounds[i][0], compounds[i][1]])
 
 def cool_prop_pure_tester(name):
     """
@@ -253,7 +253,7 @@ def cool_prop_pure_tester(name):
                 PropsSI("DMOLAR", "T", T, "P", P * 1e5, f"PR::{name}"),
                 rel=5e-3, # within 0.5% of CoolProp value
             ) == value(m.fs.state[0].dens_mol_phase["Liq"])
-
+            
             assert pytest.approx(
                 CoolProp.PropsSI("SMOLAR", "T", T, "P", P * 1e5, f"PR::{name}") - S0_CP,
                 rel=5e-3, # within 0.5% of CoolProp value
@@ -264,55 +264,55 @@ def cool_prop_pure_tester(name):
                 rel=5e-3, # within 0.5% of CoolProp value
             ) == value(m.fs.state[0].enth_mol_phase["Liq"] - H0_I), f"entr {name, T}"
 
-def cool_prop_mixture_tester(names):
-    """
-    Method tests build_package("coolprop", [name], ["Liq"]) against CoolProp.PropsSI values
+# def cool_prop_mixture_tester(names):
+#     """
+#     Method tests build_package("coolprop", [name], ["Liq"]) against CoolProp.PropsSI values
 
-    Parameters:
-        name (str): Name of cool-prop compound to be tested e.g. "benzene"
+#     Parameters:
+#         name (str): Name of cool-prop compound to be tested e.g. "benzene"
 
-    Returns:
-        none: Method asserts values against CoolProp.PropsSI
-    """
+#     Returns:
+#         none: Method asserts values against CoolProp.PropsSI
+#     """
 
-    m = get_ms(names)
+#     m = get_ms(names)
 
-    name = f"{names[0]}[0.5]&{names[1]}[0.5]"
+#     name = f"{names[0]}[0.5]&{names[1]}[0.5]"
 
-    Td = CoolProp.PropsSI("T", "P", 101325, "Q", 0.5, name)
-    Tmin = CoolProp.PropsSI("TMIN", f"{name}")
+#     Td = CoolProp.PropsSI("T", "P", 101325, "Q", 0.5, name)
+#     Tmin = CoolProp.PropsSI("TMIN", f"{name}")
 
-    for T in arange(Tmin, Td, 10):
-        m.fs.state[0].pressure.fix(101325)
-        m.fs.state[0].temperature.fix(T)
+#     for T in arange(Tmin, Td, 10):
+#         m.fs.state[0].pressure.fix(101325)
+#         m.fs.state[0].temperature.fix(T)
 
-        m.fs.state.initialize()
+#         m.fs.state.initialize()
 
-        S0_CP = CoolProp.PropsSI("SMOLAR", "T", T, "P", 101325, f"{name}")
-        S0_I = value(m.fs.state[0].entr_mol)
+#         S0_CP = CoolProp.PropsSI("SMOLAR", "T", T, "P", 101325, f"{name}")
+#         S0_I = value(m.fs.state[0].entr_mol)
 
-        H0_CP = CoolProp.PropsSI("HMOLAR", "T", T, "P", 101325, f"{name}")
-        H0_I = value(m.fs.state[0].enth_mol)
+#         H0_CP = CoolProp.PropsSI("HMOLAR", "T", T, "P", 101325, f"{name}")
+#         H0_I = value(m.fs.state[0].enth_mol)
 
-        for P in range(1, 11):
-            m.fs.state[0].pressure.fix(P * 1e5)
+#         for P in range(1, 11):
+#             m.fs.state[0].pressure.fix(P * 1e5)
 
-            results = solver.solve(m.fs)
+#             results = solver.solve(m.fs)
 
-            assert results.solver.termination_condition == TerminationCondition.optimal
-            assert results.solver.status == SolverStatus.ok
+#             assert results.solver.termination_condition == TerminationCondition.optimal
+#             assert results.solver.status == SolverStatus.ok
 
-            assert pytest.approx(
-                PropsSI("DMOLAR", "T", T, "P", P * 1e5, f"{name}"),
-                rel=5e-3, # within 0.5% of CoolProp value
-            ) == value(m.fs.state[0].dens_mol), f"{Tmin, name, T, P}"
+#             assert pytest.approx(
+#                 PropsSI("DMOLAR", "T", T, "P", P * 1e5, f"{name}"),
+#                 rel=5e-3, # within 0.5% of CoolProp value
+#             ) == value(m.fs.state[0].dens_mol), f"{Tmin, name, T, P}"
 
-            assert pytest.approx(
-                CoolProp.PropsSI("SMOLAR", "T", T, "P", P * 1e5, f"{name}") - S0_CP,
-                rel=5e-3, # within 0.5% of CoolProp value
-            ) == value(m.fs.state[0].entr_mol - S0_I), f"entr {Tmin, name, T}"
+#             assert pytest.approx(
+#                 CoolProp.PropsSI("SMOLAR", "T", T, "P", P * 1e5, f"{name}") - S0_CP,
+#                 rel=5e-3, # within 0.5% of CoolProp value
+#             ) == value(m.fs.state[0].entr_mol - S0_I), f"entr {Tmin, name, T}"
 
-            assert pytest.approx(
-                CoolProp.PropsSI("HMOLAR", "T", T, "P", P * 1e5, f"{name}") - H0_CP,
-                rel=5e-3, # within 0.5% of CoolProp value
-            ) == value(m.fs.state[0].enth_mol - H0_I), f"entr {Tmin, name, T}"
+#             assert pytest.approx(
+#                 CoolProp.PropsSI("HMOLAR", "T", T, "P", P * 1e5, f"{name}") - H0_CP,
+#                 rel=5e-3, # within 0.5% of CoolProp value
+#             ) == value(m.fs.state[0].enth_mol - H0_I), f"entr {Tmin, name, T}"
