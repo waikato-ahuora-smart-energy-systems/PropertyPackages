@@ -48,6 +48,8 @@ from pyomo.environ import (
     value,
     Var,
 )
+
+import json
 import pytest
 
 solver = get_solver(solver="ipopt_v2")

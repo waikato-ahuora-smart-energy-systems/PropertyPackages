@@ -13,7 +13,16 @@ from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
 from property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
 from property_packages.types import States
-import csv
+import csv, json
+
+from idaes.models.properties.modular_properties.pure.ConstantProperties import Constant
+
+from idaes.models.properties.modular_properties.coolprop.coolprop_wrapper import (
+    CoolPropWrapper,
+    CoolPropExpressionError,
+    CoolPropPropertyError,
+)
+
 
 class base_units_parser(BuildBase):
     @staticmethod
@@ -203,7 +212,9 @@ class components_parser(BuildBase):
 class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return {("Vap", "Liq"): SmoothVLE}
+        if len(valid_states) == 2:
+            return {("Vap", "Liq"): SmoothVLE}
+        return None
 
 class phases_parser(BuildBase):
     @staticmethod
@@ -227,7 +238,9 @@ class phases_parser(BuildBase):
 class phases_in_equilibrium_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
-        return [("Vap", "Liq")]
+        if len(valid_states) == 2:
+            return [("Vap", "Liq")]
+        return None
 
 class pressure_ref_parser(BuildBase):
     @staticmethod
