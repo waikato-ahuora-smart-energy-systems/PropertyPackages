@@ -2,10 +2,14 @@ from pyomo.environ import (
     Expression,
     SolverFactory,
     check_optimal_termination,
-    units
+    units,
+    Block,
+    Constraint,
+    value
 )
 from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
 from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
+from idaes.models.properties.general_helmholtz import HelmholtzThermoExpressions
 from idaes.core import declare_process_block_class
 from idaes.core.util.initialization import solve_indexed_blocks, revert_state_vars
 from idaes.core.util.model_statistics import degrees_of_freedom
@@ -22,6 +26,8 @@ class _ExtendedStateBlock(_StateBlock):
         outlvl = kwargs.get("outlvl", idaeslog.NOTSET)
         init_log = idaeslog.getInitLogger(blk.name, outlvl, tag="properties")
         solve_log = idaeslog.getSolveLogger(blk.name, outlvl, tag="properties")
+
+        set_vapor_frac_guesses(blk)
 
         flag_dict = fix_state_vars(blk, kwargs.get("state_args", None))
 
@@ -61,6 +67,46 @@ class _ExtendedStateBlock(_StateBlock):
     
     def release_state(blk, flags, outlvl=idaeslog.NOTSET):
         revert_state_vars(blk, flags)
+
+
+def set_vapor_frac_guesses(blk: Block) -> None:
+    """
+    Vapor fraction specified
+    valid combinations: {p, x}, {T, x}
+
+    We find a guess for h and p based on the specified vapor fraction and either p or T.
+
+    This is because the initial guess has to be within the vapor fraction region
+    otherwise the solver has a hard time converging.
+    """
+    helmholtz_blk = blk[blk.index_set().first()].config.parameters
+    
+    for sb in blk.values():
+        if not hasattr(sb.constraints, "vapor_frac"):
+            continue
+        
+        x = value(sb.constraints.vapor_frac)
+        del sb.constraints.vapor_frac
+        
+        if sb.pressure.fixed:
+            p_sat = sb.pressure
+        elif hasattr(sb.constraints, "temperature"):
+            # find p_sat from T using helmholtz thermo expressions
+            thermo_expressions = HelmholtzThermoExpressions(blk, helmholtz_blk)
+            p_sat = thermo_expressions.p_sat(T=value(sb.constraints.temperature) * units.K)
+            sb.pressure.value = p_sat  # set pressure guess
+        else:
+            # neither p_sat or T is given, use default idaes guess
+            p_sat = sb.pressure
+        
+        # set guess for enth_mol from p_sat and vapor fraction
+        sb.enth_mol.value = helmholtz_blk.htpx(p=p_sat, x=x)
+
+        # add custom vapor fraction constraint: h = h_sat_liq + x(h_sat_vap - h_sat_liq)
+        sb.constraints.add_component(
+            "custom_vapor_frac",
+            Constraint(expr=sb.enth_mol == sb.enth_mol_sat_phase["Liq"] + x * (sb.enth_mol_sat_phase["Vap"] - sb.enth_mol_sat_phase["Liq"]))
+        )
 
 
 @declare_process_block_class("HelmholtzExtendedStateBlock", block_class=_ExtendedStateBlock)
