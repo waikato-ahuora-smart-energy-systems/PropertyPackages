@@ -27,5 +27,5 @@ def build_helmholtz_package(compound_list: List[str]):
                                             phase_presentation=PhaseType.MIX,
                                             state_vars=StateVars.PH,
                                             amount_basis=AmountBasis.MOLE)
-
-    
+        else:
+            raise ValueError(f"Compound {component} not found in Helmholtz registered components")
