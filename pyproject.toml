@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ahuora-compounds"
-version = "0.0.10"
+version = "0.0.12"
 
 authors = [
   { name="Example Author", email="author@example.com" },
