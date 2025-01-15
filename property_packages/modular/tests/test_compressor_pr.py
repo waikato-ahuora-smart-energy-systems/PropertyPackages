@@ -69,7 +69,7 @@ def test_expander_asu():
         thermodynamic_assumption=ThermodynamicAssumption.adiabatic,
         compressor=False)
     
-    m.fs.compressor.inlet.flow_mol[0].fix(1*units.kilomol/units.hour)
+    m.fs.compressor.inlet.flow_mol[0].fix(1/3.7)
     m.fs.compressor.inlet.pressure.fix(1000000 * units.Pa)
     m.fs.compressor.inlet.temperature.fix((273.15+25) * units.K)
     m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(1/3)
@@ -80,7 +80,7 @@ def test_expander_asu():
 
     assert degrees_of_freedom(m) == 0
 
-    m.fs.compressor.initialize()
+    m.fs.compressor.initialize(outlvl=1)
 
     assert degrees_of_freedom(m) == 0
 
