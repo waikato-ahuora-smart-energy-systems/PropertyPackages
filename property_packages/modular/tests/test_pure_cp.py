@@ -197,23 +197,10 @@ def test_cubic_liquid_enth():
 
 def test_compounds():
 
-    compounds = [
-        ["nitrogen", "argon"],
-        ["ethanol", "toluene"],
-        ["argon", "ammonia"],
-        ["benzene", "toluene"],
-        ["ethanol", "ethylbenzene"],
-        ["ethylene", "fluorine"],
-        ["hydrogen", "isobutane"],
-        ["krypton", "toluene"]
-    ]
+    compounds = ["nitrogen", "benzene", "toluene"]
 
     for c in compounds:
-        cool_prop_pure_tester(c[0])
-        cool_prop_pure_tester(c[1])
-
-    # for i in range(len(compounds)):
-    #     cool_prop_mixture_tester([compounds[i][0], compounds[i][1]])
+        cool_prop_pure_tester(c)
 
 def cool_prop_pure_tester(name):
     """

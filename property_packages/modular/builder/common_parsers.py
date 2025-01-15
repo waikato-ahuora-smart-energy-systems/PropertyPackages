@@ -6,8 +6,9 @@ from pyomo.environ import units as pyunits
 from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
 from idaes.core import LiquidPhase, VaporPhase, Component, PhaseType as PT
-from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE)
+from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE, CubicComplementarityVLE)
 from idaes.models.properties.modular_properties.phase_equil.forms import log_fugacity
+from idaes.models.properties.modular_properties.phase_equil.forms import fugacity
 from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
 from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
 from property_packages.modular.builder.data.chem_sep import ChemSep
@@ -213,7 +214,7 @@ class phase_equilibrium_state_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
         if len(valid_states) == 2:
-            return {("Vap", "Liq"): SmoothVLE}
+            return {("Vap", "Liq"): CubicComplementarityVLE}
         return None
 
 class phases_parser(BuildBase):
@@ -281,8 +282,8 @@ class cool_prop_components_parser(BuildBase):
     @staticmethod
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
 
-        # if len(compounds) > 1:robinson
-        #     raise Exception("Cool-prop currently only supports single component systems")
+        if len(compounds) > 1:
+            raise Exception("Cool-prop currently only supports single component systems")
 
         valid_names = json.load(open(this_file_dir() + "/data/cool_prop.json", "r"))["liquids"]
     
@@ -314,10 +315,10 @@ class cool_prop_components_parser(BuildBase):
         
         components_output = {}
         for compound in compounds:
-            # if compound["CompoundID"].value.lower() in valid_names:
-            #     components_output[compound["CompoundID"].value] = serialise_component(compound)
-            # else:
-            #     raise ValueError(f"Compound {compound['CompoundID'].value} not found in CoolProp database")
+            if compound["CompoundID"].value.lower() in valid_names:
+                components_output[compound["CompoundID"].value] = serialise_component(compound)
+            else:
+                raise ValueError(f"Compound {compound['CompoundID'].value} not found in CoolProp database")
             components_output[compound["CompoundID"].value] = serialise_component(compound)
         return components_output
     

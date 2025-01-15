@@ -28,6 +28,10 @@ def flowsheet():
 
 def build_state(m):
     m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
+    m.fs.state[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.state[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.state[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.state[0].eps_z_Vap_Liq.set_value(1e-4)
     return m.fs.state[0]
 
 

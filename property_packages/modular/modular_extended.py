@@ -18,6 +18,7 @@ from pyomo.environ import (
     Block,
     check_optimal_termination,
     Constraint,
+    Objective,
     exp,
     Expression,
     log,
@@ -389,6 +390,7 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                     b.temperature.fix()
                     Tfix[k] = True
                 for c in b.component_objects(Constraint):
+
                     # Activate common constraints
                     if c.local_name in (
                         "total_flow_balance",
@@ -399,6 +401,7 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                         "mole_frac_comp_eq",
                     ):
                         c.activate()
+                    
                     if c.local_name == "log_mole_frac_phase_comp_eqn":
                         c.activate()
                         for p, j in b.params._phase_component_set:
@@ -438,8 +441,10 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                     f"{blk.name} Unexpected degrees of freedom during "
                     f"initialization at phase equilibrium step: {dof}."
                 )
+
             with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
                 res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
+
             init_log.info(
                 "Phase equilibrium initialization: {}.".format(idaeslog.condition(res))
             )

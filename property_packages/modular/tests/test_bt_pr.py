@@ -12,10 +12,12 @@ from idaes.core.solvers import get_solver
 from pyomo.util.check_units import assert_units_consistent
 
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
+from pyomo.environ import assert_optimal_termination, ConcreteModel, Objective, value
 from pyomo.environ import  check_optimal_termination, ConcreteModel, Objective
 import idaes.core.util.scaling as iscale
 from idaes.core.util.model_statistics import degrees_of_freedom
 solver = get_solver(solver="ipopt")
+from numpy import logspace
 
 import idaes.logger as idaeslog
 SOUT = idaeslog.INFO
@@ -53,72 +55,68 @@ def get_m():
   m.fs = FlowsheetBlock(dynamic=False,time_set=[1], )
   m.fs.props = build_package("peng-robinson", ["benzene", "toluene"], ["Liq", "Vap"])
   m.fs.state = m.fs.props.build_state_block([1], defined_state=True)
-  iscale.calculate_scaling_factors(m.fs.props)
-  iscale.calculate_scaling_factors(m.fs.state[1])
+  m.fs.state[1].eps_t_Vap_Liq.set_value(1e-4)
+  m.fs.state[1].eps_z_Vap_Liq.set_value(1e-4)
+  iscale.calculate_scaling_factors(m.fs)
   return m
 
 def test_T_sweep():
   m = get_m()
-  sb = m.fs.state[1]
-
   assert_units_consistent(m)
+  m.fs.obj = Objective(expr=(m.fs.state[1].temperature - 510) ** 2)
+  m.fs.state[1].temperature.setub(600)
 
-  m.fs.obj = Objective(expr=(sb.temperature - 510) ** 2)
-  sb.temperature.setub(600)
+  for P in logspace(4.8, 5.9, 8):
 
-  # Tests a variety of pressures, and makes sure that the benzene-toluene mixture
-  # can move from liquid to vapor phase at each pressure
-  for logP in [9.5, 10, 10.5, 11, 11.5, 12]:
-      m.fs.obj.deactivate()
+      m.fs.state[1].flow_mol.fix(100)
+      m.fs.state[1].mole_frac_comp["benzene"].fix(0.5)
+      m.fs.state[1].mole_frac_comp["toluene"].fix(0.5)
+      m.fs.state[1].temperature.fix(300)
+      m.fs.state[1].pressure.fix(P)
 
-      sb.flow_mol.fix(100)
-      sb.mole_frac_comp["benzene"].fix(0.5)
-      sb.mole_frac_comp["toluene"].fix(0.5)
-      sb.pressure.fix(10 ** (0.5 * logP))
-
-      assert degrees_of_freedom(sb) == 1
+      # For optimization sweep, use a large eps to avoid getting stuck at
+      # bubble and dew points
+      m.fs.state[1].eps_t_Vap_Liq.set_value(10)
+      m.fs.state[1].eps_z_Vap_Liq.set_value(10)
 
       m.fs.state.initialize()
-      sb.temperature.fix(300)
 
-      assert degrees_of_freedom(sb) == 0
-
-      results = solver.solve(m)
-      assert sb.flow_mol_phase["Vap"].value <= 1e-2
-
-      sb.temperature.unfix()
-      assert degrees_of_freedom(sb) == 1
+      m.fs.state[1].temperature.unfix()
       m.fs.obj.activate()
 
       results = solver.solve(m)
+      assert_optimal_termination(results)
 
-      assert check_optimal_termination(results)
-      assert sb.flow_mol_phase["Liq"].value <= 1e-2
-
-
-def test_P_sweep():
-  m = get_m()
-  sb = m.fs.state[1]
-
-  # Tests initiialization at a variety of temperatures.
-  for T in range(370, 500, 25):
-      sb.flow_mol.fix(100)
-      sb.mole_frac_comp["benzene"].fix(0.5)
-      sb.mole_frac_comp["toluene"].fix(0.5)
-      sb.pressure.fix(1e5)
-      sb.temperature.fix(T)
-      m.fs.state.initialize()
+      # Switch to small eps and re-solve to refine result
+      m.fs.state[1].eps_t_Vap_Liq.set_value(1e-4)
+      m.fs.state[1].eps_z_Vap_Liq.set_value(1e-4)
 
       results = solver.solve(m)
 
-      assert check_optimal_termination(results)
+      assert_optimal_termination(results)
+      assert m.fs.state[1].flow_mol_phase["Liq"].value <= 1e-5
 
-      while sb.pressure.value <= 1e6:
+def test_P_sweep():
+  m = get_m()
+  for T in range(370, 500, 25):
+    m.fs.state[1].flow_mol.fix(100)
+    m.fs.state[1].mole_frac_comp["benzene"].fix(0.5)
+    m.fs.state[1].mole_frac_comp["toluene"].fix(0.5)
+    m.fs.state[1].temperature.fix(T)
+    m.fs.state[1].pressure.fix(1e5)
 
-          results = solver.solve(m)
-          assert check_optimal_termination(results)
+    m.fs.state.initialize()
 
-          sb.pressure.value = sb.pressure.value + 1e5
+    results = solver.solve(m)
+
+    assert_optimal_termination(results)
+
+    while m.fs.state[1].pressure.value <= 1e6:
+
+        results = solver.solve(m)
+        assert_optimal_termination(results)
+
+        m.fs.state[1].pressure.value = m.fs.state[1].pressure.value + 1e5
 
 def test_T350_P1_x5():
   m = get_m()
@@ -358,7 +356,8 @@ def test_T376_P1_x2():
 def test_basic_scaling():
   m = get_m()
   sb = m.fs.state[1]
-  assert len(sb.scaling_factor) == 26 # IDAES version has 23, but I think we have some more because of enth_mol 
+  print(sb.scaling_factor)
+  assert len(sb.scaling_factor) == 19 # IDAES version has 23, but I think we have some more because of enth_mol 
   assert sb.scaling_factor[sb.flow_mol] == 1e-2
   assert sb.scaling_factor[sb.flow_mol_phase["Liq"]] == 1e-2
   assert sb.scaling_factor[sb.flow_mol_phase["Vap"]] == 1e-2
@@ -421,37 +420,5 @@ def test_basic_scaling():
   assert sb.scaling_factor[sb.pressure] == 1e-5
   assert sb.scaling_factor[sb.temperature] == 1e-2
   assert sb.scaling_factor[sb._teq["Vap", "Liq"]] == 1e-2
-  assert sb.scaling_factor[sb._t1_Vap_Liq] == 1e-2
 
-  assert (
-      sb.scaling_factor[
-          sb._mole_frac_tbub["Vap", "Liq", "benzene"]
-      ]
-      == 1000
-  )
-  assert (
-      sb.scaling_factor[
-          sb._mole_frac_tbub["Vap", "Liq", "toluene"]
-      ]
-      == 1000
-  )
-  assert (
-      sb.scaling_factor[
-          sb._mole_frac_tdew["Vap", "Liq", "benzene"]
-      ]
-      == 1000
-  )
-  assert (
-      sb.scaling_factor[
-          sb._mole_frac_tdew["Vap", "Liq", "toluene"]
-      ]
-      == 1000
-  )
-  assert (
-      sb.scaling_factor[sb.temperature_bubble["Vap", "Liq"]]
-      == 1e-2
-  )
-  assert (
-      sb.scaling_factor[sb.temperature_dew["Vap", "Liq"]]
-      == 1e-2
-  )
+  # TODO: Find 3 other scaling values

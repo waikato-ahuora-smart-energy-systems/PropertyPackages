@@ -11,6 +11,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.models.unit_models.heater import Heater
 from idaes.models.unit_models.pressure_changer import Pump
 from idaes.models.unit_models.pressure_changer import PressureChanger, ThermodynamicAssumption
+from property_packages.utils import solver_graph
 
 def assert_approx(value, expected_value, error_margin):
     percent_error = error_margin / 100
@@ -26,7 +27,7 @@ def test_compressor_asu():
     m.fs.compressor = PressureChanger(
         property_package=m.fs.properties, 
         thermodynamic_assumption=ThermodynamicAssumption.isentropic,
-        compressor=True    
+        compressor=True
     )
 
     m.fs.compressor.inlet.flow_mol[0].fix(1)
@@ -35,15 +36,24 @@ def test_compressor_asu():
     m.fs.compressor.inlet.mole_frac_comp[0, "argon"].fix(1/3)
     m.fs.compressor.inlet.mole_frac_comp[0, "oxygen"].fix(1/3)
     m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(1/3)
-
     m.fs.compressor.outlet.pressure.fix(800000*units.Pa)
     m.fs.compressor.efficiency_isentropic.fix(0.75)
+
+    m.fs.compressor.control_volume.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.compressor.control_volume.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.compressor.control_volume.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.compressor.control_volume.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
+
+    # solver_graph(m.fs.compressor.control_volume)
+
+    assert degrees_of_freedom(m) == 0
 
     m.fs.compressor.initialize()
 
     assert degrees_of_freedom(m) == 0
 
     solver = SolverFactory('ipopt')
+    solver.options['max_iter'] = 500
     solver.solve(m, tee=True)
 
     assert_approx(value(m.fs.compressor.outlet.temperature[0]), 512.38, 0.1)

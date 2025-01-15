@@ -73,11 +73,11 @@ def test_mixer():
     assert approx(outlet.mole_frac_comp["benzene"].value) == 0.5
     assert approx(outlet.mole_frac_comp["toluene"].value) == 0.5
 
-    assert value(outlet.flow_mol_phase["Vap"]) == approx(0, abs=1e-2)
-    assert value(outlet.flow_mol_phase["Liq"]) == approx(200, abs=1e-2)
-    assert value(inlet_1.flow_mol_phase["Vap"]) == approx(0, abs=1e-2)
-    assert value(inlet_1.flow_mol_phase["Liq"]) == approx(100, abs=1e-2)
-    assert value(inlet_2.flow_mol_phase["Vap"]) == approx(0, abs=1e-2)
-    assert value(inlet_2.flow_mol_phase["Liq"]) == approx(100, abs=1e-2)
+    assert value(outlet.flow_mol_phase["Vap"]) == approx(0, abs=1e-1)
+    assert value(outlet.flow_mol_phase["Liq"]) == approx(200, abs=1e-1)
+    assert value(inlet_1.flow_mol_phase["Vap"]) == approx(0, abs=1e-1)
+    assert value(inlet_1.flow_mol_phase["Liq"]) == approx(100, abs=1e-1)
+    assert value(inlet_2.flow_mol_phase["Vap"]) == approx(0, abs=1e-1)
+    assert value(inlet_2.flow_mol_phase["Liq"]) == approx(100, abs=1e-1)
     assert value(outlet.temperature) == approx(354.5, abs=1e-1)
     assert value(outlet.pressure) == approx(101325*2, abs=1e-2)

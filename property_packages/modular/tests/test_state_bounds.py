@@ -9,6 +9,7 @@ from idaes.core import FlowsheetBlock
 from idaes.models.unit_models.pressure_changer import PressureChanger
 from idaes.models.unit_models.heater import Heater
 from property_packages.build_package import build_package
+from idaes.core.util.model_statistics import degrees_of_freedom
 
 
 def test_compressor():
@@ -38,6 +39,11 @@ def test_compressor():
     m.fs.compressor.inlet.mole_frac_comp[0, "nitrogen"].fix(0.02)
     m.fs.compressor.outlet.pressure.fix(m.fs.compressor.outlet.pressure[0].ub)
 
+    m.fs.compressor.control_volume.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.compressor.control_volume.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.compressor.control_volume.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.compressor.control_volume.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
+
     m.fs.compressor.initialize(outlvl=1)
     opt = SolverFactory("ipopt")
     res = opt.solve(m, tee=True)
@@ -55,10 +61,12 @@ def test_heater():
         ["nitrogen", "carbon dioxide", "water"],
         ["Liq", "Vap"],
     )
+    
     m.fs.heater = Heater(
         property_package=m.fs.properties,
         has_pressure_change=False,
     )
+
     m.fs.heater.inlet.flow_mol.fix(1)
     m.fs.heater.inlet.pressure.fix(100000)
     # temperature currently doesn't have a good method for determining lb
@@ -69,7 +77,15 @@ def test_heater():
     m.fs.heater.inlet.mole_frac_comp[0, "water"].fix(0.01)
     m.fs.heater.outlet.temperature.fix(m.fs.heater.outlet.temperature[0].ub)
 
+    assert degrees_of_freedom(m) == 0
+
+    m.fs.heater.control_volume.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heater.control_volume.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
+
     m.fs.heater.initialize(outlvl=1)
+
     opt = SolverFactory("ipopt")
     res = opt.solve(m, tee=True)
 

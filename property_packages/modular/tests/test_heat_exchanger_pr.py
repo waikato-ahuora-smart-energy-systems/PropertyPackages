@@ -53,6 +53,12 @@ def test_heat_exchanger_bt():
 
     assert degrees_of_freedom(m) == 0
 
+    # Only required on tube side (using VLE 2)
+    m.fs.heat_exchanger.tube.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heat_exchanger.tube.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.heat_exchanger.tube.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heat_exchanger.tube.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
+
     m.fs.heat_exchanger.initialize()
 
     solver = SolverFactory('ipopt')
@@ -95,6 +101,14 @@ def test_heat_exchanger_asu():
 
     m.fs.heat_exchanger.shell_outlet.pressure.fix(100000)
     m.fs.heat_exchanger.heat_duty.fix(927.7) # W
+
+    assert degrees_of_freedom(m) == 0
+
+    # Only required on tube side (using VLE 2)
+    m.fs.heat_exchanger.tube.properties_in[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heat_exchanger.tube.properties_in[0].eps_z_Vap_Liq.set_value(1e-4)
+    m.fs.heat_exchanger.tube.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
+    m.fs.heat_exchanger.tube.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
 
     assert degrees_of_freedom(m) == 0
 
