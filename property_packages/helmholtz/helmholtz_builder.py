@@ -24,7 +24,7 @@ def build_helmholtz_package(compound_list: List[str]):
         if component in registered_components():
             # Build and return a helmholtz property package for this compound
             return HelmholtzExtendedParameterBlock(pure_component=component,
-                                            phase_presentation=PhaseType.MIX,
+                                            phase_presentation=PhaseType.LG,
                                             state_vars=StateVars.PH,
                                             amount_basis=AmountBasis.MOLE)
         else:
