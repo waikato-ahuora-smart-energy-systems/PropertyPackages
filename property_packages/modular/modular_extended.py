@@ -9,6 +9,8 @@ from idaes.models.properties.modular_properties.base.generic_property import (
 )
 import idaes.models.properties.modular_properties.base.utility as utility
 
+from property_packages.utils import debug_block
+from property_packages.utils.block_graph import solver_graph
 from property_packages.base.state_block_constraints import StateBlockConstraints
 from property_packages.utils.fix_state_vars import fix_state_vars
 
@@ -306,6 +308,7 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
             for k in blk.values():
                 for pp in k.params._pe_pairs:
                     k.params.config.phase_equilibrium_state[pp].calculate_teq(k, pp)
+                    # print(k._teq[pp].value) # teq guess + setting up slacks <- fine?
 
             init_log.info("Equilibrium temperature initialization completed.")
 
@@ -390,7 +393,6 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                     b.temperature.fix()
                     Tfix[k] = True
                 for c in b.component_objects(Constraint):
-
                     # Activate common constraints
                     if c.local_name in (
                         "total_flow_balance",
@@ -434,6 +436,8 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                 # Skip solve if DoF < 0 - this is probably due to a
                 # phase-component flow state with flash
                 skip = True
+        
+        # debug_block(blk)
 
         if n_cons > 0 and not skip:
             if dof > 0:

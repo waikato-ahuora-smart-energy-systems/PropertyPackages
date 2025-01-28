@@ -112,15 +112,40 @@ def normalize_variables(vv):
         json.dump(var_values, f, indent=4)
     return var_values
 
-def plot_graph():
-    var_values = json.load(open("solver_graph.json", 'r'))
-    # var_values = normalize_variables(var_values)
+def plot_graph(filename):
+    var_values = json.load(open(filename, 'r'))
+    filter_plot(var_values)
+
+def plot_change(filenames):
+    var_values = []
+    final_json = {}
+    for filename in filenames:
+        var_values.append(json.load(open(filename, 'r')))
     for v in var_values:
-        plt.plot(var_values[v], label=v)
+        for k in v:
+            if k not in final_json:
+                final_json[k] = []
+            final_json[k].append(v[k][-1])
+    filter_plot(final_json)
+    # plt.savefig('output_plot.png')
+
+def filter_plot(vals):
+    for v in vals:
+        if v in [
+            # "fs.state[1].log_mole_frac_phase_comp[Liq,argon]",
+            # "fs.state[1].log_mole_frac_phase_comp[Liq,oxygen]",
+            # "fs.state[1].log_mole_frac_phase_comp[Liq,nitrogen]",
+            # "fs.state[1].log_mole_frac_phase_comp[Vap,argon]",
+            # "fs.state[1].log_mole_frac_phase_comp[Vap,oxygen]",
+            # "fs.state[1].log_mole_frac_phase_comp[Vap,nitrogen]"
+            "fs.state[1].flow_mol_phase[Liq]",
+            "fs.state[1].flow_mol_phase[Vap]"
+        ]:
+            plt.plot(vals[v], label=v)
     plt.legend(fontsize="xx-small")
     plt.xlabel("Iterations")
     plt.ylabel("Variable values")
     plt.show()
-    # plt.savefig('output_plot.png')
+
 
 
