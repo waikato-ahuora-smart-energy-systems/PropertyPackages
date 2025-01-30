@@ -14,7 +14,7 @@ https://idaes-pse.readthedocs.io/en/stable/explanations/components/property_pack
 """
 
 def build_config(property_package_name, compound_names: List[str], valid_states: List[States]) -> dict[str,any]:
-
+  
   # Build list of compound objects
 
   compounds = []
@@ -42,7 +42,9 @@ def build_config(property_package_name, compound_names: List[str], valid_states:
 
   for key, obj in template.items():
     # Call the parse method on each object and update the template
-    new_template[key] = obj.serialise(compounds, valid_states)
+    config = obj.serialise(compounds, valid_states)
+    if config is not None:
+      new_template[key] = config
   
   # Building property package and returning
   return GenericExtendedParameterBlock(**new_template)
