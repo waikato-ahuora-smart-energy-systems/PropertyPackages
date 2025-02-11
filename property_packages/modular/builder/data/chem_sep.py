@@ -165,14 +165,30 @@ class ChemSep(object):
 
         @staticmethod
         def return_expression(b, cobj, T, dT=False):
-            psat = (
-                    exp(
-                        cobj.pressure_sat_comp_coeff_A - cobj.pressure_sat_comp_coeff_B /
-                        (pyunits.convert(T, to_units=pyunits.K) + cobj.pressure_sat_comp_coeff_C))
-                    ) * pyunits.Pa
+            if dT:
+                return ChemSep.pressure_sat_comp.dT_expression(b, cobj, T)
+            
+            else:
+                psat = (
+                        exp(
+                            cobj.pressure_sat_comp_coeff_A - cobj.pressure_sat_comp_coeff_B /
+                            (pyunits.convert(T, to_units=pyunits.K) + cobj.pressure_sat_comp_coeff_C))
+                        ) * pyunits.Pa
+
+                units = b.params.get_metadata().derived_units
+                return pyunits.convert(psat, to_units=units.PRESSURE)
+
+        @staticmethod
+        def dT_expression(b, cobj, T):
+            # TODO: check this equation
+            dt_psat = (
+                (cobj.pressure_sat_comp_coeff_B * ChemSep.pressure_sat_comp.return_expression(b, cobj, T, dT=False))
+                / (pyunits.convert(T, to_units=pyunits.K) + cobj.pressure_sat_comp_coeff_C)**2
+            )
 
             units = b.params.get_metadata().derived_units
-            return pyunits.convert(psat, to_units=units.PRESSURE)
+            dp_units = units.PRESSURE / units.TEMPERATURE
+            return pyunits.convert(dt_psat, to_units=dp_units)
     
     class cp_mol_liq_comp:
         @staticmethod

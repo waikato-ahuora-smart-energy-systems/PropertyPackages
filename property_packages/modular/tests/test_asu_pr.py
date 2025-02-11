@@ -18,12 +18,14 @@ from idaes.core.util.model_statistics import (
 )
 from idaes.core.solvers import get_solver
 
-from idaes.models.properties.modular_properties.state_definitions import FTPx
-from idaes.models.properties.modular_properties.phase_equil import SmoothVLE, CubicComplementarityVLE
+# from idaes.models.properties.modular_properties.state_definitions import FTPx
+from property_packages.modular.builder.data.FTPx import FTPx
+from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
 from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
 from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from property_packages.build_package import build_package
+from property_packages.modular.vle_2 import CubicComplementarityVLE
 
 solver = get_solver("ipopt")
 

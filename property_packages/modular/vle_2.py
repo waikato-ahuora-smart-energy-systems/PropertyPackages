@@ -214,7 +214,6 @@ class CubicComplementarityVLE:
 
     @staticmethod
     def calculate_scaling_factors(b, phase_pair):
-        print("DIS WORK")
         """
         Method to calculate scaling factors for phase equilibrium
         """
@@ -274,8 +273,6 @@ class CubicComplementarityVLE:
 
         # 2.3 Extension to supercritical conditions
 
-        print(t2)
-
         blk._teq[pp].set_value(t2)  # pylint: disable=protected-access
 
         # ---------------------------------------------------------------------
@@ -311,18 +308,15 @@ def _calculate_temperature_slacks(b, phase_pair, liquid_phase, vapor_phase):
 
     # pylint: disable-next=protected-access
     if value(b._teq[phase_pair]) > value(b.temperature): # in liquid region
-        print("in liquid region")
         # pylint: disable-next=protected-access
         s[vapor_phase].set_value(value(b._teq[phase_pair] - b.temperature))
         s[liquid_phase].set_value(EPS_INIT)
     # pylint: disable-next=protected-access
     elif value(b._teq[phase_pair]) < value(b.temperature): # in vapor region
-        print("in vapor region")
         s[vapor_phase].set_value(EPS_INIT)
         # pylint: disable-next=protected-access
         s[liquid_phase].set_value(value(b.temperature - b._teq[phase_pair]))
     else: # in vapor-lquid region
-        print("in vapor-liquid region")
         s[vapor_phase].set_value(EPS_INIT)
         s[liquid_phase].set_value(EPS_INIT)
 

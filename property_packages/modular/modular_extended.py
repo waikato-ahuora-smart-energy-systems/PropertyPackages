@@ -33,16 +33,10 @@ from pyomo.environ import (
 )
 from pyomo.common.config import ConfigBlock, ConfigDict, ConfigValue, In, Bool
 from pyomo.util.calc_var_value import calculate_variable_from_constraint
+import idaes.core.util.scaling as iscale
 
 # Import IDAES cores
-from idaes.core import (
-    declare_process_block_class,
-    PhysicalParameterBlock,
-    StateBlockData,
-    StateBlock,
-    MaterialFlowBasis,
-    ElectrolytePropertySet,
-)
+from idaes.core import declare_process_block_class
 from idaes.core.base.components import Component, __all_components__
 from idaes.core.base.phases import (
     Phase,
@@ -52,7 +46,6 @@ from idaes.core.base.phases import (
     __all_phases__,
 )
 from idaes.core.util.initialization import (
-    revert_state_vars,
     solve_indexed_blocks,
 )
 from idaes.core.util.model_statistics import (
@@ -61,35 +54,14 @@ from idaes.core.util.model_statistics import (
 )
 from idaes.core.util.exceptions import (
     BurntToast,
-    ConfigurationError,
-    PropertyPackageError,
-    PropertyNotSupportedError,
     InitializationError,
 )
-from idaes.core.util.misc import add_object_reference
+
 from idaes.core.solvers import get_solver
 import idaes.logger as idaeslog
-import idaes.core.util.scaling as iscale
-from idaes.core.initialization.initializer_base import InitializerBase
 
-from idaes.models.properties.modular_properties.base.generic_reaction import (
-    equil_rxn_config,
-)
-from idaes.models.properties.modular_properties.base.utility import (
-    get_method,
-    get_phase_method,
-    GenericPropertyPackageError,
-    StateIndex,
-    identify_VL_component_list,
-    estimate_Tbub,
-    estimate_Tdew,
-    estimate_Pbub,
-    estimate_Pdew,
-)
-from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (
-    LogBubbleDew,
-)
-from idaes.models.properties.modular_properties.phase_equil.henry import HenryType
+from idaes.models.properties.modular_properties.base.utility import StateIndex
+
 from idaes.models.properties.modular_properties.base.generic_property import (
     _initialize_critical_props,
     _init_Tbub,
@@ -173,7 +145,7 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
         solve_log = idaeslog.getSolveLogger(blk.name, outlvl, tag="properties")
 
         init_log.info("Starting initialization")
-
+        
         res = None
 
         for k in blk.values():
@@ -227,7 +199,6 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
         # If present, initialize bubble, dew , and critical point calculations
         for k in blk.values():
             T_units = k.params.get_metadata().default_units.TEMPERATURE
-
             # List of bubble and dew point constraints
             cons_list = [
                 "eq_pressure_dew",
@@ -298,7 +269,8 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                     idaeslog.condition(res)
                 )
             )
-        # ---------------------------------------------------------------------
+        
+        # --------------------------------------------------------------------- Valid
         # Calculate _teq if required
         # Using iterator k outside of for loop - this should be OK as we just need
         # a valid StateBlockData an assume they are all the same.
@@ -309,10 +281,10 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                 for pp in k.params._pe_pairs:
                     k.params.config.phase_equilibrium_state[pp].calculate_teq(k, pp)
                     # print(k._teq[pp].value) # teq guess + setting up slacks <- fine?
+            for k in blk.values():
+                init_log.info(f"Equilibrium temperature initialization completed.{k.pressure.value}")
 
-            init_log.info("Equilibrium temperature initialization completed.")
-
-        # ---------------------------------------------------------------------
+        # --------------------------------------------------------------------- Invalid
         # Initialize flow rates and compositions
         for k in blk.values():
 
@@ -373,6 +345,7 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                 and isinstance(k.temperature, Var)
                 and not k.temperature.fixed
             ):
+                print("shouldn't be in here")
                 k.temperature.value = value(
                     sum(k._teq[i] for i in k.params._pe_pairs) / len(k.params._pe_pairs)
                 )
@@ -437,7 +410,39 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                 # phase-component flow state with flash
                 skip = True
         
-        # debug_block(blk)
+        # ---------------------------------------------------------------------
+        # Providing better initial guesses for flow_mol constraints, variables & expressions (from state definition)
+        # iscale.calculate_scaling_factors(blk[1])
+
+        # for k, b in blk.items():
+        #     if b.params.config.state_definition is not None:
+        #         for c in b.component_objects(Var):
+        #             if c.local_name in ["flow_mol_phase", "flow_mol_phase_comp", "flow_mol", "mole_frac_phase_comp", "mole_frac_comp"]:
+        #                 for v in c.values():
+        #                     if c.local_name == "flow_mol_phase":
+        #                         v.set_value(b.flow_mol.value / len(b.phase_list))
+        #                         iscale.set_scaling_factor(v, 1 / b.flow_mol.value)
+        #                     if c.local_name == "flow_mol":
+        #                         print("FOUND FLOW MOL")
+        #                         v.set_value(b.flow_mol.value)
+        #                         iscale.set_scaling_factor(v, 1 / b.flow_mol.value)
+        #                     if c.local_name == "mole_frac_phase_comp":
+        #                         for p in c.index_set():
+        #                             c[p].set_value(1 / len(b.params.component_list))
+        #                             iscale.set_scaling_factor(c[p], 1)
+        #                     if c.local_name == "mole_frac_comp":
+        #                         for p in c.index_set():
+        #                             c[p].set_value(1 / len(b.params.component_list))
+        #                             iscale.set_scaling_factor(c[p], 1)
+        #         for c in b.component_objects(Expression):
+        #             if c.local_name == "flow_mol_phase_comp":
+        #                 for v in c.values():
+        #                     iscale.set_scaling_factor(v, 1 / b.flow_mol.value)
+
+        # for s in blk[1].scaling_factor:
+        #     print(s, value(s), iscale.get_scaling_factor(s))
+        
+        # debug_block(blk[1])
 
         if n_cons > 0 and not skip:
             if dof > 0:
@@ -445,9 +450,9 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
                     f"{blk.name} Unexpected degrees of freedom during "
                     f"initialization at phase equilibrium step: {dof}."
                 )
-
+            
             with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
-                res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
+                res = solve_indexed_blocks(opt, [blk], tee=idaeslog.DEBUG)
 
             init_log.info(
                 "Phase equilibrium initialization: {}.".format(idaeslog.condition(res))
@@ -518,7 +523,7 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
             with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
                 res = solve_indexed_blocks(opt, [blk], tee=slc.tee)
             init_log.info(
-                "Property initialization: {}.".format(idaeslog.condition(res))
+                "Property initialization: {}.".format(res)
             )
 
         # ---------------------------------------------------------------------

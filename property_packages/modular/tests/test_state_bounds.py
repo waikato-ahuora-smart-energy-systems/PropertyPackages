@@ -69,12 +69,11 @@ def test_heater():
 
     m.fs.heater.inlet.flow_mol.fix(1)
     m.fs.heater.inlet.pressure.fix(100000)
-    # temperature currently doesn't have a good method for determining lb
-    # we will do 150 K for now
     m.fs.heater.inlet.temperature.fix(150)
     m.fs.heater.inlet.mole_frac_comp[0, "nitrogen"].fix(0.79)
     m.fs.heater.inlet.mole_frac_comp[0, "carbon dioxide"].fix(0.2)
     m.fs.heater.inlet.mole_frac_comp[0, "water"].fix(0.01)
+    
     m.fs.heater.outlet.temperature.fix(m.fs.heater.outlet.temperature[0].ub)
 
     assert degrees_of_freedom(m) == 0
@@ -84,7 +83,7 @@ def test_heater():
     m.fs.heater.control_volume.properties_out[0].eps_t_Vap_Liq.set_value(1e-4)
     m.fs.heater.control_volume.properties_out[0].eps_z_Vap_Liq.set_value(1e-4)
 
-    m.fs.heater.initialize(outlvl=1)
+    m.fs.heater.initialize()
 
     opt = SolverFactory("ipopt")
     res = opt.solve(m, tee=True)

@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from .base_parser import BuildBase
 from compounds.Compound import Compound
 from pyomo.environ import units as pyunits
-from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
+# from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
 from idaes.core import LiquidPhase, VaporPhase, Component, PhaseType as PT
 from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE) #, CubicComplementarityVLE
@@ -15,9 +15,11 @@ from property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
 from property_packages.types import States
 import csv, json
+# from idaes.models.properties.modular_properties.phase_equil import SmoothVLE, CubicComplementarityVLE
 from property_packages.modular.vle_2 import CubicComplementarityVLE
 from idaes.models.properties.modular_properties.pure.ConstantProperties import Constant
 from idaes.models.properties.modular_properties.coolprop.coolprop_wrapper import CoolPropWrapper
+from .data.FTPx import FTPx
 
 
 class base_units_parser(BuildBase):
@@ -252,10 +254,9 @@ class state_bounds_parser(BuildBase):
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
 
         min_melting_point = min([compound["NormalMeltingPointTemperature"].value for compound in compounds])
-
         # TODO: Refactor this logic, need a more versatile approach
         return { # Initial guess for flow_mol affects tests passing
-            "flow_mol": (0, 1, 1000, pyunits.mol / pyunits.s), # initial guess should be the fixed variable
+            "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s), # initial guess should be the fixed variable
             "temperature": (max(min_melting_point-50,1), 300, 3000, pyunits.K),
             "pressure": (5e4, 1e5, 1e6, pyunits.Pa),
         }
