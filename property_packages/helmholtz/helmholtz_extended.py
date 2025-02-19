@@ -69,6 +69,7 @@ class _ExtendedStateBlock(_StateBlock):
         revert_state_vars(blk, flags)
 
 
+
 def set_vapor_frac_guesses(blk: Block) -> None:
     """
     Vapor fraction specified
@@ -85,8 +86,16 @@ def set_vapor_frac_guesses(blk: Block) -> None:
         if not hasattr(sb.constraints, "vapor_frac"):
             continue
         
-        x = value(sb.constraints.vapor_frac)
-        del sb.constraints.vapor_frac
+        # Get the value the vapor fraction is set to.
+        # value(sb.constraints.vapor_frac) returns the current value of the left hand
+        # side of the constraint, which (since the model is not solved) is not actually
+        # the correct value of the vapor fraction.
+        # instead, the lower and upper bounds of the constraint are equal and set to the 
+        # desired value of the vapor fraction.
+        if sb.constraints.vapor_frac.lower != sb.constraints.vapor_frac.upper:
+            raise ValueError("We haven't implemented supporting bounds on the vapor fraction constraint yet. See PropertyPackages, helmholtz_extended.py")
+        x = sb.constraints.vapor_frac.lower
+        del sb.constraints.vapor_frac # new smooth constraint will be added later instead
         
         if sb.pressure.fixed:
             p_sat = sb.pressure
@@ -103,11 +112,12 @@ def set_vapor_frac_guesses(blk: Block) -> None:
         sb.enth_mol.value = helmholtz_blk.htpx(p=p_sat, x=x)
 
         # add custom vapor fraction constraint: h = h_sat_liq + x(h_sat_vap - h_sat_liq)
+        # I think this is to make the vapor fraction continuous, rather than cutting off at 0 and 1. Helps with solving reliability as outside
+        # the vapor fraction region, this will still be smooth and will not have a zero gradient.
         sb.constraints.add_component(
             "custom_vapor_frac",
             Constraint(expr=sb.enth_mol == sb.enth_mol_sat_phase["Liq"] + x * (sb.enth_mol_sat_phase["Vap"] - sb.enth_mol_sat_phase["Liq"]))
         )
-
 
 @declare_process_block_class("HelmholtzExtendedStateBlock", block_class=_ExtendedStateBlock)
 class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData, StateBlockConstraints):
