@@ -17,11 +17,6 @@ def build_package(package_name: PackageName, compound_list: List[str], valid_sta
         case "nrtl":
             pass # TODO: Implement build_package for nrtl.
         case "milk":
-            return build_milk_package()
+            return build_milk_package(compound_list)
         case _:
             raise ValueError(f"Invalid package name {package_name}. Expected a valid property package type, e.g helmholtz")
-        
-
-# TODO: Function to get avaliable compounds for a package
-# something to get compound information from the .xml files and dbs
-# something to say what compounds are available for a given package (and currently selected compounds)
