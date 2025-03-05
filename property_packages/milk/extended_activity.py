@@ -35,6 +35,8 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
               "entr_mol": {"method": "_entr_mol", "units": "J/mol"},
               "entr_mass_comp": {"method": "_entr_mass_comp", "units": "J/kg"},
               "entr_mass": {"method": "_entr_mass", "units": "J/kg"},
+              "vapor_frac": {"method": "_vapor_frac", "units": None},
+              "flow_vol": {"method": "_flow_vol", "units": "m^3/s"},
             }
         )
 
@@ -43,6 +45,20 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
 
     def build(self):
         super().build()
+    
+    def _flow_vol(self):
+      def _rule_flow_vol(model):
+          return 0 # Placeholder until we have density data
+      self.flow_vol = Expression(
+          rule=_rule_flow_vol,
+      )
+
+    def _vapor_frac(self):
+        def _rule_vapor_frac(model):
+            return model.flow_mol_phase['Vap'] / model.flow_mol_phase['Liq']
+        self.vapor_frac = Expression(
+            rule=_rule_vapor_frac,
+        )
 
     def _enth_mol_comp(self):
       def _rule_enth_mol_comp(model, i):

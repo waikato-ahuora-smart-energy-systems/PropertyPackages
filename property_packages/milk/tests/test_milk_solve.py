@@ -106,6 +106,9 @@ def test_milk_custom_props():
     assert value(m.fs.state[1].entr_mass_comp["milk_solid"]) == approx(739, abs=1)
     assert value(m.fs.state[1].entr_mass) == approx(1.51e4, abs=1e2)
 
+    assert value(m.fs.state[1].vapor_frac) == approx(0, abs=1e-4)
+    assert value(m.fs.state[1].flow_vol) == approx(0)
+
 
 
 
