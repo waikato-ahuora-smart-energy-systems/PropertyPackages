@@ -19,7 +19,7 @@ estimation problem if the VLE data is available.
 """
 
 # Import Pyomo libraries
-from pyomo.environ import Param, NonNegativeReals, Set, units as pyunits
+from pyomo.environ import Param, Expression, NonNegativeReals, Set, units as pyunits
 
 # Import IDAES cores
 from idaes.core import declare_process_block_class, Component
@@ -29,6 +29,7 @@ from idaes.models.properties.activity_coeff_models.activity_coeff_prop_pack impo
     ActivityCoeffParameterData,
 )
 from idaes.logger import getIdaesLogger
+from .extended_activity import ExtendedActivityCoeffParameterData
 
 # Some more information about this module
 __author__ = "Jaffer Ghouse"
@@ -40,7 +41,7 @@ _log = getIdaesLogger(__name__)
 
 
 @declare_process_block_class("MilkParameterBlock")
-class MilkParameterData(ActivityCoeffParameterData):
+class MilkParameterData(ExtendedActivityCoeffParameterData):
     """Property package for mixtures of water and  milk solids"""
 
     def build(self):
@@ -115,7 +116,6 @@ class MilkParameterData(ActivityCoeffParameterData):
             units=pyunits.K,
         )
 
-
         mw_comp_data = {
             "milk_solid": 232e-3, # F.Glasser et al Technical Note: Estimation of Milk Fatty Acid Yield from Milk Fat Data https://www.sciencedirect.com/science/article/pii/S0022030207717241#:~:text=The%20mean%20molecular%20weight%20of,%3D%209%20g%2Fmol).
             "water": 18.02e-3,
@@ -134,7 +134,7 @@ class MilkParameterData(ActivityCoeffParameterData):
         # Sources: For water NIST Webbook, https://webbook.nist.gov addapted for water https://webbook.nist.gov/cgi/cbook.cgi?ID=C14940637&Type=JANAFG&Plot=on#JANAFG
         #
 
-        Cp_Liq_A_data = { 
+        Cp_Liq_A_data = {
             ("milk_solid"): 470599.7666604,
               ("water"): 92072.5211902,}
         Cp_Liq_B_data = {
@@ -145,12 +145,11 @@ class MilkParameterData(ActivityCoeffParameterData):
             ("milk_solid"): 32.8747223,
             ("water"): 0.8662807,
         }
-        Cp_Liq_D_data = {("milk_solid"): -0.0747202, 
+        Cp_Liq_D_data = {("milk_solid"): -0.0747202,
                          ("water"): -0.0019851, }
 
         Cp_Liq_E_data = {("milk_solid"): 0.0000637,
-                          ("water"): 0.0000019
-,}
+                          ("water"): 0.0000019, }
 
         self.cp_mol_liq_comp_coeff_A = Param(
             self.component_list,
@@ -206,7 +205,7 @@ class MilkParameterData(ActivityCoeffParameterData):
             ("water"): -0.00000030,
         }
         Cp_Vap_E_data = {("milk_solid"):  0.0000001,
-                          ("water"): 0, 
+                          ("water"): 0,
                           }
 
         self.cp_mol_vap_comp_coeff_A = Param(
@@ -247,7 +246,7 @@ class MilkParameterData(ActivityCoeffParameterData):
         # Source: The Properties of Gases and Liquids (1987)
         # 4th edition, Chemical Engineering Series - Robert C. Reid
 
-        #This is the Wagner Equation for the calculation of the saturation pressure 
+        #This is the Wagner Equation for the calculation of the saturation pressure
         pressure_sat_coeff_data = {
             ("milk_solid", "A"): -13.07261788, #Calcuated from the aceentic factor of Oleic acid file:///C:/Users/bjl25/Downloads/ie202379u_si_001.pdf
             ("milk_solid", "B"): 6.31986368,# Eq https://www.sciencedirect.com/science/article/pii/S0021961411000905
