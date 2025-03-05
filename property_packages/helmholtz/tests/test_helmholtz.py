@@ -49,3 +49,26 @@ def test_vapor_fraction_state_block():
     assert value(m.fs.sb[0].vapor_frac) == approx(0.8)
     assert value(m.fs.sb[0].pressure) == approx(101273)
 
+def test_ammonia():
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock(dynamic=False) 
+    m.fs.properties = build_package("helmholtz", ["ammonia"], ["Liq", "Vap"])
+    
+    m.fs.heater = Heater(property_package=m.fs.properties)
+
+    m.fs.heater.heat_duty.fix(0)
+    m.fs.heater.inlet.flow_mol.fix(1)
+    m.fs.heater.inlet.enth_mol.fix(1878.71)
+    m.fs.heater.inlet.pressure.fix(101325)
+
+    assert degrees_of_freedom(m) == 0
+
+    m.fs.heater.initialize()
+
+    solver = SolverFactory('ipopt')
+    solver.solve(m, tee=True)
+
+    assert value(m.fs.heater.control_volume.properties_out[0].temperature) == approx(220.850, rel=1e-3)
+    assert value(m.fs.heater.outlet.pressure[0]) == approx(101325)
+    assert value(m.fs.heater.outlet.flow_mol[0]) == approx(1)
+
