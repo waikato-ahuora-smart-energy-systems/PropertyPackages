@@ -97,19 +97,6 @@ def set_vapor_frac_guesses(blk: Block) -> None:
         x = sb.constraints.vapor_frac.lower
         del sb.constraints.vapor_frac # new smooth constraint will be added later instead
         
-        if sb.pressure.fixed:
-            p_sat = sb.pressure
-        elif hasattr(sb.constraints, "temperature"):
-            # find p_sat from T using helmholtz thermo expressions
-            thermo_expressions = HelmholtzThermoExpressions(blk, helmholtz_blk)
-            p_sat = thermo_expressions.p_sat(T=value(sb.constraints.temperature) * units.K)
-            sb.pressure.value = p_sat  # set pressure guess
-        else:
-            # neither p_sat or T is given, use default idaes guess
-            p_sat = sb.pressure
-        
-        # set guess for enth_mol from p_sat and vapor fraction
-        sb.enth_mol.value = helmholtz_blk.htpx(p=p_sat, x=x)
 
         # add custom vapor fraction constraint: h = h_sat_liq + x(h_sat_vap - h_sat_liq)
         # I think this is to make the vapor fraction continuous, rather than cutting off at 0 and 1. Helps with solving reliability as outside

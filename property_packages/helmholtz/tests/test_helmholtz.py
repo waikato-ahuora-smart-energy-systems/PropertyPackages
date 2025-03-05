@@ -72,3 +72,23 @@ def test_ammonia():
     assert value(m.fs.heater.outlet.pressure[0]) == approx(101325)
     assert value(m.fs.heater.outlet.flow_mol[0]) == approx(1)
 
+
+
+def test_vapor_fraction_ammonia():
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock(dynamic=False) 
+    m.fs.properties = build_package("helmholtz", ["ammonia"], ["Liq", "Vap"])
+
+    m.fs.sb = m.fs.properties.build_state_block([0])
+    m.fs.sb[0].flow_mol.fix(100)
+    m.fs.sb[0].constrain_component(m.fs.sb[0].temperature,283.15) # 100C
+    m.fs.sb[0].constrain_component(m.fs.sb[0].vapor_frac,0.8)
+    m.fs.sb[0].pressure.value = 700000 # 1 atm as defualt guess.
+    m.fs.sb.initialize()
+    solver = SolverFactory('ipopt')
+    solver.solve(m, tee=True)
+    assert value(m.fs.sb[0].temperature) == approx(283.15)
+    assert value(m.fs.sb[0].flow_mol) == approx(100)
+    assert value(m.fs.sb[0].vapor_frac) == approx(0.8)
+    assert value(m.fs.sb[0].pressure) == approx(614294.349)
+
