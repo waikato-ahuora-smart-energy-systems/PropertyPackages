@@ -63,7 +63,7 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
 
     def _vapor_frac(self):
         def _rule_vapor_frac(model):
-            return model.flow_mol_phase['Vap'] / model.flow_mol_phase['Liq']
+            return model.flow_mol_phase['Vap'] / model.flow_mol
         self.vapor_frac = Expression(
             rule=_rule_vapor_frac,
         )
