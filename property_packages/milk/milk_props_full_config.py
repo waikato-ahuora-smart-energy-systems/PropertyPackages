@@ -129,12 +129,6 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
             units=pyunits.kg / pyunits.mol,
         )
 
-        self.mass_flow = Param(
-            self.component_list,
-            mutable=True,
-            initialize={("milk_solid"): 1, ("water"): 1},
-        )
-
         # Constants for specific heat capacity, enthalpy valid to 70C
         #https://cameochemicals.noaa.gov/chris/OLA.pdf Oleic acid
         # Sources: For water NIST Webbook, https://webbook.nist.gov addapted for water https://webbook.nist.gov/cgi/cbook.cgi?ID=C14940637&Type=JANAFG&Plot=on#JANAFG
