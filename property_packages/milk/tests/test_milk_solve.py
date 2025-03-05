@@ -109,7 +109,9 @@ def test_milk_custom_props():
     assert value(m.fs.state[1].vapor_frac) == approx(0, abs=1e-4)
     assert value(m.fs.state[1].flow_vol) == approx(0)
     assert value(m.fs.state[1].total_energy_flow) == approx(-1400646, abs=1e3)
+    print(m.fs.state[1].flow_vol.expr)
 
+    assert 1 == 0
 
 
 

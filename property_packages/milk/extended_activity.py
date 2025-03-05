@@ -56,7 +56,7 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
     
     def _flow_vol(self):
       def _rule_flow_vol(model):
-          return 0 # Placeholder until we have density data
+          return 0 * pyunits.m**3 / pyunits.s # Placeholder until we have density data
       self.flow_vol = Expression(
           rule=_rule_flow_vol,
       )
