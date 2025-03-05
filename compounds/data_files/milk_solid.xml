@@ -1,6 +1,6 @@
 <compound>
   <LibraryIndex name="Index" value="1500" />
-  <CompoundID name="Name" value="milk_solids" />
+  <CompoundID name="Name" value="milk_solid" />
   <StructureFormula name="Structure" value="not for use" />
   <Family name="Family" value="not for use" />
   <CriticalTemperature name="Critical temperature" units="K" value="not for use" />
