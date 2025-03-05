@@ -16,7 +16,7 @@ from pyomo.environ import (Expression, Param, Var, Constraint, units as pyunits)
 class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
     def build(self):
       super().build()
-      self._state_block_class = ExtendedActivityCoeffStateBlock
+      self._state_block_class = ExtendedActivityCoeffStateBlock # noqa: F821
 
     @classmethod
     def define_metadata(cls, obj):

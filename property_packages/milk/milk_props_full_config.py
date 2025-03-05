@@ -29,7 +29,6 @@ from idaes.models.properties.activity_coeff_models.activity_coeff_prop_pack impo
     ActivityCoeffParameterData,
 )
 from idaes.logger import getIdaesLogger
-
 from .extended_activity import ExtendedActivityCoeffParameterData
 
 # Some more information about this module
