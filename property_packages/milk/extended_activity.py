@@ -37,6 +37,7 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
               "entr_mass": {"method": "_entr_mass", "units": "J/kg"},
               "vapor_frac": {"method": "_vapor_frac", "units": None},
               "flow_vol": {"method": "_flow_vol", "units": "m^3/s"},
+              "total_energy_flow": {"method": "_total_energy_flow", "units": "J/s"},
             }
         )
 
@@ -45,6 +46,13 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
 
     def build(self):
         super().build()
+    
+    def _total_energy_flow(self):
+        def _rule_total_energy_flow(model):
+            return model.flow_mass * model.enth_mass
+        self.total_energy_flow = Expression(
+            rule=_rule_total_energy_flow,
+        )
     
     def _flow_vol(self):
       def _rule_flow_vol(model):
