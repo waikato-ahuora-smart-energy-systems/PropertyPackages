@@ -19,17 +19,15 @@ estimation problem if the VLE data is available.
 """
 
 # Import Pyomo libraries
-from pyomo.environ import Param, Expression, NonNegativeReals, Set, units as pyunits
+from pyomo.environ import Param, NonNegativeReals, Set, units as pyunits
 
 # Import IDAES cores
 from idaes.core import declare_process_block_class, Component
 from idaes.core.util.misc import extract_data
 
-from idaes.models.properties.activity_coeff_models.activity_coeff_prop_pack import (
-    ActivityCoeffParameterData,
-)
-from idaes.logger import getIdaesLogger
 from .extended_activity import ExtendedActivityCoeffParameterData
+from idaes.logger import getIdaesLogger
+
 
 # Some more information about this module
 __author__ = "Jaffer Ghouse"
@@ -64,12 +62,12 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
         self.phase_equilibrium_idx = Set(initialize=[1, 2])
 
         self.phase_equilibrium_list_master = {
-            1: ["milk_solid", ("Vap", "Liq")],
+            1: ["milk_solid", ("Liq")],
             2: ["water", ("Vap", "Liq")],
         }
 
         self.phase_equilibrium_list = {
-            1: ["milk_solid", ("Vap", "Liq")],
+            1: ["milk_solid", ("Liq")],
             2: ["water", ("Vap", "Liq")],
         }
 
@@ -87,9 +85,9 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
             units=pyunits.K,
         )
 
-        # Critical properties
+        # Critical propertiess
         pressure_critical_data = {
-            "milk_solid": 1332.96e3,  #https://www.chemeo.com/cid/13-615-4/Oleic-Acid aprrox as Oleic acid Joback method
+            "milk_solid": 30e4,  #https://www.chemeo.com/cid/13-615-4/Oleic-Acid aprrox as Oleic acid Joback method
             "water": 22046e3, # NIST https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Units=SI
         }
 
@@ -116,6 +114,7 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
             units=pyunits.K,
         )
 
+
         mw_comp_data = {
             "milk_solid": 232e-3, # F.Glasser et al Technical Note: Estimation of Milk Fatty Acid Yield from Milk Fat Data https://www.sciencedirect.com/science/article/pii/S0022030207717241#:~:text=The%20mean%20molecular%20weight%20of,%3D%209%20g%2Fmol).
             "water": 18.02e-3,
@@ -134,7 +133,7 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
         # Sources: For water NIST Webbook, https://webbook.nist.gov addapted for water https://webbook.nist.gov/cgi/cbook.cgi?ID=C14940637&Type=JANAFG&Plot=on#JANAFG
         #
 
-        Cp_Liq_A_data = {
+        Cp_Liq_A_data = { 
             ("milk_solid"): 470599.7666604,
               ("water"): 92072.5211902,}
         Cp_Liq_B_data = {
@@ -145,11 +144,12 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
             ("milk_solid"): 32.8747223,
             ("water"): 0.8662807,
         }
-        Cp_Liq_D_data = {("milk_solid"): -0.0747202,
+        Cp_Liq_D_data = {("milk_solid"): -0.0747202, 
                          ("water"): -0.0019851, }
 
         Cp_Liq_E_data = {("milk_solid"): 0.0000637,
-                          ("water"): 0.0000019, }
+                          ("water"): 0.0000019
+,}
 
         self.cp_mol_liq_comp_coeff_A = Param(
             self.component_list,
@@ -189,23 +189,23 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
 #water Cp vap from Cengel and Boles Thermodynamics an Engineering Approach
 #use it stays as a liquid for milk solids
         Cp_Vap_A_data = {
-            ("milk_solid"): 39.98454639,
+            ("milk_solid"):0, #39.98454639,
             ("water"): 39.98454639,
         }
         Cp_Vap_B_data = {
-            ("milk_solid"):-0.06627961,
+            ("milk_solid"):0,#-0.06627961,
             ("water"): -0.06627961,
         }
         Cp_Vap_C_data = {
-            ("milk_solid"): 0.00022787,
+            ("milk_solid"):0,# 0.00022787,
             ("water"): 0.00022787,
         }
         Cp_Vap_D_data = {
-            ("milk_solid"): -0.00000030,
+            ("milk_solid"):0, #-0.00000030,
             ("water"): -0.00000030,
         }
-        Cp_Vap_E_data = {("milk_solid"):  0.0000001,
-                          ("water"): 0,
+        Cp_Vap_E_data = {("milk_solid"):0,  #0.0000001,
+                          ("water"): 0, 
                           }
 
         self.cp_mol_vap_comp_coeff_A = Param(
@@ -246,7 +246,7 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
         # Source: The Properties of Gases and Liquids (1987)
         # 4th edition, Chemical Engineering Series - Robert C. Reid
 
-        #This is the Wagner Equation for the calculation of the saturation pressure
+        #This is the Wagner Equation for the calculation of the saturation pressure 
         pressure_sat_coeff_data = {
             ("milk_solid", "A"): -13.07261788, #Calcuated from the aceentic factor of Oleic acid file:///C:/Users/bjl25/Downloads/ie202379u_si_001.pdf
             ("milk_solid", "B"): 6.31986368,# Eq https://www.sciencedirect.com/science/article/pii/S0021961411000905
@@ -269,11 +269,18 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
         # Standard heats of formation
         # Source: NIST Webbook, https://webbook.nist.gov
         # Retrieved 25th September 2019
+        # dh_form_data = {
+        #     ("Vap", "milk_solid"): -690e3,
+        #     ("Vap", "water"): -241.8e3 ,
+        #     ("Liq", "milk_solid"): -764.8e3,
+        #     ("Liq", "water"): -285.83e3,
+        # }
+
         dh_form_data = {
-            ("Vap", "milk_solid"): -690e3,
-            ("Vap", "water"): -241.8e3 ,
-            ("Liq", "milk_solid"): -764.8e3,
-            ("Liq", "water"): -285.83e3,
+            ("Vap", "milk_solid"): -0,
+            ("Vap", "water"): 40660 ,
+            ("Liq", "milk_solid"): -0,
+            ("Liq", "water"): -0,
         }
 
         self.dh_form = Param(
@@ -288,9 +295,9 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
         # Standard entropy of formation
         # Retrieved 2025 from NIST Webbook, https://webbook.nist.gov
         ds_form_data = {
-            ("Vap", "milk_solid"): 1,
+            ("Vap", "milk_solid"): -0,
             ("Vap", "water"): 188.835,
-            ("Liq", "milk_solid"): 1,
+            ("Liq", "milk_solid"): -0,
             ("Liq", "water"): 69.95,
         }
 
