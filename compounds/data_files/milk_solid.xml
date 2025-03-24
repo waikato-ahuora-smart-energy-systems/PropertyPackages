@@ -11,7 +11,7 @@
   <NormalMeltingPointTemperature name="Melting point" units="K" value="not for use" />
   <TriplePointTemperature name="Triple point temperature" units="K" value="not for use" />
   <TriplePointPressure name="Triple point pressure" units="Pa" value="not for use" />
-  <MolecularWeight name="Molecular weight" units="kg/kmol" value="not for use" />
+  <MolecularWeight name="Molecular weight" units="kg/kmol" value="232" />
   <LiquidVolumeAtNormalBoilingPoint name="Liquid molar volume at normal boiling point" units="m3/kmol" value="not for use" />
   <AcentricityFactor name="Acentric factor" units="_" value="not for use" />
   <RadiusOfGyration name="Radius of gyration" units="m" value="not for use" />
