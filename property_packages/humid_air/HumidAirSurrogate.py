@@ -60,7 +60,7 @@ class _StateBlock(StateBlock):
             flow_mol : value at which to initialize component flows
                              (default=None)
             pressure : value at which to initialize pressure (default=None)
-            temperature_dry_bulb : value at which to initialize temperature_dry_bulb
+            temperature : value at which to initialize temperature
             mole_flow_frac: value at which to initialise the molar flow fraction
                           (default=None)
             outlvl : sets output level of initialisation routine
@@ -131,14 +131,14 @@ class _StateBlock(StateBlock):
                     else:
                         blk[k].pressure.fix(state_args["pressure"])
 
-                if blk[k].temperature_dry_bulb.fixed is True:
+                if blk[k].temperature.fixed is True:
                     Tflag[k] = True
                 else:
                     Tflag[k] = False
                     if state_args is None:
-                        blk[k].temperature_dry_bulb.fix()
+                        blk[k].temperature.fix()
                     else:
-                        blk[k].temperature_dry_bulb.fix(state_args["temperature_dry_bulb"])
+                        blk[k].temperature.fix(state_args["temperature"])
 
             # If input block, return flags, else release state
             flags = {"Fcflag": Fcflag, "Pflag": Pflag, "Tflag": Tflag}
@@ -180,7 +180,7 @@ class _StateBlock(StateBlock):
             if flags["Pflag"][k] is False:
                 blk[k].pressure.unfix()
             if flags["Tflag"][k] is False:
-                blk[k].temperature_dry_bulb.unfix()
+                blk[k].temperature.unfix()
             # if flags["Fmflag"][k] is False:
             #     blk[k].mole_frac_comp["water"].unfix()
 
@@ -200,7 +200,6 @@ class HAirStateBlockData(StateBlockData):
         """
         super(HAirStateBlockData, self).build()
         self._make_state_vars()
-        self.temperature = Reference(self.temperature_dry_bulb[:], units=units.K)
         if self.config.defined_state is False:
             self.sum_mole_frac_out = Constraint(
                 expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
@@ -222,7 +221,7 @@ class HAirStateBlockData(StateBlockData):
             doc="State pressure [Pa]",
         )
 
-        self.temperature_dry_bulb = Var(
+        self.temperature = Var(
             domain=NonNegativeReals,
             initialize=350,
             bounds=(193.15, 400 + 273.15),
@@ -271,7 +270,7 @@ class HAirStateBlockData(StateBlockData):
             units = units.m**3 / units.mol
         )
 
-        inputs = [self.temperature_dry_bulb, self.pressure, self.mole_frac_comp["water"], self.mole_frac_comp["air"]]
+        inputs = [self.temperature, self.pressure, self.mole_frac_comp["water"], self.mole_frac_comp["air"]]
         outputs = [self.relative_humidity, self.temperature_wet_bulb, self.enth_mol, self.entr_mol, self.vol_mol]
         script_dir = os.path.dirname(__file__)
         self.pysmo_surrogate = PysmoSurrogate.load_from_file(
@@ -393,7 +392,7 @@ class HAirStateBlockData(StateBlockData):
     def define_state_vars(self):
         return {
             "flow_mol": self.flow_mol,
-            "temperature_dry_bulb": self.temperature_dry_bulb,
+            "temperature": self.temperature,
             "pressure": self.pressure,
             "mole_frac_comp": self.mole_frac_comp
         }
@@ -404,10 +403,10 @@ class HAirStateBlockData(StateBlockData):
         Model checks for property block
         """
         # Check temperature bounds
-        if value(blk.temperature_dry_bulb) < blk.temperature_dry_bulb.lb:
-            _log.error("{} temperature_dry_bulb set below lower bound.".format(blk.name))
-        if value(blk.temperature_dry_bulb) > blk.temperature_dry_bulb.ub:
-            _log.error("{} temperature_dry_bulb set above upper bound.".format(blk.name))
+        if value(blk.temperature) < blk.temperature.lb:
+            _log.error("{} temperature set below lower bound.".format(blk.name))
+        if value(blk.temperature) > blk.temperature.ub:
+            _log.error("{} temperature set above upper bound.".format(blk.name))
 
         # Check pressure bounds
         if value(blk.pressure) < blk.pressure.lb:
@@ -470,6 +469,7 @@ class PhysicalParameterData(PhysicalParameterBlock):
                 "entr_mol_comp": {"method": "_entr_mol_comp"},
                 "entr_mass": {"method": "_entr_mass", "units": units.J / units.kg / units.K},
                 "entr_mass_comp": {"method": "_entr_mass_comp"},
+                "temperature": {"method": None, "units": units.K},
                 "total_energy_flow": {"method": "_total_energy_flow", "units": units.kW},
                 # "vapor_frac": {"method": "_vapor_frac"}
 
@@ -478,7 +478,6 @@ class PhysicalParameterData(PhysicalParameterBlock):
 
         obj.define_custom_properties(
             {
-                "temperature_dry_bulb": {"method": None},
                 "temperature_wet_bulb": {"method": None},
                 "relative_humidity": {"method": None},
             }
