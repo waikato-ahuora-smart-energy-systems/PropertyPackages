@@ -9,7 +9,8 @@ from idaes.core import (
     declare_process_block_class,
 )
 
-from pyomo.environ import (Expression, Param, Var, Constraint, units as pyunits)
+from pyomo.environ import (Expression, Param, Var, Constraint, units as pyunits,value)
+
 
 
 @declare_process_block_class("ExtendedActivityCoeffParameterBlock")
@@ -27,7 +28,6 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                         "enth_mol_comp": {"method": "_enth_mol_comp", "units": "J/mol"},
                         "enth_mol": {"method": "_enth_mol", "units": "J/mol"},
                         "enth_mass_comp": {"method": "_enth_mass_comp", "units": "J/kg"},
-                        "enth_mass": {"method": "_enth_mass", "units": "J/kg"},
                         "flow_mol_comp": {"method": "_flow_mol_comp", "units": "mol/s"},
                         "flow_mass_comp": {"method": "_flow_mass_comp", "units": "kg/s"},
                         "flow_mass": {"method": "_flow_mass", "units": "kg/s"},
@@ -35,14 +35,25 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                         "entr_mol": {"method": "_entr_mol", "units": "J/mol"},
                         "entr_mass_comp": {"method": "_entr_mass_comp", "units": "J/kg"},
                         "entr_mass": {"method": "_entr_mass", "units": "J/kg"},
-                        "vapor_frac": {"method": "_vapor_frac", "units": None},
                         "flow_vol": {"method": "_flow_vol", "units": "m^3/s"},
-                        "total_energy_flow": {"method": "_total_energy_flow", "units": "J/s"},
-                        "phase_frac_mol": {"method": "_phase_frac_mol", "units": None},
-                        "flow_mass_phase": {"method": "_flow_mass_phase_comp", "units": "kg/s"},
-                        "phase_frac_mass": {"method": "_phase_frac_mass", "units": None},
+                        "flow_mass_phase": {"method": "_flow_mass_phase", "units": "kg/s"},
                         "mass_frac_phase_comp": {"method": "_mass_frac_phase_comp", "units": None},
+                        "enth_mass": {"method": "_enth_mass", "units": "J/kg"},
+                        "dens_mass": {"method": "_dens_mass", "units": "kg/m^3"}
                     }
+                    )
+            obj.define_custom_properties(
+                {
+                "weighted_Molecular_weight_per_phase":{ "method": "_weighted_Molecular_weight_per_phase", "units": "kg/mol"},
+                "enth_mass_phase": {"method": "_enth_mass_phase", "units": "J/kg"},
+                "entr_mass_phase": {"method": "_entr_mass_phase", "units": "J/kg"},
+                "phase_frac_mass": {"method": "_phase_frac_mass", "units": None},
+                "phase_frac_mol": {"method": "_phase_frac_mol", "units": None},
+                "vapor_frac": {"method": "_vapor_frac", "units": None},
+                "total_energy_flow": {"method": "_total_energy_flow", "units": "J/s"},
+                "dens_mass_phase": {"method": "_dens_mass_phase", "units": "kg/m^3"},
+        
+                }
             )
 
 @declare_process_block_class("ExtendedActivityCoeffStateBlock", block_class=_ActivityCoeffStateBlock)
@@ -53,6 +64,9 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
         # we want to always create these properties (We said the magic words)
         self.enth_mol_phase
         self.entr_mol_phase
+        self.set_default_scaling("flow_vol", 1000)
+        self.set_default_scaling("flow_mass", 10)
+        
 
         #Ahuora layout mol_frac_comp, flow_mol, temperature, pressure, flow_mass, vapor_frac, enth_mol , enth_mass, entr_mol, entr_mass, total_energy_flow, flow_vol
     def _flow_mol_comp(self):
@@ -99,16 +113,18 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
           rule=_rule_enth_mol
       )
 
-    def _weighted_Molecular_weight(self):
-        def _rule_weighted_Molecular_weight(model):
-            return sum(model.mole_frac_comp[c] * model.params.mw_comp[c] for c in model.params.component_list)
-        self.weighted_Molecular_weight = Expression(
-            rule=_rule_weighted_Molecular_weight,
+    def _weighted_Molecular_weight_per_phase(self):
+        def _rule_weighted_Molecular_weight_per_phase(model,p):
+            return sum(model.mole_frac_phase_comp[p,c] * model.params.mw_comp[c] for c in model.params.component_list)
+        self.weighted_Molecular_weight_per_phase = Expression(
+            self.params.phase_list,
+            rule=_rule_weighted_Molecular_weight_per_phase,
         )
+    
 
     def _flow_mass_phase(self):
         def _rule_flow_mass_phase(model, p):
-            return model.flow_mol_phase[p] * self.weighted_Molecular_weight
+            return model.flow_mol_phase[p] * self.weighted_Molecular_weight_per_phase[p]
         self.flow_mass_phase = Expression(
             self.params.phase_list,
             rule=_rule_flow_mass_phase
@@ -129,9 +145,9 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
             rule=_rule_mass_frac_phase_comp,
         )
 
-    def enth_mass_phase(self):
+    def _enth_mass_phase(self):
         def _rule_enth_mass_phase(model,p):
-            return model.enth_mol_phase[p] / model.weighted_Molecular_weight
+            return model.enth_mol_phase[p] / model.weighted_Molecular_weight_per_phase[p]
         self.enth_mass_phase = Expression(
             self.params.phase_list,
             rule=_rule_enth_mass_phase
@@ -139,7 +155,7 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
 
     def _enth_mass(self):
       def _rule_enth_mass(model):
-          return sum(model.phase_frac_mass[p]*model.enth_mass_phase[p] for p in model.params.phase_list)
+          return sum(model.phase_frac_mass[p] * model.enth_mass_phase[p] for p in model.params.phase_list)
                 
       self.enth_mass = Expression(
           rule=_rule_enth_mass
@@ -154,7 +170,7 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
 
     def _entr_mass_phase(self):
         def _rule_entr_mass_phase(model,p):
-            return model.entr_mol_phase[p] / model.weighted_Molecular_weight
+            return model.entr_mol_phase[p] / model.weighted_Molecular_weight_per_phase[p]
         self.entr_mass_phase = Expression(
             self.params.phase_list,
             rule=_rule_entr_mass_phase
@@ -174,9 +190,27 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
             rule=_rule_total_energy_flow,
         )
     
+#To Do: Add density data and method
+    def _dens_mass_phase(self):
+        def _rule_dens_phase(model,p):
+                return (model.params.density_liq_below45[p,model.params.component_list[2]]*model.mole_frac_comp[model.params.component_list[2]] + model.params.density_liq_below45[p,model.params.component_list[1]]*model.mole_frac_comp[model.params.component_list[1]]*0.83)
+        self.dens_mass_phase = Expression(
+            self.params.phase_list,
+            rule=_rule_dens_phase,
+        )
+  
+    def _dens_mass(self):
+        def _rule_dens_mass(model):
+            return sum(model.phase_frac_mass[p]*model.dens_mass_phase[p] for p in model.params.phase_list)
+        self.dens_mass = Expression(
+            rule=_rule_dens_mass
+        )
+
     def _flow_vol(self):
       def _rule_flow_vol(model):
-          return 0 * pyunits.m**3 / pyunits.s # Placeholder until we have density data
+          return  model.flow_mass / model.dens_mass
       self.flow_vol = Expression(
           rule=_rule_flow_vol,
       )
+
+    

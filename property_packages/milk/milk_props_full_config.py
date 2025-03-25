@@ -309,3 +309,19 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
             doc="Standard entropy of formation [J/mol.K]",
             units=pyunits.J / pyunits.mol / pyunits.K,
         )
+        #Input constant density for milk
+
+        dens_data = {
+            ("Vap", "milk_solid"):1,
+            ("Vap", "water"): 1,
+            ("Liq", "milk_solid"): 1660,
+            ("Liq", "water"): 1000,
+        }
+        self.density_liq_below45 = Param(
+            self.phase_list,
+            self.component_list,
+            mutable=True,
+            initialize= dens_data,
+            doc="Density of the phase [kg/m^3]",
+            units=pyunits.kg / pyunits.m**3,
+        )
