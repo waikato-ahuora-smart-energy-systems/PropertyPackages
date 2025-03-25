@@ -37,9 +37,10 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                         "entr_mass": {"method": "_entr_mass", "units": "J/kg"},
                         "flow_vol": {"method": "_flow_vol", "units": "m^3/s"},
                         "flow_mass_phase": {"method": "_flow_mass_phase", "units": "kg/s"},
-                        "mass_frac_phase_comp": {"method": "_mass_frac_phase_comp", "units": None},
+
                         "enth_mass": {"method": "_enth_mass", "units": "J/kg"},
-                        "dens_mass": {"method": "_dens_mass", "units": "kg/m^3"}
+                        "dens_mass": {"method": "_dens_mass", "units": "kg/m^3"},
+
                     }
                     )
             obj.define_custom_properties(
@@ -52,7 +53,8 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                 "vapor_frac": {"method": "_vapor_frac", "units": None},
                 "total_energy_flow": {"method": "_total_energy_flow", "units": "J/s"},
                 "dens_mass_phase": {"method": "_dens_mass_phase", "units": "kg/m^3"},
-        
+                "flow_mass_phase_comp":{"method": "_flow_mass_phase_comp", "units": "kg/s"},
+                "mass_frac_phase_comp": {"method": "_mass_frac_phase_comp", "units": None},
                 }
             )
 
@@ -136,9 +138,20 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
             self.params.phase_list,
             rule=_rule_phase_frac_mass
         )
+
+    def _flow_mass_phase_comp(self):
+        def _rule_flow_mass_phase_comp(model,p,c):
+            return model.flow_mol_phase[p] * model.mole_frac_phase_comp[p,c] * model.params.mw_comp[c]
+        self.flow_mass_phase_comp = Expression(
+            self.params.phase_list,
+            self.params.component_list,
+            rule=_rule_flow_mass_phase_comp,
+        )
+
+            
     def _mass_frac_phase_comp(self):
-        def _rule_mass_frac_phase_comp(model, p, i):
-            return model.flow_mass_phase_comp[p, i] / model.flow_mass
+        def _rule_mass_frac_phase_comp(model, p, c):
+            return model.flow_mass_phase_comp[p, c] / model.flow_mass_phase[p]
         self.mass_frac_phase_comp = Expression(
             self.params.phase_list,
             self.params.component_list,
