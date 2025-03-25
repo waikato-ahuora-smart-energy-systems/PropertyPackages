@@ -87,7 +87,7 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
 
         # Critical propertiess
         pressure_critical_data = {
-            "milk_solid": 30e4,  #https://www.chemeo.com/cid/13-615-4/Oleic-Acid aprrox as Oleic acid Joback method
+            "milk_solid": 30e7,  #https://www.chemeo.com/cid/13-615-4/Oleic-Acid aprrox as Oleic acid Joback method
             "water": 22046e3, # NIST https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Units=SI
         }
 
@@ -308,4 +308,20 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
             initialize=extract_data(ds_form_data),
             doc="Standard entropy of formation [J/mol.K]",
             units=pyunits.J / pyunits.mol / pyunits.K,
+        )
+        #Input constant density for milk
+
+        dens_data = {
+            ("Vap", "milk_solid"):1,
+            ("Vap", "water"): 1,
+            ("Liq", "milk_solid"): 1660,
+            ("Liq", "water"): 1000,
+        }
+        self.density_liq_below45 = Param(
+            self.phase_list,
+            self.component_list,
+            mutable=True,
+            initialize= dens_data,
+            doc="Density of the phase [kg/m^3]",
+            units=pyunits.kg / pyunits.m**3,
         )
