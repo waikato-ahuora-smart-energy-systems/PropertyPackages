@@ -5,6 +5,7 @@ import os
 # Import Pyomo libraries
 from pyomo.environ import (
     Expression,
+    Constraint,
     Param,
     Reals,
     value,
@@ -99,17 +100,17 @@ class _StateBlock(StateBlock):
             Fcflag = {}
             Pflag = {}
             Tflag = {}
-            Fmflag = {}
+            # Fmflag = {}
 
             for k in blk.keys():
-                if blk[k].mole_frac_comp["water"].fixed is True:
-                    Fmflag[k] = True
-                else:
-                    Fmflag[k] = False
-                    if state_args is None:
-                        blk[k].mole_frac_comp["water"].fix()
-                    else:
-                        blk[k].mole_frac_comp["water"].fix(state_args["flow_mol_water"])
+                # if blk[k].mole_frac_comp["water"].fixed is True:
+                #     Fmflag[k] = True
+                # else:
+                #     Fmflag[k] = False
+                #     if state_args is None:
+                #         blk[k].mole_frac_comp["water"].fix()
+                #     else:
+                #         blk[k].mole_frac_comp["water"].fix(state_args["flow_mol_water"])
 
                 if blk[k].flow_mol.fixed is True:
                     Fcflag[k] = True
@@ -139,7 +140,7 @@ class _StateBlock(StateBlock):
                         blk[k].temperature_dry_bulb.fix(state_args["temperature_dry_bulb"])
 
             # If input block, return flags, else release state
-            flags = {"Fcflag": Fcflag, "Pflag": Pflag, "Tflag": Tflag, "Fmflag": Fmflag}
+            flags = {"Fcflag": Fcflag, "Pflag": Pflag, "Tflag": Tflag}
 
         else:
             # Check when the state vars are fixed already result in dof 0
@@ -179,8 +180,8 @@ class _StateBlock(StateBlock):
                 blk[k].pressure.unfix()
             if flags["Tflag"][k] is False:
                 blk[k].temperature_dry_bulb.unfix()
-            if flags["Fmflag"][k] is False:
-                blk[k].mole_frac_comp["water"].unfix()
+            # if flags["Fmflag"][k] is False:
+            #     blk[k].mole_frac_comp["water"].unfix()
 
         if outlvl > 0:
             if outlvl > 0:
@@ -198,6 +199,10 @@ class HAirStateBlockData(StateBlockData):
         """
         super(HAirStateBlockData, self).build()
         self._make_state_vars()
+        if self.config.defined_state is False:
+            self.sum_mole_frac_out = Constraint(
+                expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
+            )
 
     def _make_state_vars(self):
 
@@ -240,6 +245,7 @@ class HAirStateBlockData(StateBlockData):
 
         self.relative_humidity = Var(
             domain=Reals,
+            initialize=0.3,
             bounds = (0,1)
         )
 
@@ -252,8 +258,9 @@ class HAirStateBlockData(StateBlockData):
 
         self.entr_mol = Var(
             domain=Reals,
+            initialize=40,
             units = units.J / units.mol / units.K,
-            doc = "Entropy [J/mol]"
+            doc = "Entropy [J/mol/K]"
         )
 
         self.vol_mol = Var(
@@ -362,11 +369,11 @@ class HAirStateBlockData(StateBlockData):
             return b.flow_mass * b.enth_mass
         self.total_energy_flow = Expression( rule = _rule_total_energy_flow)
     
-    def _vapor_frac(self):
-        self.vapor_frac = Var(
-            domain = NonNegativeReals,
-            initialize=1.0,
-        )
+    # def _vapor_frac(self):
+    #     self.vapor_frac = Var(
+    #         domain = NonNegativeReals,
+    #         initialize=1.0,
+    #     )
 
     def get_material_flow_terms(self, p, j):
         return self.flow_mol
@@ -462,7 +469,7 @@ class PhysicalParameterData(PhysicalParameterBlock):
                 "entr_mass": {"method": "_entr_mass", "units": units.J / units.kg / units.K},
                 "entr_mass_comp": {"method": "_entr_mass_comp"},
                 "total_energy_flow": {"method": "_total_energy_flow", "units": units.kW},
-                "vapor_frac": {"method": "_vapor_frac"}
+                # "vapor_frac": {"method": "_vapor_frac"}
 
             }
         )
