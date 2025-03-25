@@ -19,7 +19,8 @@ from idaes.core import (
     PhysicalParameterBlock,
     StateBlockData,
     StateBlock,
-
+    MaterialBalanceType,
+    EnergyBalanceType,
     VaporPhase,
     Component,
 )
@@ -353,8 +354,23 @@ class HAirStateBlockData(StateBlockData):
             domain = NonNegativeReals,
             initialize=1.0,
         )
+
+    def get_material_flow_terms(self, p, j):
+        return self.flow_mol
+
+    def get_enthalpy_flow_terms(self, p):
+        return self.flow_mol * self.enth_mol
+
+    def default_material_balance_type(self):
+        return MaterialBalanceType.componentTotal
+
+    def default_energy_balance_type(self):
+        return EnergyBalanceType.enthalpyTotal
+    
+
     def define_state_vars(self):
         return {
+            "flow_mol": self.flow_mol,
             "temperature_dry_bulb": self.temperature_dry_bulb,
             "pressure": self.pressure,
             "mole_frac_comp": self.mole_frac_comp
