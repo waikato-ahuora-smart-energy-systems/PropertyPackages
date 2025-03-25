@@ -19,7 +19,7 @@ def build_package(package_name: PackageName, compound_list: List[str], valid_sta
             pass # TODO: Implement build_package for nrtl.
         case "milk":
             return build_milk_package(compound_list)
-        case "humic_air":
+        case "humid_air":
             return build_humid_air_package(compound_list)
         case _:
             raise ValueError(f"Invalid package name {package_name}. Expected a valid property package type, e.g helmholtz")
