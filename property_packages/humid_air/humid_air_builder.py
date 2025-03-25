@@ -1,4 +1,4 @@
-from HumidAirSurrogate import HAirParameterBlock
+from .HumidAirSurrogate import HAirParameterBlock
 from typing import List, Literal
 
 def build_humid_air_package(compound_list: List[str]):
