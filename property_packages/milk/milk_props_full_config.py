@@ -87,7 +87,7 @@ class MilkParameterData(ExtendedActivityCoeffParameterData):
 
         # Critical propertiess
         pressure_critical_data = {
-            "milk_solid": 30e4,  #https://www.chemeo.com/cid/13-615-4/Oleic-Acid aprrox as Oleic acid Joback method
+            "milk_solid": 30e7,  #https://www.chemeo.com/cid/13-615-4/Oleic-Acid aprrox as Oleic acid Joback method
             "water": 22046e3, # NIST https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Units=SI
         }
 
