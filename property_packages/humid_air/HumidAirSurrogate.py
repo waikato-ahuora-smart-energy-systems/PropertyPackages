@@ -252,7 +252,7 @@ class HAirStateBlockData(StateBlockData):
 
         self.entr_mol = Var(
             domain=Reals,
-            units = units.J / units.mol,
+            units = units.J / units.mol / units.K,
             doc = "Entropy [J/mol]"
         )
 
@@ -281,7 +281,7 @@ class HAirStateBlockData(StateBlockData):
                 b.mole_frac_comp[i] 
                 * (1/b.params.mw_comp[i])
                 for i in b.params.component_list
-                ) * b.flow_mol
+                )
         self.vol_mass = Expression(rule=_vol_mass_rule)
 
     def _enth_mass(self):
