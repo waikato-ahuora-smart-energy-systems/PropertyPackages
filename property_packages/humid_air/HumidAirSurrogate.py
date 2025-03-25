@@ -99,8 +99,18 @@ class _StateBlock(StateBlock):
             Fcflag = {}
             Pflag = {}
             Tflag = {}
+            Fmflag = {}
 
             for k in blk.keys():
+                if blk[k].mole_frac_comp["water"].fixed is True:
+                    Fmflag[k] = True
+                else:
+                    Fmflag[k] = False
+                    if state_args is None:
+                        blk[k].mole_frac_comp["water"].fix()
+                    else:
+                        blk[k].mole_frac_comp["water"].fix(state_args["flow_mol_water"])
+
                 if blk[k].flow_mol.fixed is True:
                     Fcflag[k] = True
                 else:
@@ -129,7 +139,7 @@ class _StateBlock(StateBlock):
                         blk[k].temperature_dry_bulb.fix(state_args["temperature_dry_bulb"])
 
             # If input block, return flags, else release state
-            flags = {"Fcflag": Fcflag, "Pflag": Pflag, "Tflag": Tflag}
+            flags = {"Fcflag": Fcflag, "Pflag": Pflag, "Tflag": Tflag, "Fmflag": Fmflag}
 
         else:
             # Check when the state vars are fixed already result in dof 0
@@ -169,6 +179,8 @@ class _StateBlock(StateBlock):
                 blk[k].pressure.unfix()
             if flags["Tflag"][k] is False:
                 blk[k].temperature_dry_bulb.unfix()
+            if flags["Fmflag"][k] is False:
+                blk[k].mole_frac_comp["water"].unfix()
 
         if outlvl > 0:
             if outlvl > 0:
@@ -192,8 +204,8 @@ class HAirStateBlockData(StateBlockData):
         self.flow_mol = Var(
             domain=NonNegativeReals,
             initialize=1.0,
-            units=units.kmol / units.s,
-            doc="Total molar flowrate [kmol/s]",
+            units=units.mol / units.s,
+            doc="Total molar flowrate [mol/s]",
         )
         self.pressure = Var(
             domain=NonNegativeReals,
@@ -233,20 +245,21 @@ class HAirStateBlockData(StateBlockData):
 
         self.enth_mol = Var(
             domain=Reals,
+            initialize=300,
             units = units.J / units.mol,
             doc = "Enthalpy [J/mol]"
         )
 
         self.entr_mol = Var(
-                    domain=Reals,
-                    units = units.J / units.mol,
-                    doc = "Enthalpy [J/mol]"
-                )
+            domain=Reals,
+            units = units.J / units.mol,
+            doc = "Entropy [J/mol]"
+        )
 
         self.vol_mol = Var(
             domain = NonNegativeReals,
             initialize=40,
-            units = units.m**3
+            units = units.m**3 / units.mol
         )
 
         inputs = [self.temperature_dry_bulb, self.pressure, self.mole_frac_comp["water"], self.mole_frac_comp["air"]]
@@ -467,7 +480,7 @@ class PhysicalParameterData(PhysicalParameterBlock):
                 "time": units.s,
                 "length": units.m,
                 "mass": units.kg,
-                "amount": units.kmol,
+                "amount": units.mol,
                 "temperature": units.K,
             }
         )
