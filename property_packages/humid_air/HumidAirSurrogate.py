@@ -197,7 +197,7 @@ class HAirStateBlockData(StateBlockData):
         )
         self.pressure = Var(
             domain=NonNegativeReals,
-            initialize=10000,
+            initialize=95000,
             bounds=(90000, 110000),
             units=units.Pa,
             doc="State pressure [Pa]",
