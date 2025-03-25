@@ -376,7 +376,7 @@ class HAirStateBlockData(StateBlockData):
     #         initialize=1.0,
     #     )
 
-    def get_material_flow_terms(self, c):
+    def get_material_flow_terms(self, p, c):
         return self.mole_frac_comp[c]*self.flow_mol
 
     def get_enthalpy_flow_terms(self):
