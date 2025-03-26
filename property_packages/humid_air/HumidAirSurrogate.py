@@ -221,10 +221,10 @@ class HAirStateBlockData(StateBlockData):
         super(HAirStateBlockData, self).build()
         self.constraints = Block()
         self._make_state_vars()
-        if self.config.defined_state is False:
-            self.sum_mole_frac_out = Constraint(
-                expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
-            )
+        # if self.config.defined_state is False:
+        #     self.sum_mole_frac_out = Constraint(
+        #         expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
+        #     )
     
     def constrain_component(blk, component: Var | Expression, value: float) -> Constraint | Var | None:
         """
@@ -257,7 +257,7 @@ class HAirStateBlockData(StateBlockData):
         self.pressure = Var(
             domain=NonNegativeReals,
             initialize=95000,
-            bounds=(90000, 110000),
+            bounds=(10000, 900000),
             units=units.Pa,
             doc="State pressure [Pa]",
         )
@@ -265,7 +265,7 @@ class HAirStateBlockData(StateBlockData):
         self.temperature = Var(
             domain=NonNegativeReals,
             initialize=350,
-            bounds=(193.15, 400 + 273.15),
+            bounds=(193.15, 273.15+250),
             units=units.K,
             doc="Dry bulb temperature [K]",
         )
