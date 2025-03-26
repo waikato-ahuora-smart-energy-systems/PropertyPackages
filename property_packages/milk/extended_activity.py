@@ -24,6 +24,12 @@ from idaes.core.util.initialization import (
     solve_indexed_blocks,
 )
 
+from pyomo.environ import Block, Constraint
+from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
+from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
+
+
+
 from property_packages.utils import fix_state_vars
 
 # Set up logger
@@ -55,6 +61,7 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                         "flow_mass_phase": {"method": "_flow_mass_phase", "units": "kg/s"},
                         "enth_mass": {"method": "_enth_mass", "units": "J/kg"},
                         "dens_mass": {"method": "_dens_mass", "units": "kg/m^3"},
+                        "vapor_frac": {"method": "_vapor_frac", "units": None},
                     }
                 )
             obj.define_custom_properties(
@@ -64,7 +71,6 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                 "entr_mass_phase": {"method": "_entr_mass_phase", "units": "J/kg"},
                 "phase_frac_mass": {"method": "_phase_frac_mass", "units": None},
                 "phase_frac_mol": {"method": "_phase_frac_mol", "units": None},
-                "vapor_frac": {"method": "_vapor_frac", "units": None},
                 "total_energy_flow": {"method": "_total_energy_flow", "units": "J/s"},
                 "dens_mass_phase": {"method": "_dens_mass_phase", "units": "kg/m^3"},
                 "flow_mass_phase_comp":{"method": "_flow_mass_phase_comp", "units": "kg/s"},
@@ -84,6 +90,26 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData, StateBloc
         blk.entr_mol_phase
         blk.set_default_scaling("flow_vol", 1000)
         blk.set_default_scaling("flow_mass", 10)
+    
+    def constrain_component(blk, component: Var | Expression, value: float) -> Constraint | Var | None:
+        """
+        Constrain a component to a value
+        """
+        if type(component) == ScalarExpression:
+            c = Constraint(expr=component == value)
+            c.defining_state_var = True
+            blk.constraints.add_component(component.local_name, c)
+            return c
+        elif type(component) in (ScalarVar, _GeneralVarData, VarData, IndexedVar):
+            component.fix(value)
+            return component
+        elif type(component) in (_GeneralExpressionData, ExpressionData):
+            # allowed, but we don't need to fix it (eg. mole_frac_comp in helmholtz)
+            return None
+        else:
+            raise Exception(
+                f"Component {component} is not a Var or Expression: {type(component)}"
+            )
     
     # Ahuora layout mol_frac_comp, flow_mol, temperature, pressure, flow_mass, vapor_frac, enth_mol, 
     # enth_mass, entr_mol, entr_mass, total_energy_flow, flow_vol

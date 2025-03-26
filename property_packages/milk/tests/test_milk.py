@@ -89,11 +89,11 @@ def test_vap_frac_fix():
     m.fs.state_block.pressure.fix(1*100*1000)
     m.fs.state_block.mole_frac_comp["milk_solid"].fix(n)
     m.fs.state_block.mole_frac_comp["water"].fix(1-n)
-    
+
     assert degrees_of_freedom(m) == 0
     m.fs.state_block.initialize()
 
-    m.fs.state_block.constrain("vapor_frac", 0.5)
+    m.fs.state_block.vapor_frac.fix(0.5)
     m.fs.state_block.pressure.unfix()
 
     m.fs.state_block.enth_mol # trigger enthalpy build
