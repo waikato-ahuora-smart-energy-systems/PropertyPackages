@@ -5,7 +5,6 @@ from idaes.models.unit_models import Heater
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.core import MaterialBalanceType
 from idaes.core.solvers import get_solver
-from CoolProp.CoolProp import HAPropsSI
 from property_packages.build_package import build_package
 
 def testInit(): ##not expected to do anything at this stage
