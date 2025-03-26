@@ -221,10 +221,10 @@ class HAirStateBlockData(StateBlockData):
         super(HAirStateBlockData, self).build()
         self.constraints = Block()
         self._make_state_vars()
-        # if self.config.defined_state is False:
-        #     self.sum_mole_frac_out = Constraint(
-        #         expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
-        #     )
+        if self.config.defined_state is False:
+            self.sum_mole_frac_out = Constraint(
+                expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
+            )
     
     def constrain_component(blk, component: Var | Expression, value: float) -> Constraint | Var | None:
         """
