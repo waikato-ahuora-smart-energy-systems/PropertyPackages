@@ -200,10 +200,10 @@ class HAirStateBlockData(StateBlockData):
         """
         super(HAirStateBlockData, self).build()
         self._make_state_vars()
-        if self.config.defined_state is False:
-            self.sum_mole_frac_out = Constraint(
-                expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
-            )
+        # if self.config.defined_state is False:
+        #     self.sum_mole_frac_out = Constraint(
+        #         expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
+        #     )
 
     def _make_state_vars(self):
 
@@ -295,14 +295,14 @@ class HAirStateBlockData(StateBlockData):
     def _enth_mass(self):
         def enth_mass_rule(b):
             return sum(b.enth_mass_comp[i] for i in b.params.component_list)
-        self.enth_mass = Expression (initialize=enth_mass_rule)
+        self.enth_mass = Expression (rule=enth_mass_rule)
 
     def _enth_mass_comp(self):
         def _rule_enth_mass_comp(b, i):
             return b.enth_mol_comp[i] / b.params.mw_comp[i]
         self.enth_mass_comp = Expression(
             self.params.component_list,
-            initialize=_rule_enth_mass_comp,
+            rule=_rule_enth_mass_comp,
         )
 
     def _enth_mol_comp(self):###check this
@@ -316,7 +316,7 @@ class HAirStateBlockData(StateBlockData):
     def _entr_mass(self):
         def entr_mass_rule(b):
             return sum (b.entr_mass_comp[i] for i in b.params.component_list)
-        self.entr_mass = Expression (initialize=entr_mass_rule)
+        self.entr_mass = Expression (rule=entr_mass_rule)
 
     def _entr_mass_comp(self):
         def _rule_entr_mass_comp(b, i):
