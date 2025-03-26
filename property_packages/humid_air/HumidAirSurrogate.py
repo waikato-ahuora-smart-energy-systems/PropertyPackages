@@ -431,7 +431,7 @@ class PhysicalParameterData(PhysicalParameterBlock):
         """
         super(PhysicalParameterData, self).build()
 
-        self._state_block_class = HAirStateBlock
+        self._state_block_class = HAirStateBlock # noqa: F821
         # List of valid phases in property package
         self.Vap = VaporPhase()
 
