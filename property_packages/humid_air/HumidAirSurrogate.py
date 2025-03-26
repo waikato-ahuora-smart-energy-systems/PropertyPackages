@@ -30,6 +30,12 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 
 from idaes.core.surrogate.surrogate_block import SurrogateBlock
 from idaes.core.surrogate.pysmo_surrogate import PysmoSurrogate
+import idaes.logger as idaeslog
+
+from pyomo.environ import Block, Constraint
+from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
+from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
+
 
 # Some more information about this module
 __author__ = "Stephen Burroughs"
@@ -188,7 +194,21 @@ class _StateBlock(StateBlock):
             if outlvl > 0:
                 _log.info("{} State Released.".format(blk.name))
 
-@declare_process_block_class("HAirStateBlock", block_class=_StateBlock)
+class _StateBlockWrapper(_StateBlock):
+
+    def initialize(blk, *args, **kwargs):
+        for v, k in blk.items():
+            print(k)
+            k.constraints.deactivate()
+        return _StateBlock.initialize(blk, *args, **kwargs)
+
+    def release_state(blk, flags, outlvl=idaeslog.NOTSET):
+        _StateBlock.release_state(blk, flags, outlvl)
+
+        for v, k in blk.items():
+            k.constraints.activate()
+
+@declare_process_block_class("HAirStateBlock", block_class=_StateBlockWrapper)
 class HAirStateBlockData(StateBlockData):
     """
     An example property package for ideal gas properties with Gibbs energy
@@ -199,10 +219,31 @@ class HAirStateBlockData(StateBlockData):
         Callable method for Block construction
         """
         super(HAirStateBlockData, self).build()
+        self.constraints = Block()
         self._make_state_vars()
         if self.config.defined_state is False:
             self.sum_mole_frac_out = Constraint(
                 expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
+            )
+    
+    def constrain_component(blk, component: Var | Expression, value: float) -> Constraint | Var | None:
+        """
+        Constrain a component to a value
+        """
+        if type(component) == ScalarExpression:
+            c = Constraint(expr=component == value)
+            c.defining_state_var = True
+            blk.constraints.add_component(component.local_name, c)
+            return c
+        elif type(component) in (ScalarVar, _GeneralVarData, VarData, IndexedVar):
+            component.fix(value)
+            return component
+        elif type(component) in (_GeneralExpressionData, ExpressionData):
+            # allowed, but we don't need to fix it (eg. mole_frac_comp in helmholtz)
+            return None
+        else:
+            raise Exception(
+                f"Component {component} is not a Var or Expression: {type(component)}"
             )
 
     def _make_state_vars(self):
