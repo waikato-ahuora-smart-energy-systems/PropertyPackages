@@ -265,7 +265,7 @@ class HAirStateBlockData(StateBlockData):
         self.temperature = Var(
             domain=NonNegativeReals,
             initialize=350,
-            bounds=(193.15, 273.15+250),
+            bounds=(193.15, 273.15+400),
             units=units.K,
             doc="Dry bulb temperature [K]",
         )
