@@ -7,7 +7,6 @@ from idaes.models.unit_models.heat_exchanger import delta_temperature_lmtd_callb
 from idaes.models.properties import iapws95
 from property_packages.build_package import build_package   
 import idaes.logger as idaeslog
-from pytest import approx
 from idaes.core.util.model_statistics import degrees_of_freedom
 
 def test_propane():
@@ -85,16 +84,14 @@ def test_vap_frac_fix():
     m.fs.state_block = m.fs.properties.build_state_block(defined_state=True)
     n = 0.01
     m.fs.state_block.flow_mol.fix(1)
-    m.fs.state_block.temperature.fix(100+273.15)
+    # m.fs.state_block.temperature.fix(100+273.15)
+    m.fs.state_block.constrain_component(m.fs.state_block.vapor_frac, 0.5)
     m.fs.state_block.pressure.fix(1*100*1000)
     m.fs.state_block.mole_frac_comp["milk_solid"].fix(n)
     m.fs.state_block.mole_frac_comp["water"].fix(1-n)
 
     assert degrees_of_freedom(m) == 0
     m.fs.state_block.initialize()
-
-    m.fs.state_block.vapor_frac.fix(0.5)
-    m.fs.state_block.pressure.unfix()
 
     m.fs.state_block.enth_mol # trigger enthalpy build
     m.fs.state_block.entr_mol # trigger entropy build

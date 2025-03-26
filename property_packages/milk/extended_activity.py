@@ -28,9 +28,18 @@ from pyomo.environ import Block, Constraint
 from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
 from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
 
+# Import IDAES cores
+from idaes.core import (
+    StateBlock,
+)
 
+from idaes.core.util.initialization import (
+    # fix_state_vars,
+    revert_state_vars,
+    solve_indexed_blocks,
+)
 
-from property_packages.utils import fix_state_vars
+from property_packages.utils.fix_state_vars import fix_state_vars
 
 # Set up logger
 _log = idaeslog.getLogger(__name__)
@@ -61,7 +70,6 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                         "flow_mass_phase": {"method": "_flow_mass_phase", "units": "kg/s"},
                         "enth_mass": {"method": "_enth_mass", "units": "J/kg"},
                         "dens_mass": {"method": "_dens_mass", "units": "kg/m^3"},
-                        "vapor_frac": {"method": "_vapor_frac", "units": None},
                     }
                 )
             obj.define_custom_properties(
@@ -75,16 +83,34 @@ class ExtendedActivityCoeffParameterData(ActivityCoeffParameterData):
                 "dens_mass_phase": {"method": "_dens_mass_phase", "units": "kg/m^3"},
                 "flow_mass_phase_comp":{"method": "_flow_mass_phase_comp", "units": "kg/s"},
                 "mass_frac_phase_comp": {"method": "_mass_frac_phase_comp", "units": None},
+                "vapor_frac": {"method": "_vapor_frac", "units": None},
                 }
             )
 
+class _ExtendedActivityCoeffStateBlock(_ActivityCoeffStateBlock):
+
+    def initialize(blk, *args, **kwargs):
+        for v, k in blk.items():
+            print(k)
+            k.constraints.deactivate()
+        return _ActivityCoeffStateBlock.initialize(blk, *args, **kwargs)
+
+    def release_state(blk, flags, outlvl=idaeslog.NOTSET):
+        _ActivityCoeffStateBlock.release_state(blk, flags, outlvl)
+
+        for v, k in blk.items():
+            k.constraints.activate()
+
+        
+
 @declare_process_block_class("ExtendedActivityCoeffStateBlock", 
-                             block_class=_ActivityCoeffStateBlock)
-class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData, StateBlockConstraints):
+                             block_class=_ExtendedActivityCoeffStateBlock)
+class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData):
 
     def build(blk, *args):
         ActivityCoeffStateBlockData.build(blk, *args)
-        StateBlockConstraints.build(blk, *args)
+        blk.constraints = Block()
+        # StateBlockConstraints.build(blk, *args)
         # we want to always create these properties (We said the magic words)
         blk.enth_mol_phase
         blk.entr_mol_phase
@@ -111,6 +137,14 @@ class ExtendedActivityCoeffStateBlockData(ActivityCoeffStateBlockData, StateBloc
                 f"Component {component} is not a Var or Expression: {type(component)}"
             )
     
+    def define_state_vars(self):
+        return {
+            "flow_mol": self.flow_mol, 
+            "temperature": self.temperature,
+            "pressure": self.pressure,
+            "mole_frac_comp": self.mole_frac_comp
+        }
+
     # Ahuora layout mol_frac_comp, flow_mol, temperature, pressure, flow_mass, vapor_frac, enth_mol, 
     # enth_mass, entr_mol, entr_mass, total_energy_flow, flow_vol
     def _flow_mol_comp(self):
