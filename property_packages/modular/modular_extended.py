@@ -104,8 +104,6 @@ utility.MAX_ITER = 1000
 class _ExtendedGenericStateBlock(_GenericStateBlock):
 
     def initialize(blk, *args, **kwargs):
-        blk.display()
-        print("after fix_state_vars")
         flag_dict = fix_state_vars(blk, kwargs.get("state_args", None))
 
         # Set state_vars_fixed to True to avoid fixing state variables
