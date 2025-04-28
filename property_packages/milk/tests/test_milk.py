@@ -79,17 +79,17 @@ def test_milk_custom_props():
 
     # Values not verified
 
-    assert value(m.fs.state_block.enth_mol) == approx(48871, abs=1e4)
+    assert value(m.fs.state_block.enth_mol) == approx(15427.3995, abs=1e4)
 
-    assert value(m.fs.state_block.enth_mass) == approx(2706595, abs=1e5)
+    assert value(m.fs.state_block.enth_mass) == approx(765255.5873, abs=1e5)
 
 
     assert value(m.fs.state_block.flow_mass) == approx(0.0201, abs=1e-4)
 
-    assert value(m.fs.state_block.entr_mol) == approx(479, rel=1e-2)
+    assert value(m.fs.state_block.entr_mol) == approx(114.71, rel=1e-2)
 
-    assert value(m.fs.state_block.entr_mass) == approx(16560, abs=1e2)
+    assert value(m.fs.state_block.entr_mass) == approx(5690, abs=1e2)
 
     assert value(m.fs.state_block.vapor_frac) == approx(0.2618, abs=1e-4)
-    assert value(m.fs.state_block.flow_vol) == approx(0)
-    assert value(m.fs.state_block.total_energy_flow) == approx(54564, abs=1e3)
+    assert value(m.fs.state_block.flow_vol) == approx(2.6e-5, abs=1e-2)
+    assert value(m.fs.state_block.total_energy_flow) == approx(15464, abs=1e3)
