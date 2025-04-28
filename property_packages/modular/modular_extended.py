@@ -104,6 +104,8 @@ utility.MAX_ITER = 1000
 class _ExtendedGenericStateBlock(_GenericStateBlock):
 
     def initialize(blk, *args, **kwargs):
+        blk.display()
+        print("after fix_state_vars")
         flag_dict = fix_state_vars(blk, kwargs.get("state_args", None))
 
         # Set state_vars_fixed to True to avoid fixing state variables
@@ -209,12 +211,13 @@ class _ExtendedGenericStateBlock(_GenericStateBlock):
             # When state vars are fixed, check that DoF is 0
             for k in blk.values():
                 if degrees_of_freedom(k) != 0:
+                    k.display()
                     # PYLINT-TODO
                     # pylint: disable-next=broad-exception-raised
                     raise Exception(
                         "State vars fixed but degrees of "
-                        "freedom for state block is not zero "
-                        "during initialization."
+                        "freedom for state block is " + str(degrees_of_freedom(k)) +
+                        " during initialization. "
                     )
 
         # Create solver

@@ -56,6 +56,8 @@ milk_configuration = {
             "dens_mol_liq_comp": Perrys,
             "enth_mol_liq_comp": Perrys,
             "enth_mol_ig_comp": NIST,
+            "entr_mol_ig_comp": NIST,
+            "entr_mol_liq_comp": Perrys,
             "pressure_sat_comp": NIST,
             "phase_equilibrium_form": {("Vap", "Liq"): fugacity},
             "parameter_data": {
@@ -73,6 +75,7 @@ milk_configuration = {
                     "4": (0.081, None),
                 },
                 "cp_mol_ig_comp_coeff": {
+                    # https://webbook.nist.gov/cgi/cbook.cgi?Name=Water+&Units=SI&cTG=on&cTC=on&cTP=on
                     "A": (
                         30.09200,
                         pyunits.J / pyunits.mol / pyunits.K,
@@ -112,6 +115,14 @@ milk_configuration = {
                     pyunits.J / pyunits.mol,
                 ),  # [1]
                 "enth_mol_form_vap_comp_ref": (-241.83, pyunits.J / pyunits.mol),  # [1]
+                "entr_mol_form_liq_comp_ref": (
+                    -69.95,
+                    pyunits.J / pyunits.mol / pyunits.K,
+                ),  # [1]
+                "entr_mol_form_vap_comp_ref": (
+                    -188.835,
+                    pyunits.J / pyunits.mol / pyunits.K,
+                ),  # [1]
                 "pressure_sat_comp_coeff": {
                     "A": (4.6543, None),  # [1], temperature range 255.9 K - 373 K
                     "B": (1435.264, pyunits.K),
@@ -124,6 +135,7 @@ milk_configuration = {
             "valid_phase_types": PT.liquidPhase,
             "dens_mol_liq_comp": Perrys,
             "enth_mol_liq_comp": Perrys,
+            "entr_mol_liq_comp": Perrys,
             "parameter_data": {
                 "mw": (232e-3, pyunits.kg / pyunits.mol),  # F.Glasser et al Technical Note: Estimation of Milk Fatty Acid Yield from Milk Fat Data https://www.sciencedirect.com/science/article/pii/S0022030207717241#:~:text=The%20mean%20molecular%20weight%20of,%3D%209%20g%2Fmol).
                 "pressure_crit": (1332.96*1000, pyunits.Pa), # https://www.chemeo.com/cid/13-615-4/Oleic-Acid
@@ -152,6 +164,12 @@ milk_configuration = {
                     -764.8e3,
                     pyunits.J / pyunits.mol,
                 ),  # [1]
+                # formation is phase transition. Entropy associated with going from solid to liquid.
+                # for now we are just using oleic acid. https://webbook.nist.gov/cgi/cbook.cgi?ID=C112801&Mask=6F
+                "entr_mol_form_liq_comp_ref": (
+                    138.4,
+                    pyunits.J / pyunits.mol / pyunits.K,
+                ),
             },
         },
     },
