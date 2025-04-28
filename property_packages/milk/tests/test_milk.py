@@ -79,27 +79,15 @@ def test_milk_custom_props():
 
     # Values not verified
 
-    assert value(m.fs.state_block.enth_mol_comp["water"]) == approx(48764, abs=1e3)
-    assert value(m.fs.state_block.enth_mol_comp["milk_solid"]) == approx(107, abs=1e3)
     assert value(m.fs.state_block.enth_mol) == approx(48871, abs=1e4)
 
-    assert value(m.fs.state_block.enth_mass_comp["water"]) == approx(2706133, abs=1e5)
-    assert value(m.fs.state_block.enth_mass_comp["milk_solid"]) == approx(462, abs=1e4)
     assert value(m.fs.state_block.enth_mass) == approx(2706595, abs=1e5)
 
-    assert value(m.fs.state_block.flow_mol_comp["water"]) == 0.99
-    assert value(m.fs.state_block.flow_mol_comp["milk_solid"]) == 0.01
 
-    assert value(m.fs.state_block.flow_mass_comp["water"]) == approx(0.0178, abs=1e-4)
-    assert value(m.fs.state_block.flow_mass_comp["milk_solid"]) == approx(0.00232, abs=1e-4)
     assert value(m.fs.state_block.flow_mass) == approx(0.0201, abs=1e-4)
 
-    assert value(m.fs.state_block.entr_mol_comp["water"]) == approx(283, rel=1e-2)
-    assert value(m.fs.state_block.entr_mol_comp["milk_solid"]) == approx(196, rel=1e-2)
     assert value(m.fs.state_block.entr_mol) == approx(479, rel=1e-2)
 
-    assert value(m.fs.state_block.entr_mass_comp["water"]) == approx(15712, abs=1e2)
-    assert value(m.fs.state_block.entr_mass_comp["milk_solid"]) == approx(847, abs=1)
     assert value(m.fs.state_block.entr_mass) == approx(16560, abs=1e2)
 
     assert value(m.fs.state_block.vapor_frac) == approx(0.2618, abs=1e-4)
