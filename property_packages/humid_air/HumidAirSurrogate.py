@@ -4,7 +4,9 @@ import os
 
 # Import Pyomo libraries
 from pyomo.environ import (
+    Reference,
     Expression,
+    Constraint,
     Param,
     Reals,
     value,
@@ -19,7 +21,8 @@ from idaes.core import (
     PhysicalParameterBlock,
     StateBlockData,
     StateBlock,
-
+    MaterialBalanceType,
+    EnergyBalanceType,
     VaporPhase,
     Component,
 )
@@ -27,6 +30,12 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 
 from idaes.core.surrogate.surrogate_block import SurrogateBlock
 from idaes.core.surrogate.pysmo_surrogate import PysmoSurrogate
+import idaes.logger as idaeslog
+
+from pyomo.environ import Block, Constraint
+from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
+from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
+
 
 # Some more information about this module
 __author__ = "Stephen Burroughs"
@@ -57,7 +66,7 @@ class _StateBlock(StateBlock):
             flow_mol : value at which to initialize component flows
                              (default=None)
             pressure : value at which to initialize pressure (default=None)
-            temperature_dry_bulb : value at which to initialize temperature_dry_bulb
+            temperature : value at which to initialize temperature
             mole_flow_frac: value at which to initialise the molar flow fraction
                           (default=None)
             outlvl : sets output level of initialisation routine
@@ -98,8 +107,18 @@ class _StateBlock(StateBlock):
             Fcflag = {}
             Pflag = {}
             Tflag = {}
+            # Fmflag = {}
 
             for k in blk.keys():
+                # if blk[k].mole_frac_comp["water"].fixed is True:
+                #     Fmflag[k] = True
+                # else:
+                #     Fmflag[k] = False
+                #     if state_args is None:
+                #         blk[k].mole_frac_comp["water"].fix()
+                #     else:
+                #         blk[k].mole_frac_comp["water"].fix(state_args["flow_mol_water"])
+
                 if blk[k].flow_mol.fixed is True:
                     Fcflag[k] = True
                 else:
@@ -118,14 +137,14 @@ class _StateBlock(StateBlock):
                     else:
                         blk[k].pressure.fix(state_args["pressure"])
 
-                if blk[k].temperature_dry_bulb.fixed is True:
+                if blk[k].temperature.fixed is True:
                     Tflag[k] = True
                 else:
                     Tflag[k] = False
                     if state_args is None:
-                        blk[k].temperature_dry_bulb.fix()
+                        blk[k].temperature.fix()
                     else:
-                        blk[k].temperature_dry_bulb.fix(state_args["temperature_dry_bulb"])
+                        blk[k].temperature.fix(state_args["temperature"])
 
             # If input block, return flags, else release state
             flags = {"Fcflag": Fcflag, "Pflag": Pflag, "Tflag": Tflag}
@@ -167,13 +186,29 @@ class _StateBlock(StateBlock):
             if flags["Pflag"][k] is False:
                 blk[k].pressure.unfix()
             if flags["Tflag"][k] is False:
-                blk[k].temperature_dry_bulb.unfix()
+                blk[k].temperature.unfix()
+            # if flags["Fmflag"][k] is False:
+            #     blk[k].mole_frac_comp["water"].unfix()
 
         if outlvl > 0:
             if outlvl > 0:
                 _log.info("{} State Released.".format(blk.name))
 
-@declare_process_block_class("HAirStateBlock", block_class=_StateBlock)
+class _StateBlockWrapper(_StateBlock):
+
+    def initialize(blk, *args, **kwargs):
+        for v, k in blk.items():
+            print(k)
+            k.constraints.deactivate()
+        return _StateBlock.initialize(blk, *args, **kwargs)
+
+    def release_state(blk, flags, outlvl=idaeslog.NOTSET):
+        _StateBlock.release_state(blk, flags, outlvl)
+
+        for v, k in blk.items():
+            k.constraints.activate()
+
+@declare_process_block_class("HAirStateBlock", block_class=_StateBlockWrapper)
 class HAirStateBlockData(StateBlockData):
     """
     An example property package for ideal gas properties with Gibbs energy
@@ -184,28 +219,53 @@ class HAirStateBlockData(StateBlockData):
         Callable method for Block construction
         """
         super(HAirStateBlockData, self).build()
+        self.constraints = Block()
         self._make_state_vars()
+        if self.config.defined_state is False:
+            self.sum_mole_frac_out = Constraint(
+                expr = 1.0 == sum(self.mole_frac_comp[i] for i in self.component_list)
+            )
+    
+    def constrain_component(blk, component: Var | Expression, value: float) -> Constraint | Var | None:
+        """
+        Constrain a component to a value
+        """
+        if type(component) == ScalarExpression:
+            c = Constraint(expr=component == value)
+            c.defining_state_var = True
+            blk.constraints.add_component(component.local_name, c)
+            return c
+        elif type(component) in (ScalarVar, _GeneralVarData, VarData, IndexedVar):
+            component.fix(value)
+            return component
+        elif type(component) in (_GeneralExpressionData, ExpressionData):
+            # allowed, but we don't need to fix it (eg. mole_frac_comp in helmholtz)
+            return None
+        else:
+            raise Exception(
+                f"Component {component} is not a Var or Expression: {type(component)}"
+            )
 
     def _make_state_vars(self):
 
         self.flow_mol = Var(
             domain=NonNegativeReals,
             initialize=1.0,
-            units=units.kmol / units.s,
-            doc="Total molar flowrate [kmol/s]",
+            units=units.mol / units.s,
+            doc="Total molar flowrate [mol/s]",
         )
         self.pressure = Var(
             domain=NonNegativeReals,
-            initialize=10000,
-            bounds=(90000, 110000),
+            initialize=95000,
+            bounds=(10000, 900000),
             units=units.Pa,
             doc="State pressure [Pa]",
         )
 
-        self.temperature_dry_bulb = Var(
+        self.temperature = Var(
             domain=NonNegativeReals,
             initialize=350,
-            bounds=(193.15, 400 + 273.15),
+            bounds=(193.15, 273.15+400),
             units=units.K,
             doc="Dry bulb temperature [K]",
         )
@@ -227,28 +287,31 @@ class HAirStateBlockData(StateBlockData):
 
         self.relative_humidity = Var(
             domain=Reals,
+            initialize=0.3,
             bounds = (0,1)
         )
 
         self.enth_mol = Var(
             domain=Reals,
+            initialize=300,
             units = units.J / units.mol,
             doc = "Enthalpy [J/mol]"
         )
 
         self.entr_mol = Var(
-                    domain=Reals,
-                    units = units.J / units.mol,
-                    doc = "Enthalpy [J/mol]"
-                )
+            domain=Reals,
+            initialize=40,
+            units = units.J / units.mol / units.K,
+            doc = "Entropy [J/mol/K]"
+        )
 
         self.vol_mol = Var(
             domain = NonNegativeReals,
             initialize=40,
-            units = units.m**3
+            units = units.m**3 / units.mol
         )
 
-        inputs = [self.temperature_dry_bulb, self.pressure, self.mole_frac_comp["water"], self.mole_frac_comp["air"]]
+        inputs = [self.temperature, self.pressure, self.mole_frac_comp["water"], self.mole_frac_comp["air"]]
         outputs = [self.relative_humidity, self.temperature_wet_bulb, self.enth_mol, self.entr_mol, self.vol_mol]
         script_dir = os.path.dirname(__file__)
         self.pysmo_surrogate = PysmoSurrogate.load_from_file(
@@ -267,20 +330,20 @@ class HAirStateBlockData(StateBlockData):
                 b.mole_frac_comp[i] 
                 * (1/b.params.mw_comp[i])
                 for i in b.params.component_list
-                ) * b.flow_mol
+                )
         self.vol_mass = Expression(rule=_vol_mass_rule)
 
     def _enth_mass(self):
         def enth_mass_rule(b):
             return sum(b.enth_mass_comp[i] for i in b.params.component_list)
-        self.enth_mass = Expression (initialize=enth_mass_rule)
+        self.enth_mass = Expression (rule=enth_mass_rule)
 
     def _enth_mass_comp(self):
         def _rule_enth_mass_comp(b, i):
             return b.enth_mol_comp[i] / b.params.mw_comp[i]
         self.enth_mass_comp = Expression(
             self.params.component_list,
-            initialize=_rule_enth_mass_comp,
+            rule=_rule_enth_mass_comp,
         )
 
     def _enth_mol_comp(self):###check this
@@ -294,7 +357,7 @@ class HAirStateBlockData(StateBlockData):
     def _entr_mass(self):
         def entr_mass_rule(b):
             return sum (b.entr_mass_comp[i] for i in b.params.component_list)
-        self.entr_mass = Expression (initialize=entr_mass_rule)
+        self.entr_mass = Expression (rule=entr_mass_rule)
 
     def _entr_mass_comp(self):
         def _rule_entr_mass_comp(b, i):
@@ -348,14 +411,29 @@ class HAirStateBlockData(StateBlockData):
             return b.flow_mass * b.enth_mass
         self.total_energy_flow = Expression( rule = _rule_total_energy_flow)
     
-    def _vapor_frac(self):
-        self.vapor_frac = Var(
-            domain = NonNegativeReals,
-            initialize=1.0,
-        )
+    # def _vapor_frac(self):
+    #     self.vapor_frac = Var(
+    #         domain = NonNegativeReals,
+    #         initialize=1.0,
+    #     )
+
+    def get_material_flow_terms(self, p, c):
+        return self.mole_frac_comp[c]*self.flow_mol
+
+    def get_enthalpy_flow_terms(self , p):
+        return self.flow_mol * self.enth_mol
+
+    def default_material_balance_type(self):
+        return MaterialBalanceType.componentTotal
+
+    def default_energy_balance_type(self):
+        return EnergyBalanceType.enthalpyTotal
+    
+
     def define_state_vars(self):
         return {
-            "temperature_dry_bulb": self.temperature_dry_bulb,
+            "flow_mol": self.flow_mol,
+            "temperature": self.temperature,
             "pressure": self.pressure,
             "mole_frac_comp": self.mole_frac_comp
         }
@@ -366,10 +444,10 @@ class HAirStateBlockData(StateBlockData):
         Model checks for property block
         """
         # Check temperature bounds
-        if value(blk.temperature_dry_bulb) < blk.temperature_dry_bulb.lb:
-            _log.error("{} temperature_dry_bulb set below lower bound.".format(blk.name))
-        if value(blk.temperature_dry_bulb) > blk.temperature_dry_bulb.ub:
-            _log.error("{} temperature_dry_bulb set above upper bound.".format(blk.name))
+        if value(blk.temperature) < blk.temperature.lb:
+            _log.error("{} temperature set below lower bound.".format(blk.name))
+        if value(blk.temperature) > blk.temperature.ub:
+            _log.error("{} temperature set above upper bound.".format(blk.name))
 
         # Check pressure bounds
         if value(blk.pressure) < blk.pressure.lb:
@@ -394,7 +472,7 @@ class PhysicalParameterData(PhysicalParameterBlock):
         """
         super(PhysicalParameterData, self).build()
 
-        self._state_block_class = HAirStateBlock
+        self._state_block_class = HAirStateBlock # noqa: F821
         # List of valid phases in property package
         self.Vap = VaporPhase()
 
@@ -432,15 +510,15 @@ class PhysicalParameterData(PhysicalParameterBlock):
                 "entr_mol_comp": {"method": "_entr_mol_comp"},
                 "entr_mass": {"method": "_entr_mass", "units": units.J / units.kg / units.K},
                 "entr_mass_comp": {"method": "_entr_mass_comp"},
+                "temperature": {"method": None, "units": units.K},
                 "total_energy_flow": {"method": "_total_energy_flow", "units": units.kW},
-                "vapor_frac": {"method": "_vapor_frac"}
+                # "vapor_frac": {"method": "_vapor_frac"}
 
             }
         )
 
         obj.define_custom_properties(
             {
-                "temperature_dry_bulb": {"method": None},
                 "temperature_wet_bulb": {"method": None},
                 "relative_humidity": {"method": None},
             }
@@ -451,7 +529,7 @@ class PhysicalParameterData(PhysicalParameterBlock):
                 "time": units.s,
                 "length": units.m,
                 "mass": units.kg,
-                "amount": units.kmol,
+                "amount": units.mol,
                 "temperature": units.K,
             }
         )

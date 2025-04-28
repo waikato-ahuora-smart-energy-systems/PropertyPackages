@@ -1,5 +1,6 @@
 from .milk_modular import milk_configuration
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
+from ..modular.modular_extended import GenericExtendedParameterBlock
+
 from typing import List, Literal
 
 def build_milk_package(compound_list: List[str]):
@@ -8,4 +9,4 @@ def build_milk_package(compound_list: List[str]):
     for compound in compound_list:
         if compound not in ["water", "milk_solid"]:
             raise ValueError(f"Compound {compound} not supported in milk package")
-    return GenericParameterBlock(milk_configuration)
+    return GenericExtendedParameterBlock(milk_configuration)

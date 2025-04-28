@@ -85,5 +85,4 @@ def test_initialise_compressor():
     m.fs.compressor.initialize(outlvl=1)
     solve(m)
     assert value(outlet.temperature) == approx(273.58047830928655)
-
     

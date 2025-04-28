@@ -7,7 +7,7 @@ from idaes.models.unit_models.heat_exchanger import delta_temperature_lmtd_callb
 from idaes.models.properties import iapws95
 from property_packages.build_package import build_package   
 import idaes.logger as idaeslog
-from pytest import approx
+from idaes.core.util.model_statistics import degrees_of_freedom
 
 def test_propane():
     # Tests do not validate data, just used to verify initialisation
@@ -77,6 +77,24 @@ def test_milk_custom_props():
     solver = pe.SolverFactory('ipopt')
     solver.solve(m)
 
+def test_vap_frac_fix():
+    m = pe.ConcreteModel()
+    m.fs = FlowsheetBlock(dynamic=False)
+    m.fs.properties = build_package("milk", ["water", "milk_solid"], ["Liq", "Vap"])
+    m.fs.state_block = m.fs.properties.build_state_block(defined_state=True)
+    n = 0.01
+    m.fs.state_block.flow_mol.fix(1)
+    # m.fs.state_block.temperature.fix(100+273.15)
+    m.fs.state_block.constrain_component(m.fs.state_block.vapor_frac, 0.5)
+    m.fs.state_block.pressure.fix(1*100*1000)
+    m.fs.state_block.mole_frac_comp["milk_solid"].fix(n)
+    m.fs.state_block.mole_frac_comp["water"].fix(1-n)
+
+    assert degrees_of_freedom(m) == 0
+    m.fs.state_block.initialize()
+
+    m.fs.state_block.enth_mol # trigger enthalpy build
+    m.fs.state_block.entr_mol # trigger entropy build
     # Values not verified
 
     assert value(m.fs.state_block.enth_mol) == approx(15427.3995, abs=1e4)
@@ -90,6 +108,10 @@ def test_milk_custom_props():
 
     assert value(m.fs.state_block.entr_mass) == approx(5690, abs=1e2)
 
+    assert degrees_of_freedom(m) == 0
+
+    solver = pe.SolverFactory('ipopt')
+    solver.solve(m)
     assert value(m.fs.state_block.vapor_frac) == approx(0.2618, abs=1e-4)
     assert value(m.fs.state_block.flow_vol) == approx(2.6e-5, abs=1e-2)
     assert value(m.fs.state_block.total_energy_flow) == approx(15464, abs=1e3)
