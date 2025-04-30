@@ -4,6 +4,12 @@ To install this:
 pip install git+https://github.com/waikato-ahuora-smart-energy-systems/PropertyPackages.git
 ```
 
+To install the development version, after cloning this repo:
+
+```sh
+pip install -e .
+```
+
 To use
 
 

@@ -42,6 +42,7 @@ def fix_state_vars(blk, state_args=None):
             "temperature",
             "total_energy_flow",
             "custom_vapor_frac",
+            "vapor_frac",
         }
         for n, v in b.define_state_vars().items():
             fix_var = True
