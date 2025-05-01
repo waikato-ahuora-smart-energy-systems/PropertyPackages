@@ -135,6 +135,7 @@ def test_milk_regression():
                     },
                     "enth_mol_form_liq_comp_ref": 
                         (-285.83e3* pyunits.J / pyunits.mol) + m.fs.reference_enthalpy,  # [1]
+                    # enth_mol_form_vap_comp_ref doesn't get used I think, because we're using NIST which just uses the H parameter
                     "enth_mol_form_vap_comp_ref": (-241.83 * pyunits.J / pyunits.mol) + m.fs.reference_enthalpy,  # [1]
                     "entr_mol_form_liq_comp_ref": 
                         (-69.95 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy,  # [1]
@@ -223,30 +224,31 @@ def test_milk_regression():
     # Unfortunately, loading from the configuration just gets the values, it doesn't link the properties.
     # unfix the reference variables and add constraints to them instead
     m.fs.milk_properties.water.enth_mol_form_liq_comp_ref.unfix()
-    m.fs.milk_properties.water.enth_mol_form_vap_comp_ref.unfix()
-    m.fs.milk_properties.water.entr_mol_form_liq_comp_ref.unfix()
-    m.fs.milk_properties.water.entr_mol_form_vap_comp_ref.unfix()
+    #m.fs.milk_properties.water.enth_mol_form_vap_comp_ref.unfix()
+    m.fs.milk_properties.water.cp_mol_ig_comp_coeff_H.unfix()
+    # m.fs.milk_properties.water.entr_mol_form_liq_comp_ref.unfix()
+    # m.fs.milk_properties.water.entr_mol_form_vap_comp_ref.unfix()
     m.fs.milk_properties.milk_solid.enth_mol_form_liq_comp_ref.unfix()
-    m.fs.milk_properties.milk_solid.entr_mol_form_liq_comp_ref.unfix()
+    # m.fs.milk_properties.milk_solid.entr_mol_form_liq_comp_ref.unfix()
 
     @m.fs.milk_properties.water.Constraint()
     def enth_mol_form_liq_comp_ref_eqn(b):
         return m.fs.milk_properties.water.enth_mol_form_liq_comp_ref == (-285.83e3* pyunits.J / pyunits.mol) + m.fs.reference_enthalpy
     @m.fs.milk_properties.water.Constraint()
-    def enth_mol_form_vap_comp_ref_eqn(b):
-        return m.fs.milk_properties.water.enth_mol_form_vap_comp_ref == (-241.83 * pyunits.J / pyunits.mol) + m.fs.reference_enthalpy
-    @m.fs.milk_properties.water.Constraint()
-    def entr_mol_form_liq_comp_ref_eqn(b):
-        return m.fs.milk_properties.water.entr_mol_form_liq_comp_ref == (-69.95 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy
-    @m.fs.milk_properties.water.Constraint()
-    def entr_mol_form_vap_comp_ref_eqn(b):
-        return m.fs.milk_properties.water.entr_mol_form_vap_comp_ref == (-188.835 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy
+    def cp_mol_ig_comp_coeff_H_eqn(b):
+        return m.fs.milk_properties.water.cp_mol_ig_comp_coeff_H ==  m.fs.reference_enthalpy # 
+    # @m.fs.milk_properties.water.Constraint()
+    # def entr_mol_form_liq_comp_ref_eqn(b):
+    #     return m.fs.milk_properties.water.entr_mol_form_liq_comp_ref == (-69.95 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy
+    # @m.fs.milk_properties.water.Constraint()
+    # def entr_mol_form_vap_comp_ref_eqn(b):
+    #     return m.fs.milk_properties.water.entr_mol_form_vap_comp_ref == (-188.835 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy
     @m.fs.milk_properties.milk_solid.Constraint()
     def enth_mol_form_liq_comp_ref_eqn(b):
         return m.fs.milk_properties.milk_solid.enth_mol_form_liq_comp_ref == (-764.8e3 * pyunits.J / pyunits.mol) + m.fs.reference_enthalpy
-    @m.fs.milk_properties.milk_solid.Constraint()
-    def entr_mol_form_liq_comp_ref_eqn(b):
-        return m.fs.milk_properties.milk_solid.entr_mol_form_liq_comp_ref == (138.4 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy
+    # @m.fs.milk_properties.milk_solid.Constraint()
+    # def entr_mol_form_liq_comp_ref_eqn(b):
+    #     return m.fs.milk_properties.milk_solid.entr_mol_form_liq_comp_ref == (138.4 * pyunits.J / pyunits.mol / pyunits.K) + m.fs.reference_entropy
     
     # Create the state blocks
 
