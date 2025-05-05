@@ -114,13 +114,13 @@ milk_configuration = {
                     -285.83e3,
                     pyunits.J / pyunits.mol,
                 ),  # [1]
-                "enth_mol_form_vap_comp_ref": (-241.83, pyunits.J / pyunits.mol),  # [1]
+                "enth_mol_form_vap_comp_ref": (0, pyunits.J / pyunits.mol),  # [1]
                 "entr_mol_form_liq_comp_ref": (
-                    -69.95,
+                    69.95, 
                     pyunits.J / pyunits.mol / pyunits.K,
                 ),  # [1]
                 "entr_mol_form_vap_comp_ref": (
-                    -188.835,
+                    188.835,  
                     pyunits.J / pyunits.mol / pyunits.K,
                 ),  # [1]
                 "pressure_sat_comp_coeff": {
@@ -161,7 +161,7 @@ milk_configuration = {
                     "5": (0.0000637, pyunits.J / pyunits.kmol / pyunits.K**5),
                 },
                 "enth_mol_form_liq_comp_ref": (
-                    -764.8e3,
+                    0,
                     pyunits.J / pyunits.mol,
                 ),  # [1]
                 # formation is phase transition. Entropy associated with going from solid to liquid.
