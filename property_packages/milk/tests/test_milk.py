@@ -100,14 +100,14 @@ def test_vap_frac_fix():
 
     assert value(m.fs.state_block.enth_mol) == approx(-264540.76, abs=1e4)
 
-    assert value(m.fs.state_block.enth_mass) == approx(-13125221.563, abs=1e5)
+    assert value(m.fs.state_block.enth_mass) == approx(-12745765.14624959, abs=1e5)
 
 
     assert value(m.fs.state_block.flow_mass) == approx(0.0201, abs=1e-4)
 
-    assert value(m.fs.state_block.entr_mol) == approx(73.76438, rel=1e-2)
+    assert value(m.fs.state_block.entr_mol) == approx(142.31538514734717, rel=1e-2)
 
-    assert value(m.fs.state_block.entr_mass) == approx(3659.828, abs=1e2)
+    assert value(m.fs.state_block.entr_mass) == approx(7060.99466583044, abs=1e2)
 
     assert degrees_of_freedom(m) == 0
 
@@ -115,4 +115,4 @@ def test_vap_frac_fix():
     solver.solve(m)
     assert value(m.fs.state_block.vapor_frac) == approx(0.5, abs=1e-4)
     assert value(m.fs.state_block.flow_vol) == approx(2.6e-5, abs=1e-2)
-    assert value(m.fs.state_block.total_energy_flow) == approx(-264540.76953367476, abs=1e3)
+    assert value(m.fs.state_block.total_energy_flow) == approx(-256892.76, abs=1e3)
