@@ -51,7 +51,7 @@ _log = logging.getLogger(__name__)
 milk_configuration = {
     # Specifying components
     "components": {
-        "h2o": {
+        "water": {
             "type": Component,
             "dens_mol_liq_comp": Perrys,
             "enth_mol_liq_comp": Perrys,
