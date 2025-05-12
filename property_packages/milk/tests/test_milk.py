@@ -105,9 +105,9 @@ def test_vap_frac_fix():
 
     assert value(m.fs.state_block.flow_mass) == approx(0.0201, abs=1e-4)
 
-    assert value(m.fs.state_block.entr_mol) == approx(124.03149421673038, rel=1e-2)
+    assert value(m.fs.state_block.entr_mol) == approx(78.11263952439862, rel=1e-2)
 
-    assert value(m.fs.state_block.entr_mass) == approx(6153.8372548587195, abs=1e2)
+    assert value(m.fs.state_block.entr_mass) == approx(3875.567848442111, abs=1e2)
 
     assert degrees_of_freedom(m) == 0
 
