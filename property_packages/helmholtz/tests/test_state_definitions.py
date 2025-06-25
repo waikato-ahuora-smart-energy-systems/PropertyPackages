@@ -1,6 +1,6 @@
 from ..helmholtz_builder import build_helmholtz_package
 from pytest import approx
-from pyomo.environ import ConcreteModel, SolverFactory, value, units
+from pyomo.environ import ConcreteModel, SolverFactory, value, units, assert_optimal_termination
 from pyomo.core.base.constraint import Constraint, ScalarConstraint
 from idaes.core import FlowsheetBlock
 from idaes.models.unit_models import Compressor
@@ -26,7 +26,8 @@ def initialize(m):
 
 def solve(m):
     solver = SolverFactory('ipopt')
-    solver.solve(m, tee=True)
+    result = solver.solve(m, tee=True)
+    assert_optimal_termination(result)
 
 
 def test_constrain():
@@ -85,4 +86,22 @@ def test_initialise_compressor():
     m.fs.compressor.initialize(outlvl=1)
     solve(m)
     assert value(outlet.temperature) == approx(273.58047830928655)
-    
+
+
+def test_butane():
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock(dynamic=False)
+    m.fs.properties = build_helmholtz_package(["i-butane"])
+    m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
+    state = m.fs.state[0]
+    state.constrain("temperature",262)
+    state.constrain("pressure",101325)
+    state.constrain("flow_mol",100)
+    m.fs.state.initialize()
+    solve(m)
+    # boiling point of butane at 1atm is -0.5 degC.
+    assert value(state.vapor_frac) == approx(1)
+    state.constraints.del_component(state.constraints.temperature)
+    state.constrain("temperature",260)
+    solve(m)
+    assert value(state.vapor_frac) == approx(0)
