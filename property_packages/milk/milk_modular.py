@@ -189,7 +189,7 @@ milk_configuration = {
     # Specifying state definition
     "state_definition": FTPx,
     "state_bounds": {
-        "flow_mol": (0, 10, 100, pyunits.mol / pyunits.s),
+        "flow_mol": (0, 10, 10000, pyunits.mol / pyunits.s),
         "temperature": (273.15, 323.15, 1000, pyunits.K),
         "pressure": (10000, 108900, 1e7, pyunits.Pa),
     },
