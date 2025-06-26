@@ -14,7 +14,7 @@ def solve(m):
 
 m = ConcreteModel()
 m.fs = FlowsheetBlock(dynamic=False)
-m.fs.properties = build_helmholtz_package(["n-butane"])
+m.fs.properties = build_helmholtz_package(["i-butane"])
 m.fs.state = m.fs.properties.build_state_block([0], defined_state=True)
 state = m.fs.state[0]
 
@@ -23,39 +23,39 @@ m.fs.state.initialize()
 
     
 sat_thermo_data = {
-        1: {  # near triple point
-            "T": 136,
-            "p": 0.00082,
-            "rhol": 733.9269,
-            "hl": -719.46,
-            "sl": -3.02,
-            "rhov": 0.000042,
-            "hv": -225.72,
-            "sv": -0.640,
+        1: {  # not that close to the triple point, but as low as I could get it to go
+            "T": 244,
+            "p": 48.482,
+            "rhol": 732.52996,
+            "hl": -699.97,
+            "sl": -3.079,
+            "rhov": 0.0000096,
+            "hv": -225.91,
+            "sv": 0.806,
         },
         2: {  # between critical and triple point
-            "T": 222,
-            "p": 8.829,
-            "rhol": 652.828,
-            "hl": -544.84,
-            "sl": -2.028,
-            "rhov": 0.27998,
-            "hv": -117.82,
-            "sv": -0.104,
+            "T": 266,
+            "p": 120.89,
+            "rhol": 588.69,
+            "hl": -417.88,
+            "sl": -15.79,
+            "rhov": 3.3332,
+            "hv": -56.92,
+            "sv": -0.222,
         },
         3: {  # near critical point
-            "T": 425,
-            "p": 3788.1,
-            "rhol": 250.17,
-            "hl": 50.78,
-            "sl": -0.235,
-            "rhov": 205.54,
-            "hv": 73.93,
-            "sv": -0.180,
+            "T": 407,
+            "p": 3580.1,
+            "rhol": 276.83,
+            "hl": 7.30,
+            "sl": -0.354,
+            "rhov": 173.46,
+            "hv": 59.64,
+            "sv": -0.225,
         },
+        
     }
 
-MOLAR_WEIGHT = 0.0581222 # kg/mol
 
 import json
 
