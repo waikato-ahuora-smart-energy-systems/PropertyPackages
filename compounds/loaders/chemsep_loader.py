@@ -1,7 +1,27 @@
+from loaders import register_loader
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 from typing import Dict
 import os
+
+# Loaders get called when CompoundDB module is imported
+
+@register_loader("chemsep")
+def load(registry):
+
+    
+    all_compounds = {}
+
+    # iterate through all files in the data_files folder
+    # and create a Compound object for each file
+    for file in os.listdir(os.path.dirname(__file__) + "/data_files/chemsep"):
+        if file.endswith(".xml"):
+            compound_name = file[:-4]
+            compound = load_compound(compound_name)
+            registry.add_compound
+            all_compounds[compound_name] = compound
+    
+    return all_compounds
 
 def convert_string_to_float(string: str) -> float | str:
     try:
@@ -61,6 +81,7 @@ compound_template = {
     'HeatOfCombustion': parse_element,
     'SolidDensity': parse_coeff,
     'LiquidDensity': parse_coeff,
+    'VaporPressure': parse_coeff, 'LiquidDensity': parse_coeff,
     'VaporPressure': parse_coeff,
     'HeatOfVaporization': parse_coeff,
     'SolidHeatCapacityCp': parse_coeff,
@@ -68,6 +89,29 @@ compound_template = {
     'IdealGasHeatCapacityCp': parse_coeff,
     'SecondVirialCoefficient': parse_coeff,
     'LiquidViscosity': parse_coeff,
+    'VaporViscosity': parse_coeff,
+    'LiquidThermalConductivity': parse_coeff,
+    'VaporThermalConductivity': parse_coeff,
+    'SurfaceTension': parse_coeff,
+    'RPPHeatCapacityCp': parse_coeff,
+    'RelativeStaticPermittivity': parse_coeff,
+    'AntoineVaporPressure': parse_coeff,
+    'LiquidViscosityRPS': parse_coeff,
+}
+
+Compound = Dict
+
+def load_compound(name: str) -> Compound:
+    """
+    Parses the XML string and populates the object's attributes.
+
+    Args:
+        xml_string (str): The XML data as a string.
+    """
+    self = {}
+    with open(os.path.dirname(__file__) + "/data_files/" + name.lower() + ".xml", 'r') as file:
+        file = ''.join(file.readlines())
+
     'VaporViscosity': parse_coeff,
     'LiquidThermalConductivity': parse_coeff,
     'VaporThermalConductivity': parse_coeff,

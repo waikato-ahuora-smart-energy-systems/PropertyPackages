@@ -1,6 +1,5 @@
-from .Compound import load_compound
+from loaders import loaders
 from typing import Dict
-import os
 
 # Loads all the compounds, and enables some basic queries for/on the compounds.
 # Handy to avoid extra reloading of the compounds, but does consume more memory.
@@ -8,17 +7,26 @@ import os
 # move to a database, hdf5, or use a redis cache or something else as the backend of this.
 # https://chatgpt.com/share/67196214-92a0-8005-8d2d-68713f50c9d6
 
+
+# compounds["source"]["name"]["parameter"]
 all_compounds = {}
 
 # iterate through all files in the data_files folder
 # and create a Compound object for each file
-for file in os.listdir(os.path.dirname(__file__) + "/data_files"):
+for file in os.listdir(os.path.dirname(__file__) + "/data_files/chemsep"):
     if file.endswith(".xml"):
         compound_name = file[:-4]
         compound = load_compound(compound_name)
         all_compounds[compound_name] = compound
 
-def get_compound(compound_name: str) -> Dict:
+# Calling all loaders
+for name, loader in loaders.items():
+    try:
+        all_compounds["name"] = loader()
+    except Exception as e:
+        print(f"Error loading compounds with loader '{loader}': {e}")
+
+def get_compound(compound_name: str, ) -> Dict:
     """
     Returns a Compound object for the given compound name.
 
