@@ -1,4 +1,4 @@
-from loaders import register_loader
+from loaders import loader
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 from typing import Dict
@@ -6,15 +6,14 @@ import os
 
 # Loaders get called when CompoundDB module is imported
 
-@register_loader("chemsep")
+@loader("chemsep")
 def load(registry):
-
     
     all_compounds = {}
 
     # iterate through all files in the data_files folder
     # and create a Compound object for each file
-    for file in os.listdir(os.path.dirname(__file__) + "/data_files/chemsep"):
+    for file in os.listdir(os.path.dirname(__file__) + "/data/chemsep"):
         if file.endswith(".xml"):
             compound_name = file[:-4]
             compound = load_compound(compound_name)

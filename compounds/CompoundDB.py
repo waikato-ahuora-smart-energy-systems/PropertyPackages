@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 __author__ = "Mahaki Leach"
 
+
 class Compound:
     def __init__(self, name: str):
         self.__name = name
@@ -21,6 +22,18 @@ class Compound:
     @property
     def packages(self):
         return self.__packages
+    
+    def get_source(self, source_name: str) -> dict:
+        """
+        Get the data from a specific source.
+        
+        Args:
+            source_name (str): Name of the source to retrieve data from.
+        
+        Returns:
+            dict: Data associated with the source if it exists, otherwise None.
+        """
+        return self.sources.get(source_name, None)
     
     def add_source(self, source_name: str, data: dict):
         if source_name in self.sources:
@@ -109,13 +122,13 @@ class PropertyPackage(ABC):
         """
         return self.check_registered(compound)
     
-   
 
 class CompoundRegistry:
 
     def __init__(self):
         self.__compounds: Dict[str, Compound] = {}
         self.__packages: Dict[str, PropertyPackage] = {}
+        self.__queue: Dict[str, list] = {"compounds": [], "packages": [], "bindings": []}
     
     @property
     def compounds(self):
@@ -126,7 +139,55 @@ class CompoundRegistry:
         return self.__packages
     
     def _build(self):
-        pass
+        # Building packages
+        for package in self.__queue["packages"]:
+            if isinstance(package, PropertyPackage):
+                self._register_package(package)
+            else:
+                raise TypeError(f"Expected PropertyPackage, got {type(package)}")
+
+        # Building compounds    
+        for compound_name, sources, data in self.__queue["compounds"]:
+            self._register_compound(compound_name, sources, data)
+
+        # Building bindings
+        for compound_name, package_name in self.__queue["bindings"]:
+            if compound_name in self.compounds and package_name in self.packages:
+                self._bind(compound_name, package_name)
+            else:
+                raise ValueError(f"Compound {compound_name} or Package {package_name} is not registered.")
+        
+        # Building dynamic bindings
+
+    def queue_compound(self, compound_name: str, source: str, data: dict):
+        """
+        Queue a compound to be registered later.
+        
+        Args:
+            compound_name (str): Name of the compound to queue.
+            source (str): Name of the source providing the compound data.
+            data (dict): Data associated with the compound from the source.
+        """
+        self.__queue["compounds"].append((compound_name, source, data))
+    
+    def queue_package(self, package: PropertyPackage):
+        """
+        Queue a property package to be registered later.
+        
+        Args:
+            package (PropertyPackage): The property package to queue.
+        """
+        self.__queue["packages"].append(package)
+    
+    def queue_binding(self, compound_name: str, package_name: str):
+        """
+        Queue a binding between a compound and a property package.
+        
+        Args:
+            compound_name (str): Name of the compound to bind.
+            package_name (str): Name of the property package to bind to.
+        """
+        self.__queue["bindings"].append((compound_name, package_name))
 
     def _register_package(self, package: PropertyPackage):
         """
@@ -310,19 +371,21 @@ class CompoundRegistry:
         """
         return list(self.__compounds.keys())
 
+
 #  Simplified wrapper for back-end interactions
 class RegistryView:
     def __init__(self, registry):
         self._registry = registry
 
     def register_package(self, pkg):
-        self._registry.register_package(pkg)
+        self._registry.queue_package(pkg)
 
     def register_compound(self, name, source, data):
-        self._registry.register_compound(name, source, data)
+        self._registry.queue_compound(name, source, data)
 
     def bind(self, compound_name, package_name):
-        self._registry.bind(compound_name, package_name)
+        self._registry.queue_bind(compound_name, package_name)
+
 
 # Simplified wrapper for front-end integration
 class RegistrySearch:
@@ -341,6 +404,21 @@ class RegistrySearch:
     
     def get_supported_compounds(self, packages, strict=True):
         return self._registry.get_supported_compounds(packages, strict)
+
+
+registry = CompoundRegistry()
+registry_view = RegistryView(registry)
+registry_search = RegistrySearch(registry)
+
+# Loading in loaders
+
+from compounds.loaders import register_loader
+
+# Building the registry
+
+registry._build()
+
+# export registry_search as registry <- need to do this
 
 """
 "expected" workflow
@@ -366,3 +444,20 @@ registry = CompoundRegistry()
 registry._build()
 
 """
+
+""" deprecated methods """
+
+from compounds import deprecated
+
+@deprecated
+def get_compound(name: str) -> Compound | None:
+    """
+    Get a compound by its name.
+    
+    Args:
+        name (str): Name of the compound to retrieve.
+    
+    Returns:
+        compound (dict): the compound chemsep source data if found, otherwise None.
+    """
+    return registry._get_compound(name).get_source("chemsep")
