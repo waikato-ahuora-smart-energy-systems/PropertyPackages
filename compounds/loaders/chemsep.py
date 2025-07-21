@@ -1,32 +1,28 @@
-from loaders import loader
+from compounds.loaders import loader
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 from typing import Dict
 import os
 
-# Loaders get called when CompoundDB module is imported
 
 @loader("chemsep")
 def load(registry):
-    
-    all_compounds = {}
 
-    # iterate through all files in the data_files folder
-    # and create a Compound object for each file
+    registry.register_package("peng-robinson")
+
     for file in os.listdir(os.path.dirname(__file__) + "/data/chemsep"):
         if file.endswith(".xml"):
             compound_name = file[:-4]
             compound = load_compound(compound_name)
-            registry.add_compound
-            all_compounds[compound_name] = compound
-    
-    return all_compounds
+            registry.register_compound(compound_name, "chemsep", compound)
+
 
 def convert_string_to_float(string: str) -> float | str:
     try:
         return float(string)
     except:
         return string
+
 
 class UnitValuePair(BaseModel):
     name: str | None
@@ -41,7 +37,10 @@ def parse_element(elem: ET.Element):
     except:
         return None
 
+
 Coefficients = Dict[str, float | str]
+
+
 def parse_coeff(element: ET.Element) -> Coefficients:
     self = {}
     for child in element:
@@ -80,7 +79,6 @@ compound_template = {
     'HeatOfCombustion': parse_element,
     'SolidDensity': parse_coeff,
     'LiquidDensity': parse_coeff,
-    'VaporPressure': parse_coeff, 'LiquidDensity': parse_coeff,
     'VaporPressure': parse_coeff,
     'HeatOfVaporization': parse_coeff,
     'SolidHeatCapacityCp': parse_coeff,
@@ -100,35 +98,13 @@ compound_template = {
 
 Compound = Dict
 
-def load_compound(name: str) -> Compound:
-    """
-    Parses the XML string and populates the object's attributes.
-
-    Args:
-        xml_string (str): The XML data as a string.
-    """
-    self = {}
-    with open(os.path.dirname(__file__) + "/data_files/" + name.lower() + ".xml", 'r') as file:
-        file = ''.join(file.readlines())
-
-    'VaporViscosity': parse_coeff,
-    'LiquidThermalConductivity': parse_coeff,
-    'VaporThermalConductivity': parse_coeff,
-    'SurfaceTension': parse_coeff,
-    'RPPHeatCapacityCp': parse_coeff,
-    'RelativeStaticPermittivity': parse_coeff,
-    'AntoineVaporPressure': parse_coeff,
-    'LiquidViscosityRPS': parse_coeff,
-}
-
-Compound = Dict
 
 def load_compound(name: str) -> Compound:
     """
     Parses the XML string and populates the object's attributes.
 
     Args:
-        xml_string (str): The XML data as a string.
+        name (str): The XML data as a string.
     """
     self = {}
     with open(os.path.dirname(__file__) + "/data_files/" + name.lower() + ".xml", 'r') as file:

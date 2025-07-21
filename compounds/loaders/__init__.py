@@ -1,6 +1,7 @@
 
 loaders = {}
 
+
 def loader(name):
     
     def decorator(func):
@@ -8,5 +9,6 @@ def loader(name):
         return func
     
     return decorator
+
 
 __all__ = ["loaders", "loader"]
