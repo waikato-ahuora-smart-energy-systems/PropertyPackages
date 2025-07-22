@@ -23,16 +23,13 @@ class CompoundRegistry:
         return self.__packages
 
     def _build(self):
-        print("Building CompoundRegistry...")
         if not self._built:
-            print(" Discovering loaders...")
             from compounds.loaders import loaders_list
 
             self._built = True
 
             # Import all loaders
             for loader in loaders_list:
-                print(" Loading loader:", loader.__name__)
                 loader(RegistryView(self))
 
             # Building packages
@@ -57,11 +54,9 @@ class CompoundRegistry:
             # TODO: finish structure
     
     def _discover_loaders(self):
-
         # Loading modules
         for module in pkgutil.iter_modules(loaders.__path__):
             #  class pkgutil.ModuleInfo(module_finder, name, ispkg)
-            print(" Loading module:", module.name)
             importlib.import_module(f"compounds.loaders.{module.name}")
 
     def queue_compound(self, compound_name: str, source: str, data: dict):
@@ -73,7 +68,6 @@ class CompoundRegistry:
             source (str): Name of the source providing the compound data.
             data (dict): Data associated with the compound from the source.
         """
-        print(" Queuing compound:", compound_name, "from source:", source)
         self.__queue["compounds"].append((compound_name, source, data))
 
     def queue_package(self, package: PropertyPackage):
@@ -128,11 +122,8 @@ class CompoundRegistry:
             data (dict): Data associated with the compound from the source.
         """
 
-        print(" Registering compound:", compound)
-
         if not compound in self.compounds:
 
-            print(" Compound not found in registry, creating new compound.")
             # Create a new compound if it doesn't exist
             self.__compounds[compound] = Compound(compound)
 
