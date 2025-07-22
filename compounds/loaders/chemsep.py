@@ -2,7 +2,7 @@ from compounds.loaders import loader
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 from typing import Dict
-from compounds.CompoundDB import PropertyPackage
+from compounds.PropertyPackage import PropertyPackage
 import os
 
 print("Chemsep loader initialized.")
