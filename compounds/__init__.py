@@ -1,6 +1,5 @@
 import warnings
 
-
 def deprecated(name):
 
     def decorator(func):

@@ -2,18 +2,23 @@ from compounds.loaders import loader
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 from typing import Dict
+from compounds.CompoundDB import PropertyPackage
 import os
 
+print("Chemsep loader initialized.")
 
 @loader("chemsep")
 def load(registry):
 
-    registry.register_package("peng-robinson")
+    registry.register_package(PropertyPackage("peng-robinson"))
 
-    for file in os.listdir(os.path.dirname(__file__) + "/data/chemsep"):
+    print("RARRRRR")
+
+    for file in os.listdir(os.path.dirname(__file__) + "/data/chemsep/"):
         if file.endswith(".xml"):
             compound_name = file[:-4]
             compound = load_compound(compound_name)
+            print(compound_name)
             registry.register_compound(compound_name, "chemsep", compound)
 
 
@@ -107,7 +112,7 @@ def load_compound(name: str) -> Compound:
         name (str): The XML data as a string.
     """
     self = {}
-    with open(os.path.dirname(__file__) + "/data_files/" + name.lower() + ".xml", 'r') as file:
+    with open(os.path.dirname(__file__) + "/data/chemsep/" + name.lower() + ".xml", 'r') as file:
         file = ''.join(file.readlines())
 
     root = ET.fromstring(file)

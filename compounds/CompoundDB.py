@@ -1,10 +1,11 @@
 from typing import Dict, Set
 from compounds import deprecated
-from compounds.loaders import loaders
 from abc import ABC, abstractmethod
+import compounds.loaders as loaders
+import pkgutil, importlib
+import compounds.loaders.chemsep
 
 __author__ = "Mahaki Leach"
-
 
 class Compound:
     def __init__(self, name: str):
@@ -161,6 +162,15 @@ class CompoundRegistry:
 
         # Building dynamic bindings
         # TODO: finish structure
+    
+    def _discover_loaders(self):
+        print("Discovering loaders...")
+
+         # Loading modules
+        for module in pkgutil.iter_modules(loaders.__path__):
+            #  class pkgutil.ModuleInfo(module_finder, name, ispkg)
+            print(" Loading module:", module.name)
+            importlib.import_module(f"compounds.loaders.{module.name}")
 
     def queue_compound(self, compound_name: str, source: str, data: dict):
         """
@@ -403,7 +413,7 @@ class RegistrySearch:
         return self._registry.search_compounds(query, package_filters, filter_strict)
 
     def get_compound_names(self):
-        return self._registry.get_compound_names()
+        return self._registry._get_compound_names()
 
     def get_compound(self, name):
         return self._registry._get_compound(name)
@@ -419,13 +429,20 @@ registry = CompoundRegistry()
 registry_view = RegistryView(registry)
 registry_search = RegistrySearch(registry)
 
-for loader in loaders:
-    loader(registry_view)
+registry._discover_loaders()
 
-registry._build()
+def main():
+    ### this ensures that all loaders are imported and registered before the registry is built
+    from compounds.loaders import loaders_list
+
+    for loader in loaders_list:
+        print("test")
+        loader(registry_view)
+
+    registry._build()
 
 
-@deprecated
+@deprecated("get_compound")
 def get_compound(name: str) -> Compound | None:
     """
     Get a compound by its name.
@@ -439,7 +456,7 @@ def get_compound(name: str) -> Compound | None:
     return registry_search.get_compound(name).get_source("chemsep")
 
 
-@deprecated
+@deprecated("get_compound_names")
 def get_compound_names() -> list:
     """
     Returns a list of all compound names.
@@ -450,7 +467,7 @@ def get_compound_names() -> list:
     return registry_search.get_compound_names()
 
 
-@deprecated
+@deprecated("search_compounds")
 def search_compounds(query: str) -> list:
     """
     Searches for compounds based on the query.
@@ -462,3 +479,6 @@ def search_compounds(query: str) -> list:
         list: List of compound names that match the query.
     """
     return registry_search.search_compounds(query)
+
+if __name__ == "__main__":
+    main()

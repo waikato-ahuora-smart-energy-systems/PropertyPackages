@@ -1,14 +1,14 @@
 
-loaders = {}
+loaders_list = []
 
+print("Compounds loaders initialized.")
 
 def loader(name):
+
+    print("Loader registered:", name)
     
     def decorator(func):
-        loaders[name] = func
+        loaders_list.append(func)
         return func
     
     return decorator
-
-
-__all__ = ["loaders", "loader"]
