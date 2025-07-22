@@ -11,6 +11,7 @@ class CompoundRegistry:
         self.__compounds: Dict[str, Compound] = {}
         self.__packages: Dict[str, PropertyPackage] = {}
         self.__queue: Dict[str, list] = {"compounds": [], "packages": [], "bindings": []}
+        self._built: bool = False
 
     @property
     def compounds(self):
@@ -21,6 +22,8 @@ class CompoundRegistry:
         return self.__packages
 
     def _build(self):
+        self._built = True
+
         # Building packages
         for package in self.__queue["packages"]:
             if isinstance(package, PropertyPackage):
@@ -43,9 +46,8 @@ class CompoundRegistry:
         # TODO: finish structure
     
     def _discover_loaders(self):
-        print("Discovering loaders...")
-
-         # Loading modules
+        
+        # Loading modules
         for module in pkgutil.iter_modules(loaders.__path__):
             #  class pkgutil.ModuleInfo(module_finder, name, ispkg)
             print(" Loading module:", module.name)

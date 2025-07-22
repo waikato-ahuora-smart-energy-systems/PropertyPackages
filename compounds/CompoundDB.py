@@ -1,5 +1,5 @@
 from compounds import deprecated
-from CompoundRegistry import CompoundRegistry
+from compounds.CompoundRegistry import CompoundRegistry
 from compounds.Compound import Compound
 
 __author__ = "Mahaki Leach"
@@ -42,9 +42,14 @@ class RegistrySearch:
         return self._registry.get_supported_compounds(packages, strict)
 
 
+# Main registry instance
 _registry = CompoundRegistry()
+
+# Backend registry view
 registry_view = RegistryView(_registry)
-registry_search = RegistrySearch(_registry)
+
+# Frontend registry view
+db = RegistrySearch(_registry)
 
 _registry._discover_loaders()
 
@@ -52,10 +57,11 @@ def main():
     ### this ensures that all loaders are imported and registered before the registry is built
     from compounds.loaders import loaders_list
 
+    # Import all loaders
     for loader in loaders_list:
-        print("test")
         loader(registry_view)
 
+    # Building the registry
     _registry._build()
 
 
@@ -70,7 +76,7 @@ def get_compound(name: str) -> Compound | None:
     Returns:
         compound (dict): the compound chem-sep source data if found, otherwise None.
     """
-    return registry_search.get_compound(name).get_source("chemsep")
+    return db.get_compound(name).get_source("chemsep")
 
 
 @deprecated("get_compound_names")
@@ -81,7 +87,7 @@ def get_compound_names() -> list:
     Returns:
         list: List of compound names.
     """
-    return registry_search.get_compound_names()
+    return db.get_compound_names()
 
 
 @deprecated("search_compounds")
@@ -95,7 +101,10 @@ def search_compounds(query: str) -> list:
     Returns:
         list: List of compound names that match the query.
     """
-    return registry_search.search_compounds(query)
+    return db.search_compounds(query)
 
 if __name__ == "__main__":
     main()
+
+# Restricting what can be imported from this module
+__all__ = ["db", "get_compound", "get_compound_names", "search_compounds"]

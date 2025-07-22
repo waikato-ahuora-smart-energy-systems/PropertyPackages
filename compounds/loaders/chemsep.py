@@ -5,20 +5,17 @@ from typing import Dict
 from compounds.PropertyPackage import DefaultPropertyPackage
 import os
 
-print("Chemsep loader initialized.")
-
 @loader("chemsep")
 def load(registry):
 
-    registry.register_package(DefaultPropertyPackage("peng-robinson"))
+    print("Loading ChemSep compounds...")
 
-    print("RARRRRR")
+    registry.register_package(DefaultPropertyPackage("peng-robinson"))
 
     for file in os.listdir(os.path.dirname(__file__) + "/data/chemsep/"):
         if file.endswith(".xml"):
             compound_name = file[:-4]
             compound = load_compound(compound_name)
-            print(compound_name)
             registry.register_compound(compound_name, "chemsep", compound)
 
 
