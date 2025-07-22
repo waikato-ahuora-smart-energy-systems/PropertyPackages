@@ -7,9 +7,7 @@ import os
 
 @loader("chemsep")
 def load(registry):
-
-    print("Loading ChemSep compounds...")
-
+    
     registry.register_package(DefaultPropertyPackage("peng-robinson"))
 
     for file in os.listdir(os.path.dirname(__file__) + "/data/chemsep/"):

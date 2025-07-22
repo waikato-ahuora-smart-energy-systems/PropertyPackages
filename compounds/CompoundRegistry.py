@@ -287,7 +287,6 @@ class CompoundRegistry:
     # To force build module on import
     # https://stackoverflow.com/questions/77186124/run-a-function-every-time-a-method-in-a-class-is-called
     def __getattribute__(self, attr):
-        print(f"hmm acktually {attr}")
         # Retrieve the attribute
         attr = super().__getattribute__(attr)
         # Check if attribute is a method
