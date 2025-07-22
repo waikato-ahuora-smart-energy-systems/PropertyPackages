@@ -53,7 +53,7 @@ db = RegistrySearch(_registry)
 
 _registry._discover_loaders()
 
-def main():
+def init_registry():
     ### this ensures that all loaders are imported and registered before the registry is built
     from compounds.loaders import loaders_list
 
@@ -103,8 +103,13 @@ def search_compounds(query: str) -> list:
     """
     return db.search_compounds(query)
 
-if __name__ == "__main__":
-    main()
+# To force build module on import
+def __getattribute__(self, attr):
+        if attr == "db":
+            init_registry()
+            return _registry
+        else:
+            return super().__getattribute__(attr)
 
 # Restricting what can be imported from this module
 __all__ = ["db", "get_compound", "get_compound_names", "search_compounds"]

@@ -46,7 +46,7 @@ class CompoundRegistry:
         # TODO: finish structure
     
     def _discover_loaders(self):
-        
+
         # Loading modules
         for module in pkgutil.iter_modules(loaders.__path__):
             #  class pkgutil.ModuleInfo(module_finder, name, ispkg)
@@ -62,6 +62,7 @@ class CompoundRegistry:
             source (str): Name of the source providing the compound data.
             data (dict): Data associated with the compound from the source.
         """
+        print(" Queuing compound:", compound_name, "from source:", source)
         self.__queue["compounds"].append((compound_name, source, data))
 
     def queue_package(self, package: PropertyPackage):
@@ -116,7 +117,11 @@ class CompoundRegistry:
             data (dict): Data associated with the compound from the source.
         """
 
+        print(" Registering compound:", compound)
+
         if not compound in self.compounds:
+
+            print(" Compound not found in registry, creating new compound.")
             # Create a new compound if it doesn't exist
             self.__compounds[compound] = Compound(compound)
 
