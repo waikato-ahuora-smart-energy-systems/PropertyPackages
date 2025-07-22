@@ -3,6 +3,7 @@ import compounds.loaders as loaders
 import pkgutil, importlib
 from compounds.Compound import Compound
 from compounds.PropertyPackage import PropertyPackage
+from compounds.RegistryView import RegistryView
 
 
 class CompoundRegistry:
@@ -22,28 +23,38 @@ class CompoundRegistry:
         return self.__packages
 
     def _build(self):
-        self._built = True
+        print("Building CompoundRegistry...")
+        if not self._built:
+            print(" Discovering loaders...")
+            from compounds.loaders import loaders_list
 
-        # Building packages
-        for package in self.__queue["packages"]:
-            if isinstance(package, PropertyPackage):
-                self._register_package(package)
-            else:
-                raise TypeError(f"Expected PropertyPackage, got {type(package)}")
+            self._built = True
 
-        # Building compounds    
-        for compound_name, sources, data in self.__queue["compounds"]:
-            self._register_compound(compound_name, sources, data)
+            # Import all loaders
+            for loader in loaders_list:
+                print(" Loading loader:", loader.__name__)
+                loader(RegistryView(self))
 
-        # Building bindings
-        for compound_name, package_name in self.__queue["bindings"]:
-            if compound_name in self.compounds and package_name in self.packages:
-                self._bind(compound_name, package_name)
-            else:
-                raise ValueError(f"Compound {compound_name} or Package {package_name} is not registered.")
+            # Building packages
+            for package in self.__queue["packages"]:
+                if isinstance(package, PropertyPackage):
+                    self._register_package(package)
+                else:
+                    raise TypeError(f"Expected PropertyPackage, got {type(package)}")
 
-        # Building dynamic bindings
-        # TODO: finish structure
+            # Building compounds    
+            for compound_name, sources, data in self.__queue["compounds"]:
+                self._register_compound(compound_name, sources, data)
+
+            # Building bindings
+            for compound_name, package_name in self.__queue["bindings"]:
+                if compound_name in self.compounds and package_name in self.packages:
+                    self._bind(compound_name, package_name)
+                else:
+                    raise ValueError(f"Compound {compound_name} or Package {package_name} is not registered.")
+
+            # Building dynamic bindings
+            # TODO: finish structure
     
     def _discover_loaders(self):
 
@@ -273,3 +284,17 @@ class CompoundRegistry:
         """
         return list(self.__compounds.keys())
 
+    # To force build module on import
+    # https://stackoverflow.com/questions/77186124/run-a-function-every-time-a-method-in-a-class-is-called
+    def __getattribute__(self, attr):
+        print(f"hmm acktually {attr}")
+        # Retrieve the attribute
+        attr = super().__getattribute__(attr)
+        # Check if attribute is a method
+        if callable(attr):
+            # Ensure build is after discovery
+            if not attr.__name__ == '_discover_loaders':
+                super().__getattribute__('_build')()
+        return attr
+
+        

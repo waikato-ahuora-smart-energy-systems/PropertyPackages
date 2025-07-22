@@ -5,21 +5,6 @@ from compounds.Compound import Compound
 __author__ = "Mahaki Leach"
 
 
-#  Simplified wrapper for back-end interactions
-class RegistryView:
-    def __init__(self, compound_registry):
-        self._registry = compound_registry
-
-    def register_package(self, pkg):
-        self._registry.queue_package(pkg)
-
-    def register_compound(self, name, source, data):
-        self._registry.queue_compound(name, source, data)
-
-    def bind(self, compound_name, package_name):
-        self._registry.queue_bind(compound_name, package_name)
-
-
 # Simplified wrapper for front-end integration
 class RegistrySearch:
 
@@ -45,25 +30,10 @@ class RegistrySearch:
 # Main registry instance
 _registry = CompoundRegistry()
 
-# Backend registry view
-registry_view = RegistryView(_registry)
-
 # Frontend registry view
 db = RegistrySearch(_registry)
 
 _registry._discover_loaders()
-
-def init_registry():
-    ### this ensures that all loaders are imported and registered before the registry is built
-    from compounds.loaders import loaders_list
-
-    # Import all loaders
-    for loader in loaders_list:
-        loader(registry_view)
-
-    # Building the registry
-    _registry._build()
-
 
 @deprecated("get_compound")
 def get_compound(name: str) -> Compound | None:
@@ -102,14 +72,6 @@ def search_compounds(query: str) -> list:
         list: List of compound names that match the query.
     """
     return db.search_compounds(query)
-
-# To force build module on import
-def __getattribute__(self, attr):
-        if attr == "db":
-            init_registry()
-            return _registry
-        else:
-            return super().__getattribute__(attr)
 
 # Restricting what can be imported from this module
 __all__ = ["db", "get_compound", "get_compound_names", "search_compounds"]
