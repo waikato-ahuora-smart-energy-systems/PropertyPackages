@@ -42,11 +42,11 @@ class RegistrySearch:
         return self._registry.get_supported_compounds(packages, strict)
 
 
-registry = CompoundRegistry()
-registry_view = RegistryView(registry)
-registry_search = RegistrySearch(registry)
+_registry = CompoundRegistry()
+registry_view = RegistryView(_registry)
+registry_search = RegistrySearch(_registry)
 
-registry._discover_loaders()
+_registry._discover_loaders()
 
 def main():
     ### this ensures that all loaders are imported and registered before the registry is built
@@ -56,7 +56,7 @@ def main():
         print("test")
         loader(registry_view)
 
-    registry._build()
+    _registry._build()
 
 
 @deprecated("get_compound")

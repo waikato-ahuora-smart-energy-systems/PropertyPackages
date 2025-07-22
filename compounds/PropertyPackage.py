@@ -66,7 +66,25 @@ class PropertyPackage(ABC):
     def check_supported_compound(self, compound: str, strict: bool = True) -> bool:
         """
         Check if a single compound is supported by this package.
-        Method can be overridden by subclasses to provide custom logic.
+        Method must be overridden by subclasses to provide custom logic.
+        
+        Args:
+            compound (str): Name of the compound to check.
+            strict (bool):  If True, all compounds must be supported.
+                            If False, only a single compound must be supported.
+        
+        Returns:
+            bool: True if the compound is supported, False otherwise.
+        """
+
+class DefaultPropertyPackage(PropertyPackage):
+    """
+    Default implementation of a property package.
+    """
+
+    def check_supported_compound(self, compound: str, strict: bool = True) -> bool:
+        """
+        Check if a single compound is supported by this package.
         Defalt behaviour assumes all "registered" compounds are supported.
         
         Args:

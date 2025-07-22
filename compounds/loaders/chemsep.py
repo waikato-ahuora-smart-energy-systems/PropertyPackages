@@ -2,7 +2,7 @@ from compounds.loaders import loader
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 from typing import Dict
-from compounds.PropertyPackage import PropertyPackage
+from compounds.PropertyPackage import DefaultPropertyPackage
 import os
 
 print("Chemsep loader initialized.")
@@ -10,7 +10,7 @@ print("Chemsep loader initialized.")
 @loader("chemsep")
 def load(registry):
 
-    registry.register_package(PropertyPackage("peng-robinson"))
+    registry.register_package(DefaultPropertyPackage("peng-robinson"))
 
     print("RARRRRR")
 
