@@ -40,12 +40,12 @@ db.get_supported_compounds(["peng-robinson", "helmholtz"])
 > ["benzene", "toluene", "..."]
 ```
 
-### Depreciated methods
+### Deprecated methods
 
 #### > get_compound(name)
 
 > [!WARNING]
-> method is depreciated
+> method is deprecated
 
 ```python
 # example usage
@@ -58,7 +58,7 @@ benzene["AbsEntropy"].unit # "J/kmol/K"
 #### > get_compound_names
 
 > [!WARNING]
-> method is depreciated
+> method is deprecated
 
 ```python
 # example usage
@@ -71,7 +71,7 @@ print(names)
 #### > search_compounds(query)
 
 > [!WARNING]
-> method is depreciated
+> method is deprecated
 
 ```python
 # example usage
