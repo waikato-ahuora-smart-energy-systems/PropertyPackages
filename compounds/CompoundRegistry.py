@@ -169,14 +169,17 @@ class CompoundRegistry:
 
     def _dynamic_bind(self, package_name: str):
         """
-        Binds all compounds to 
+        Binds all compounds to a package dynamically. (based on package check_supported_compounds implementation)
         """
         if package_name not in self.packages:
             raise ValueError(f"Package {package_name} is not registered.")
 
         # Loop through all compounds
-        # Check if compound is supported
-        # Bind compound to package
+        for compound_name in self.compounds:
+            # Check if compound is supported by package
+            if self.__packages[package_name].check_supported_compound(compound_name):
+                # Bind compound to package
+                self._bind(compound_name, package_name)
 
     def _get_supported_packages(self, compounds: Set[str], strict=True) -> Set[str]:
         """
@@ -215,25 +218,23 @@ class CompoundRegistry:
             Set[str]: Set of compound names that are supported by the given packages.
         """
 
-        # TODO: Finish this implementation
-
-        # supported_compounds = set()
+        supported_compounds = set()
 
         # Looping through all registered compounds
-
-        # if strict:
-        #     # Getting 
-        #     for package in packages:
-        #         p = self.get_package()
-        #         if p is None:
-        #             raise ValueError(f"Package {package} is not registered.")
-        #         else:
-        #             p.check_supported(compounds, strict)
-        # else:
-        # for package in packages:
-        #     if 
-
-        # return supported_compounds
+        for package in packages:
+            p = self._get_package(package)
+            if p is None:
+                raise ValueError(f"Package {package} is not registered.")
+            else:
+                if strict:
+                    if len(supported_compounds) == 0:
+                        supported_compounds = p.compounds
+                    else:
+                        supported_compounds = supported_compounds.intersection(p.compounds)     
+                else:
+                    supported_compounds = supported_compounds.union(p.compounds)
+        
+        return supported_compounds
 
     def _search_compounds(self,
                           query: str,

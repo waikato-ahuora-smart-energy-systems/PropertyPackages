@@ -15,6 +15,7 @@ def load(registry):
             compound_name = file[:-4]
             compound = load_compound(compound_name)
             registry.register_compound(compound_name, "chemsep", compound)
+            registry.bind(compound_name, "peng-robinson")
 
 
 def convert_string_to_float(string: str) -> float | str:
