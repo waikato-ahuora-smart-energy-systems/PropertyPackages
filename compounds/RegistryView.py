@@ -10,4 +10,4 @@ class RegistryView:
         self._registry.queue_compound(name, source, data)
 
     def bind(self, compound_name, package_name):
-        self._registry.queue_bind(compound_name, package_name)
+        self._registry.queue_binding(compound_name, package_name)
