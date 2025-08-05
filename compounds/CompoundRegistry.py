@@ -3,7 +3,7 @@ import compounds.loaders as loaders
 import pkgutil, importlib
 from compounds.Compound import Compound
 from compounds.PropertyPackage import PropertyPackage
-from compounds.RegistryView import RegistryView
+from compounds.RegistryLoader import RegistryLoader
 
 
 class CompoundRegistry:
@@ -30,7 +30,7 @@ class CompoundRegistry:
 
             # Import all loaders
             for loader in loaders_list:
-                loader(RegistryView(self))
+                loader(RegistryLoader(self))
 
             # Building packages
             for package in self.__queue["packages"]:
@@ -51,6 +51,7 @@ class CompoundRegistry:
                     raise ValueError(f"Compound {compound_name} or Package {package_name} is not registered.")
 
             # Building dynamic bindings
+            # This occurs earlier?
             # TODO: finish structure
     
     def _discover_loaders(self):

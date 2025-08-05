@@ -1,5 +1,5 @@
 #  Simplified wrapper for back-end interactions
-class RegistryView:
+class RegistryLoader:
     def __init__(self, compound_registry):
         self._registry = compound_registry
 

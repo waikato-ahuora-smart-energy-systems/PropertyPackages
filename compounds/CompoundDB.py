@@ -2,6 +2,7 @@ from compounds import deprecated
 from compounds.CompoundRegistry import CompoundRegistry
 from compounds.Compound import Compound
 from compounds.RegistrySearch import RegistrySearch
+from compounds.RegistryLoader import RegistryLoader
 
 __author__ = "Mahaki Leach"
 
@@ -10,6 +11,7 @@ _registry = CompoundRegistry()
 
 # Frontend registry view
 db = RegistrySearch(_registry)
+db_loader = RegistryLoader(_registry)
 
 _registry._discover_loaders()
 
@@ -52,4 +54,4 @@ def search_compounds(query: str) -> list:
     return db.search_compounds(query)
 
 # Restricting what can be imported from this module
-__all__ = ["db", "get_compound", "get_compound_names", "search_compounds"]
+__all__ = ["db", "db_loader", "get_compound", "get_compound_names", "search_compounds"]
