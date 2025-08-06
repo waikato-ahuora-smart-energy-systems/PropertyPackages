@@ -1,11 +1,15 @@
+from unittest import case
 from property_packages.modular.template_builder import build_config
 from .helmholtz.helmholtz_builder import build_helmholtz_package
 from property_packages.humid_air import build_humid_air_package
 from property_packages.milk import build_milk_package
 from property_packages.types import PackageName, States
+from property_packages.combustion.biomass_builder import (
+    build_biomass_and_flue_package,
+    build_biomass_combustion_reaction_package)
 from typing import List
 
-def build_package(package_name: PackageName, compound_list: List[str], valid_states: List[States]=["Liq", "Vap"]): # type: ignore
+def build_package(package_name: PackageName, compound_list: List[str], valid_states: List[States]=["Liq", "Vap"], property_package=None): # type: ignore
     """ Builds a property package
 
     Args:
@@ -35,6 +39,10 @@ def build_package(package_name: PackageName, compound_list: List[str], valid_sta
             return build_milk_package(compound_list)
         case "humid_air":
             return build_humid_air_package(compound_list)
+        case "biomass_and_flue":
+            return build_biomass_and_flue_package(compound_list)
+        case "biomass_combustion_reaction":
+            return build_biomass_combustion_reaction_package(compound_list, pp=property_package)
         case "genericML":
             raise NotImplementedError("Generic ML package is not implemented yet.")
         case _:
