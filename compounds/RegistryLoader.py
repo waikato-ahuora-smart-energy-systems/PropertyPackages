@@ -11,3 +11,6 @@ class RegistryLoader:
 
     def bind(self, compound_name, package_name):
         self._registry.queue_binding(compound_name, package_name)
+    
+    def dynamic_bind(self, package_name):
+        self._registry.queue_dynamic_binding(package_name)

@@ -11,7 +11,7 @@ class CompoundRegistry:
     def __init__(self):
         self.__compounds: Dict[str, Compound] = {}
         self.__packages: Dict[str, PropertyPackage] = {}
-        self.__queue: Dict[str, list] = {"compounds": [], "packages": [], "bindings": []}
+        self.__queue: Dict[str, list] = {"compounds": [], "packages": [], "bindings": [], "dynamic_bindings": []}
         self._built: bool = False
 
     @property
@@ -51,8 +51,11 @@ class CompoundRegistry:
                     raise ValueError(f"Compound {compound_name} or Package {package_name} is not registered.")
 
             # Building dynamic bindings
-            # This occurs earlier?
-            # TODO: finish structure
+            for package_name in self.__queue["dynamic_bindings"]:
+                if package_name in self.packages:
+                    self._dynamic_bind(package_name)
+                else:
+                    raise ValueError(f"Package {package_name} is not registered.")
     
     def _discover_loaders(self):
         # Loading modules
@@ -89,6 +92,15 @@ class CompoundRegistry:
             package_name (str): Name of the property package to bind to.
         """
         self.__queue["bindings"].append((compound_name, package_name))
+    
+    def queue_dynamic_binding(self, package_name: str):
+        """
+        Queue a dynamic binding for a property package.
+        
+        Args:
+            package_name (str): Name of the property package to bind dynamically.
+        """
+        self.__queue["dynamic_bindings"].append(package_name)
 
     def _register_package(self, package: PropertyPackage):
         """

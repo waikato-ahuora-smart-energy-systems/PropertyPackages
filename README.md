@@ -1,3 +1,9 @@
+## About
+
+This repository is split into two main tools: the compound database and property package builder.
+
+## Installation
+
 To install this:
 
 ```sh
@@ -12,13 +18,11 @@ pip install -e .
 
 To use
 
-# About
 
-This repository is split into two main tools: the compound database and property package builder.
 
-# Compound Database
+## Compound Database
 
-## Usage
+### Usage
 
 ```python
 # example usage
@@ -40,6 +44,62 @@ db.get_supported_compounds(["peng-robinson", "helmholtz"])
 > ["benzene", "toluene", "..."]
 ```
 
+### Development
+
+```
+
+Creating new data loader under compounds/loaders/
+
+3 step process
+
+1 - register package
+2 - register compounds
+3 - bind compounds to package
+
+```
+
+```python
+
+# general workflow
+
+# default property package
+
+@loader("example_loader")
+def load(registry):
+
+    registry.register_package(DefaultPropertyPackage("example_pp"))
+    
+    registry.register_compound('compound1', "example_pp", {})
+    registry.register_compound('compound2', "example_pp", {})
+
+    registry.bind("compound1", "example_pp")
+    registry.bind("compound2", "example_pp")
+
+# custom property package
+
+class MilkPropertyPackage(PropertyPackage):
+    def check_supported_compound(self, compound: str, strict: bool = True) -> bool:
+        return True
+
+@loader("example_loader")
+def load(registry):
+
+    registry.register_package(MilkPropertyPackage("example_custom_pp"))
+    
+    registry.register_compound('compound1', "example_custom_pp", {})
+    registry.register_compound('compound2', "example_custom_pp", {})
+    registry.register_compound('compound3', "example_custom_pp", {})
+
+    # Generates based on PropertyPackage check_supported_compound implementation
+    # In this case all compounds across loaders will be valid for this property package
+    registry.dynamic_bind("example_custom_pp") 
+
+```
+
+```
+more examples in compounds/loaders/
+```
+
 ### Deprecated methods
 
 #### > get_compound(name)
@@ -49,8 +109,8 @@ db.get_supported_compounds(["peng-robinson", "helmholtz"])
 
 ```python
 # example usage
-from compounds import CompoundDB as db
-benzene = db.get_compound("benzene")
+from CompoundDB import get_compound
+benzene = get_compound("benzene")
 benzene["AbsEntropy"].value # "269300"
 benzene["AbsEntropy"].unit # "J/kmol/K" 
 ```
@@ -62,8 +122,8 @@ benzene["AbsEntropy"].unit # "J/kmol/K"
 
 ```python
 # example usage
-from compounds import CompoundDB as db
-names = db.get_compound_names()
+from CompoundDB import get_compound_names
+names = get_compound_names()
 print(names)
 > ["benzene", "methane", "butane", "..."]
 ```
@@ -75,15 +135,11 @@ print(names)
 
 ```python
 # example usage
-from compounds import CompoundDB as db
-names = db.search_compounds("hex")
+from compounds import search_compounds
+names = search_compounds("hex")
 print(names)
 > ["hexane", "1-hexane", "..."]
 ```
-
-## Next Steps
-
-
 
 # Property Package Builder
 
