@@ -29,4 +29,3 @@ def load(registry):
     registry.bind("oxygen", "biomass_combustion_reaction")
     registry.bind("carbon monoxide", "biomass_combustion_reaction")
     registry.bind("nitrogen", "biomass_combustion_reaction")
-    registry.bind("ash", "biomass_combustion_reaction")

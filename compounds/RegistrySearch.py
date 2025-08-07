@@ -5,7 +5,7 @@ class RegistrySearch:
         self._registry = compound_registry
 
     def search_compounds(self, query, package_filters=None, filter_strict=False):
-        return self._registry.search_compounds(query, package_filters, filter_strict)
+        return self._registry._search_compounds(query, package_filters, filter_strict)
 
     def get_compound_names(self):
         return self._registry._get_compound_names()
@@ -14,7 +14,7 @@ class RegistrySearch:
         return self._registry._get_compound(name)
 
     def get_supported_packages(self, compounds, strict=True):
-        return self._registry.get_supported_packages(compounds, strict)
+        return self._registry._get_supported_packages(compounds, strict)
 
     def get_supported_compounds(self, packages, strict=True):
-        return self._registry.get_supported_compounds(packages, strict)
+        return self._registry._get_supported_compounds(packages, strict)

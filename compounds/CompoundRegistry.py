@@ -200,7 +200,7 @@ class CompoundRegistry:
         # Looping through all registered packages
         for package in self.__packages.values():
             # Checking if package supports compounds with the given strictness
-            if package.check_supported(compounds, strict):
+            if package.check_supported_compounds(compounds, strict):
                 # If it does, add the package name to the supported packages
                 supported_packages.add(package.name)
 
