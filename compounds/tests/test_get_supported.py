@@ -14,4 +14,4 @@ def test_package_support_strict():
 
 def test_package_support_not_strict():
     assert db.get_supported_packages(["biomass", "water", "carbon dioxide", "oxygen", "carbon monoxide", "nitrogen", "ash"], 
-                                    strict=False) == {"biomass_combustion_reaction", "biomass_and_flue", "peng-robinson", "milk"}
+                                    strict=False) == {"biomass_combustion_reaction", "biomass_and_flue", "peng-robinson", "milk", "humid_air"}
