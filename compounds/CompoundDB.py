@@ -1,35 +1,34 @@
-from .Compound import load_compound
-from typing import Dict
-import os
+from compounds import deprecated
+from compounds.CompoundRegistry import CompoundRegistry
+from compounds.Compound import Compound
+from compounds.RegistrySearch import RegistrySearch
+from compounds.RegistryLoader import RegistryLoader
 
-# Loads all the compounds, and enables some basic queries for/on the compounds.
-# Handy to avoid extra reloading of the compounds, but does consume more memory.
-# Right now, the compounds are stored as xml files, but we could eventually
-# move to a database, hdf5, or use a redis cache or something else as the backend of this.
-# https://chatgpt.com/share/67196214-92a0-8005-8d2d-68713f50c9d6
+__author__ = "Mahaki Leach"
 
-all_compounds = {}
+# Main registry instance
+_registry = CompoundRegistry()
 
-# iterate through all files in the data_files folder
-# and create a Compound object for each file
-for file in os.listdir(os.path.dirname(__file__) + "/data_files"):
-    if file.endswith(".xml"):
-        compound_name = file[:-4]
-        compound = load_compound(compound_name)
-        all_compounds[compound_name] = compound
+# Frontend registry view
+db = RegistrySearch(_registry)
 
-def get_compound(compound_name: str) -> Dict:
+_registry._discover_loaders()
+
+@deprecated("get_compound")
+def get_compound(name: str) -> Compound | None:
     """
-    Returns a Compound object for the given compound name.
-
+    Get a compound by its name.
+    
     Args:
-        compound_name (str): Name of the compound.
-
+        name (str): Name of the compound to retrieve.
+    
     Returns:
-        Compound: The Compound object.
+        compound (dict): the compound chem-sep source data if found, otherwise None.
     """
-    return all_compounds[compound_name.lower()]
+    return db.get_compound(name).get_source("chemsep")
 
+
+@deprecated("get_compound_names")
 def get_compound_names() -> list:
     """
     Returns a list of all compound names.
@@ -37,8 +36,10 @@ def get_compound_names() -> list:
     Returns:
         list: List of compound names.
     """
-    return list(all_compounds.keys())
+    return db.get_compound_names()
 
+
+@deprecated("search_compounds")
 def search_compounds(query: str) -> list:
     """
     Searches for compounds based on the query.
@@ -49,4 +50,7 @@ def search_compounds(query: str) -> list:
     Returns:
         list: List of compound names that match the query.
     """
-    return [name for name in all_compounds.keys() if query.lower() in name.lower()]
+    return db.search_compounds(query)
+
+# Restricting what can be imported from this module
+__all__ = ["db", "get_compound", "get_compound_names", "search_compounds"]
