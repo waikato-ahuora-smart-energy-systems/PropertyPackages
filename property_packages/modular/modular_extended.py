@@ -549,6 +549,14 @@ class GenericExtendedStateBlockData(GenericStateBlockData, StateBlockConstraints
     def add_extra_expressions(blk):
         super().add_extra_expressions()
 
+
+        # Generic property packages support temperature_bubble and temperature_dew,
+        # Helmholtz is pure so these are the same, and so it only has
+        # temperature_sat. https://idaes-pse.readthedocs.io/en/stable/reference_guides/model_libraries/generic/property_models/helmholtz.html#expressions
+        # We add temperature_sat_liq and temperature_sat_vap so the interface is consistent.
+        blk.add_component("temperature_sat_liq", Expression(expr=blk.temperature_bubble[("Vap","Liq")]))
+        blk.add_component("temperature_sat_vap", Expression(expr=blk.temperature_dew[("Vap","Liq")]))
+
         # add vapor_frac expression
         def rule_vapor_frac(blk):
             if "Vap" not in blk.phase_list:

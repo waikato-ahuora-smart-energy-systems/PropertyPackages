@@ -119,9 +119,9 @@ class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData, StateBlockConstra
         # Generic property packages support temperature_bubble and temperature_dew,
         # Helmholtz is pure so these are the same, and so it only has
         # temperature_sat. https://idaes-pse.readthedocs.io/en/stable/reference_guides/model_libraries/generic/property_models/helmholtz.html#expressions
-        # We add them here so that the property package interface is consistent.
-        blk.add_component("temperature_bubble", Expression(expr=blk.temperature_sat))
-        blk.add_component("temperature_dew", Expression(expr=blk.temperature_sat))
+        # We add temperature_sat_liq and temperature_sat_vap so the interface is consistent.
+        blk.add_component("temperature_sat_liq", Expression(expr=blk.temperature_sat))
+        blk.add_component("temperature_sat_vap", Expression(expr=blk.temperature_sat))
 
         # For numerical stability when constraining temperature, we actually smooth out the temperature equilibrium curve. 
         # Otherwise, the solver has difficulty solving through the vapor fraction region as there is zero gradient.
