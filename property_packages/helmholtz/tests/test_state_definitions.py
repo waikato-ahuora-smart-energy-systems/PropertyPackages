@@ -105,3 +105,4 @@ def test_butane():
     state.constrain("temperature",260)
     solve(m)
     assert value(state.vapor_frac) == approx(0)
+    

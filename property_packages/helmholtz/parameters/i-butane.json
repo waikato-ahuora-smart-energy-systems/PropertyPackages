@@ -20,13 +20,9 @@
     },
     "eos": {
         "reference": [
-            "International Association for the Properties of Water and Steam (2016).",
-            "    IAPWS R6-95 (2016), Revised Release on the IAPWS Formulation 1995 for",
-            "    the Properties of Ordinary Water Substance for General Scientific Use.",
-            "    URL: http://iapws.org/relguide/IAPWS95-2016.pdf",
-            "Wagner, W.,  A. Pruss (2002). The IAPWS Formulation 1995 for the",
-            "    Thermodynamic Properties of Ordinary Water Substance for General and",
-            "    Scientific Use. J. Phys. Chem. Ref. Data, 31, 387-535."
+            "Reference Equations of State for the Thermodynamic",
+            "Properties of Fluid Phase -Butane and Isobutane",
+            "D. Bücker; W. Wagner"
         ],
         "c": {
             "8": 1,
@@ -169,9 +165,9 @@
     },
     "aux": {
         "reference": [
-            "Wagner, W.,  A. Pruss (2002). The IAPWS Formulation 1995 for the",
-            "    Thermodynamic Properties of Ordinary Water Substance for General and",
-            "    Scientific Use. J. Phys. Chem. Ref. Data, 31, 387-535."
+            "Reference Equations of State for the Thermodynamic",
+            "Properties of Fluid Phase -Butane and Isobutane",
+            "D. Bücker; W. Wagner"
         ],
         "delta_l_sat_approx": {
             "c": 1.0,
@@ -208,18 +204,10 @@
     },
     "transport": {
         "thermal_conductivity": {
-            "reference": [
-                "International Association for the Properties of Water and Steam (2011). IAPWS",
-                "    R15-11, Release on the IAPWS Formulation 2011 for the Thermal Conductivity",
-                "    of Ordinary Water Substance. URL: http://iapws.org/relguide/ThCond.pdf"
-            ]
+            "reference": []
         },
         "viscosity": {
-            "reference": [
-                "International Association for the Properties of Water and Steam (2008).",
-                "    IAPWS R12-08, Release on the IAPWS Formulation 2008 for the Viscosity",
-                "    of Ordinary Water Substance. URL: http://iapws.org/relguide/visc.pdf"
-            ]
+            "reference": []
         },
         "surface_tension": {
             "reference": [
