@@ -1,4 +1,3 @@
-from compounds.Compound import load_compound
 from property_packages.types import States
 from typing import List, Dict
 

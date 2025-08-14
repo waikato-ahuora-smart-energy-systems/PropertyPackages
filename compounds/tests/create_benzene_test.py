@@ -1,4 +1,4 @@
-from ..Compound import load_compound
+from ..loaders.chemsep import load_compound
 
 
 def test_parsing():

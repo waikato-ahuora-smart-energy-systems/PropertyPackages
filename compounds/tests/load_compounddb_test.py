@@ -4,7 +4,6 @@
 # https://stackoverflow.com/questions/6760685/what-is-the-best-way-of-implementing-singleton-in-python
 # TLDR; don't, just use a module
 
-
 def test_load_compounds():
     from compounds import CompoundDB as db
     assert "benzene" in db.get_compound_names()
