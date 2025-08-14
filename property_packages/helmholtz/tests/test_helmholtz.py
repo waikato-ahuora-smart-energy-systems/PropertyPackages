@@ -91,4 +91,7 @@ def test_vapor_fraction_ammonia():
     assert value(m.fs.sb[0].flow_mol) == approx(100)
     assert value(m.fs.sb[0].vapor_frac) == approx(0.8)
     assert value(m.fs.sb[0].pressure) == approx(614294.349)
+    # check that temperature_bubble exists
+    assert value(m.fs.sb[0].temperature_bubble) == approx(283.1266) 
+    assert value(m.fs.sb[0].temperature_dew) == approx(283.1266)
 

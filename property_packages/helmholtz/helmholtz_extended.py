@@ -99,7 +99,7 @@ def set_vapor_frac_guesses(blk: Block) -> None:
         
 
         # add custom vapor fraction constraint: h = h_sat_liq + x(h_sat_vap - h_sat_liq)
-        # I think this is to make the vapor fraction continuous, rather than cutting off at 0 and 1. Helps with solving reliability as outside
+        # this is to make the vapor fraction continuous, rather than cutting off at 0 and 1. Helps with solving reliability as outside
         # the vapor fraction region, this will still be smooth and will not have a zero gradient.
         sb.constraints.add_component(
             "custom_vapor_frac",
@@ -116,6 +116,16 @@ class HelmholtzExtendedStateBlockData(HelmholtzStateBlockData, StateBlockConstra
     def add_extra_expressions(blk):
         super().add_extra_expressions()
 
+        # Generic property packages support temperature_bubble and temperature_dew,
+        # Helmholtz is pure so these are the same, and so it only has
+        # temperature_sat. https://idaes-pse.readthedocs.io/en/stable/reference_guides/model_libraries/generic/property_models/helmholtz.html#expressions
+        # We add them here so that the property package interface is consistent.
+        blk.add_component("temperature_bubble", Expression(expr=blk.temperature_sat))
+        blk.add_component("temperature_dew", Expression(expr=blk.temperature_sat))
+
+        # For numerical stability when constraining temperature, we actually smooth out the temperature equilibrium curve. 
+        # Otherwise, the solver has difficulty solving through the vapor fraction region as there is zero gradient.
+    
         # rename temperature to old_temperature
         old_temperature = blk.temperature
         blk.del_component("temperature")
