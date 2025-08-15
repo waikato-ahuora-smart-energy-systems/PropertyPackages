@@ -56,22 +56,29 @@ class BMCombReactionParameterData(ReactionParameterBlock):
 
         # Reaction Index
         self.rate_reaction_idx = Set(initialize=["R1"])
-
-        # Reaction Stoichiometry
-        self.rate_reaction_stoichiometry = {("R1", "Vap", "H2O"): 5,
+        self.reaction_set = Set(initialize=[("R1", "Vap", "H2O"),
+                                            ("R1", "Vap", "CO2"),
+                                            ("R1", "Vap", "O2"),
+                                            ("R1", "Sol", "biomass"),
+                                            ("R1", "Vap", "N2"),
+                                            ("R1", "Vap", "CO"),
+                                            ("R1", "Sol", "ash")
+                                            ])
+        # biomass combustion stoichiometry based on cellulose
+        self.rate_reaction_stoichiometry = Var(self.reaction_set, initialize={("R1", "Vap", "H2O"): 5,
                                             ("R1", "Vap", "CO2"): 6,
                                             ("R1", "Vap", "O2"): -6,
                                             ("R1", "Sol", "biomass"): -1,
                                             ("R1", "Vap", "N2"): 0,
                                             ("R1", "Vap", "CO"): 0,
-                                            ("R1", "Sol", "ash"): 0.01#self.ash_content
-                                            }
-
+                                            ("R1", "Sol", "ash"): 0.01
+                                            })
+        self.rate_reaction_stoichiometry.fix()
         
         self.reactant_list=Set(initialize=["biomass","O2"])
         
-        self.h=Var(initialize=0.06) #concentration of hydrogen as a percentage of weight, h=6%
-        self.w=Var(initialize=0.09) #water content of fuel as percentage of weight
+        self.h=Var(initialize=0.06, units=pyunits.mol) #concentration of hydrogen as a percentage of weight, h=6%
+        self.w=Var(initialize=0.09, units=pyunits.mol) #water content of fuel as percentage of weight
         self.gcv=Param(initialize=20.2, units=pyunits.MJ/pyunits.kg, doc="gross calorific value") #gross calorific value (dry basis)
         self.ncv=(self.gcv*(1-self.w)-2.447*self.w-2.447*self.h*9.01*(1-self.w))*162.1394*1000 #J/mol 
         #net calorific value (wet basis) (pg. 7) https://www.mbie.govt.nz/dmsdocument/125-industrial-bioenergy-
