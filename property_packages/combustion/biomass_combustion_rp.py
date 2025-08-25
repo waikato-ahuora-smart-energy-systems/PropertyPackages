@@ -12,6 +12,7 @@ from pyomo.environ import (Constraint,
                            Set,
                            Var,
                            Param,
+                           Any,
                            units as pyunits)
 
 # Import IDAES cores
@@ -52,7 +53,8 @@ class BMCombReactionParameterData(ReactionParameterBlock):
                                               'O2',
                                               'CO',
                                               'N2',
-                                              'biomass'])
+                                              'biomass',
+                                              'ash'])
 
         # Reaction Index
         self.rate_reaction_idx = Set(initialize=["R1"])
@@ -65,7 +67,8 @@ class BMCombReactionParameterData(ReactionParameterBlock):
                                             ("R1", "Sol", "ash")
                                             ])
         # biomass combustion stoichiometry based on cellulose
-        self.rate_reaction_stoichiometry = Var(self.reaction_set, initialize={("R1", "Vap", "H2O"): 5,
+        self.rate_reaction_stoichiometry = Var(self.reaction_set, initialize={
+                                            ("R1", "Vap", "H2O"): 5,
                                             ("R1", "Vap", "CO2"): 6,
                                             ("R1", "Vap", "O2"): -6,
                                             ("R1", "Sol", "biomass"): -1,
@@ -76,6 +79,11 @@ class BMCombReactionParameterData(ReactionParameterBlock):
         self.rate_reaction_stoichiometry.fix()
         
         self.reactant_list=Set(initialize=["biomass","O2"])
+
+        self.limit_reactant_dict = Param(self.rate_reaction_idx, initialize={
+            "R1": "biomass",
+        },
+        within=Any)
         
         self.h=Var(initialize=0.06, units=pyunits.mol) #concentration of hydrogen as a percentage of weight, h=6%
         self.w=Var(initialize=0.09, units=pyunits.mol) #water content of fuel as percentage of weight
