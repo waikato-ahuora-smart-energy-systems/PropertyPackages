@@ -20,7 +20,7 @@ def build_biomass_combustion_reaction_package(compound_list: List[str], pp=None)
     # Validate compound list
 
     for compound in compound_list:
-        if compound not in ["biomass", "water", "carbon dioxide", "oxygen", "carbon monoxide", "nitrogen"]:
+        if compound not in ["biomass", "water", "carbon dioxide", "oxygen", "carbon monoxide", "nitrogen", "ash"]:
             raise ValueError(f"Compound {compound} is not valid for biomass combustion reaction package.")
 
     return BMCombReactionParameterBlock(
