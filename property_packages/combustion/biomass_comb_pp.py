@@ -64,9 +64,9 @@ configuration = {
             },      
         },
 
-        "ash": {
+        "uncombustible": {#based on ash, mainly SiO2, Al2O3, CaO, Fe2O3, MgO
             "type": Component,
-            "elemental_composition": {"Random":1}, #mainly SiO2, Al2O3, CaO, Fe2O3, MgO
+            "elemental_composition": {"uncombustible":1}, 
             "cp_mol_sol_comp": ConstantProperties.Constant,
             "enth_mol_sol_comp": ConstantProperties.Constant,
             "dens_mol_sol_comp": ConstantProperties.Constant,
