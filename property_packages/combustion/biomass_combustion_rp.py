@@ -58,7 +58,7 @@ class BMCombReactionParameterData(ReactionParameterBlock):
 
         # Reaction Index
         self.rate_reaction_idx = Set(initialize=["Rbiomass"])
-        self.has_uncombustible_set = Set(initialize=["Rbiomass",])
+        self.uncombs_set = Set(initialize=["Rbiomass",])
         self.reaction_set = Set(initialize=[("Rbiomass", "Vap", "H2O"),
                                             ("Rbiomass", "Vap", "CO2"),
                                             ("Rbiomass", "Vap", "O2"),
