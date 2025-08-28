@@ -57,45 +57,36 @@ class BMCombReactionParameterData(ReactionParameterBlock):
                                               'uncombustible'])
 
         # Reaction Index
-        self.rate_reaction_idx = Set(initialize=["R1"])
-        self.uncombs_set = Set(initialize=["R1",])
-        self.reaction_set = Set(initialize=[("R1", "Vap", "H2O"),
-                                            ("R1", "Vap", "CO2"),
-                                            ("R1", "Vap", "O2"),
-                                            ("R1", "Sol", "biomass"),
-                                            ("R1", "Sol", "uncombustible"),
-                                            ("R1", "Vap", "N2"),
-                                            ("R1", "Vap", "CO"),
+        self.rate_reaction_idx = Set(initialize=["Rbiomass"])
+        self.has_uncombustible_set = Set(initialize=["Rbiomass",])
+        self.reaction_set = Set(initialize=[("Rbiomass", "Vap", "H2O"),
+                                            ("Rbiomass", "Vap", "CO2"),
+                                            ("Rbiomass", "Vap", "O2"),
+                                            ("Rbiomass", "Sol", "biomass"),
+                                            ("Rbiomass", "Sol", "uncombustible"),
+                                            ("Rbiomass", "Vap", "N2"),
+                                            ("Rbiomass", "Vap", "CO"),
                                             ])
         # biomass combustion stoichiometry based on cellulose
         self.rate_reaction_stoichiometry = Var(self.reaction_set, initialize={
-                                            ("R1", "Vap", "H2O"): 5,
-                                            ("R1", "Vap", "CO2"): 6,
-                                            ("R1", "Vap", "O2"): -6,
-                                            ("R1", "Sol", "biomass"): -1,
-                                            ("R1", "Sol", "uncombustible"): 0.01,
-                                            ("R1", "Vap", "N2"): 0,
-                                            ("R1", "Vap", "CO"): 0,
+                                            ("Rbiomass", "Vap", "H2O"): 5,
+                                            ("Rbiomass", "Vap", "CO2"): 6,
+                                            ("Rbiomass", "Vap", "O2"): -6,
+                                            ("Rbiomass", "Sol", "biomass"): -1,
+                                            ("Rbiomass", "Sol", "uncombustible"): 0.01,
+                                            ("Rbiomass", "Vap", "N2"): 0,
+                                            ("Rbiomass", "Vap", "CO"): 0,
                                             })
         self.rate_reaction_stoichiometry.fix()
         
         self.reactant_list=Set(initialize=["biomass","O2"])
 
         self.limit_reactant_dict = Param(self.rate_reaction_idx, initialize={
-            "R1": "biomass",
+            "Rbiomass": "biomass",
         },
         within=Any)
         
-        # self.h=Var(initialize=0.06, units=pyunits.mol) #concentration of hydrogen as a percentage of weight, h=6%
-        # self.w=Var(initialize=0.09, units=pyunits.mol) #water content of fuel as percentage of weight
-        # # self.h.fix
-        # # self.w.fix
-        # self.gcv=Param(initialize=20.2, units=pyunits.MJ/pyunits.kg, doc="gross calorific value") #gross calorific value (dry basis)
-        # self.ncv=(self.gcv*(1-self.w)-2.447*self.w-2.447*self.h*9.01*(1-self.w))*162.1394*1000 #J/mol 
-        # #net calorific value (wet basis) (pg. 7) https://www.mbie.govt.nz/dmsdocument/125-industrial-bioenergy-
-        # #ncv multiplied by 162 g/mo (cellulose) to convert from /mass to /mol basis.
-
-        dh_rxn_dict = {"R1": -2749556.40, # @ w=9%, h=6% ==> ncv=-2749556.40
+        dh_rxn_dict = {"Rbiomass": -2749556.40, # @ w=9%, h=6% ==> ncv=-2749556.40
                     #    "RCH4": -802.6
                        } 
         
