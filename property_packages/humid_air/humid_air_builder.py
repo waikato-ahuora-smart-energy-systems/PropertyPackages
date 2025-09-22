@@ -6,8 +6,7 @@ def build_humid_air_package(compound_list: List[str]):
         raise ValueError("Humid Air package only supports two components: water and air")
     for compound in compound_list:
         if compound not in ["water", "air"]:
-            raise ValueError(f"Compound {compound} not supported in Humid Air package")
+            raise ValueError(f"Compound {compound} not supported in Humid Air package fgfdgfdgdfgf")
 
     return HAirParameterBlock()
 
-# david
