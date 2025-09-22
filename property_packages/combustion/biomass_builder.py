@@ -9,7 +9,7 @@ def build_biomass_and_flue_package(compound_list: List[str]):
     # Validate compound list
 
     for compound in compound_list:
-        if compound not in ["biomass", "water", "carbon dioxide", "oxygen", "carbon monoxide", "nitrogen", "ash"]:
+        if compound not in ["biomass", "water", "carbon dioxide", "oxygen", "carbon monoxide", "nitrogen"]:
             raise ValueError(f"Compound {compound} is not valid for biomass and flue package.")
 
     return GenericParameterBlock(**configuration)

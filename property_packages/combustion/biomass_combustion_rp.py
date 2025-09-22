@@ -1,7 +1,7 @@
 """
 reaction package for the combustion of biomass in air
 """
-from pyomo.environ import Expression
+from pyomo.environ import Expression, Reals
 
 # Import Python libraries
 import logging
@@ -12,6 +12,7 @@ from pyomo.environ import (Constraint,
                            Set,
                            Var,
                            Param,
+                           Any,
                            units as pyunits)
 
 # Import IDAES cores
@@ -52,40 +53,48 @@ class BMCombReactionParameterData(ReactionParameterBlock):
                                               'O2',
                                               'CO',
                                               'N2',
-                                              'biomass'])
+                                              'biomass',
+                                              'uncombustible'])
 
         # Reaction Index
-        self.rate_reaction_idx = Set(initialize=["R1"])
-
-        # Reaction Stoichiometry
-        self.rate_reaction_stoichiometry = {("R1", "Vap", "H2O"): 5,
-                                            ("R1", "Vap", "CO2"): 6,
-                                            ("R1", "Vap", "O2"): -6,
-                                            ("R1", "Sol", "biomass"): -1,
-                                            ("R1", "Vap", "N2"): 0,
-                                            ("R1", "Vap", "CO"): 0,
-                                            ("R1", "Sol", "ash"): 0.01#self.ash_content
-                                            }
-
+        self.rate_reaction_idx = Set(initialize=["Rbiomass"])
+        self.uncombs_set = Set(initialize=["Rbiomass",])
+        self.reaction_set = Set(initialize=[("Rbiomass", "Vap", "H2O"),
+                                            ("Rbiomass", "Vap", "CO2"),
+                                            ("Rbiomass", "Vap", "O2"),
+                                            ("Rbiomass", "Sol", "biomass"),
+                                            ("Rbiomass", "Sol", "uncombustible"),
+                                            ("Rbiomass", "Vap", "N2"),
+                                            ("Rbiomass", "Vap", "CO"),
+                                            ])
+        # biomass combustion stoichiometry based on cellulose
+        self.rate_reaction_stoichiometry = Var(self.reaction_set, initialize={
+                                            ("Rbiomass", "Vap", "H2O"): 5,
+                                            ("Rbiomass", "Vap", "CO2"): 6,
+                                            ("Rbiomass", "Vap", "O2"): -6,
+                                            ("Rbiomass", "Sol", "biomass"): -1,
+                                            ("Rbiomass", "Sol", "uncombustible"): 0.01,
+                                            ("Rbiomass", "Vap", "N2"): 0,
+                                            ("Rbiomass", "Vap", "CO"): 0,
+                                            })
+        self.rate_reaction_stoichiometry.fix()
         
         self.reactant_list=Set(initialize=["biomass","O2"])
-        
-        self.h=Var(initialize=0.06) #concentration of hydrogen as a percentage of weight, h=6%
-        self.w=Var(initialize=0.09) #water content of fuel as percentage of weight
-        self.gcv=Param(initialize=20.2, units=pyunits.MJ/pyunits.kg, doc="gross calorific value") #gross calorific value (dry basis)
-        self.ncv=(self.gcv*(1-self.w)-2.447*self.w-2.447*self.h*9.01*(1-self.w))*162.1394*1000 #J/mol 
-        #net calorific value (wet basis) (pg. 7) https://www.mbie.govt.nz/dmsdocument/125-industrial-bioenergy-
-        #ncv multiplied by 162 g/mo (cellulose) to convert from /mass to /mol basis.
 
-        dh_rxn_dict = {"R1": -self.ncv} # @ w=9%, h=6% ==> ncv=-2749556.40
+        self.limit_reactant_dict = Param(self.rate_reaction_idx, initialize={
+            "Rbiomass": "biomass",
+        },
+        within=Any)
         
-        def dh_rxn(b,reaction_index):
-            # only one reaction index, so we are just setting it to the ncv
-            return -self.ncv
-
-        self.dh_rxn = Expression(self.rate_reaction_idx, 
-                            rule=dh_rxn,
-                            doc="Heat of reaction")
+        dh_rxn_dict = {"Rbiomass": -2749556.40, # @ w=9%, h=6% ==> ncv=-2749556.40
+                    #    "RCH4": -802.6
+                       } 
+        
+        self.dh_rxn = Var(self.rate_reaction_idx, 
+                          initialize = dh_rxn_dict,
+                          domain=Reals,
+                          doc="Heat of reaction")
+        self.dh_rxn.fix()
 
     @classmethod
     def define_metadata(cls, obj):
