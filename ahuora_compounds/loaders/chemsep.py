@@ -21,7 +21,8 @@ def load(registry):
 def convert_string_to_float(string: str) -> float | str:
     try:
         return float(string)
-    except:
+    except (AttributeError, ValueError):
+        # TODO: Why are we doing this again?
         return string
 
 
@@ -35,7 +36,8 @@ class UnitValuePair(BaseModel):
 def parse_element(elem: ET.Element):
     try:
         return UnitValuePair(name=elem.get('name'), value=convert_string_to_float(elem.get('value')), unit=elem.get('units'))
-    except:
+    except (AttributeError, ValueError):
+        #TODO: Why are we catching these errors here? This is not really good practice. Is there a good reason for it?
         return None
 
 

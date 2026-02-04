@@ -59,10 +59,12 @@ class CompoundRegistry:
                     raise ValueError(f"Package {package_name} is not registered.")
     
     def _discover_loaders(self):
+        # Todo: THis is a very hacky way of dynamically loading all modules in the loaders package. 
+        # Is dynamic loading even necessary? Can we just import all loaders in the __init__.py file of the loaders package?
         # Loading modules
         for module in pkgutil.iter_modules(loaders.__path__):
             #  class pkgutil.ModuleInfo(module_finder, name, ispkg)
-            importlib.import_module(f"compounds.loaders.{module.name}")
+            importlib.import_module(f"ahuora_compounds.loaders.{module.name}")
 
     def queue_compound(self, compound_name: str, source: str, data: dict):
         """

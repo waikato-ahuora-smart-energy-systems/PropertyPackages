@@ -4,7 +4,6 @@ import os
 
 # Import Pyomo libraries
 from pyomo.environ import (
-    Expression,
     Constraint,
     Param,
     Reals,

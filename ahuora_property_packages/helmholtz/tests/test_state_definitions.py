@@ -41,7 +41,7 @@ def test_constrain():
 
     # add a constraint for flow_mass
     c = sb.constrain("flow_mass", 1)
-    assert type(c) == ScalarConstraint
+    assert isinstance(c, ScalarConstraint)
     assert c in sb.component_data_objects(Constraint)
     assert getattr(sb.constraints, "flow_mass") == c
 

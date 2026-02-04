@@ -21,7 +21,7 @@ def build_config(property_package_name, compound_names: List[str], valid_states:
     # Verifying compound name
     try:
         compounds.append(get_compound(compound))
-    except:
+    except (AttributeError, ValueError):
        raise ValueError(f"Invalid compound name {compound}")
 
   # Verifying property package name

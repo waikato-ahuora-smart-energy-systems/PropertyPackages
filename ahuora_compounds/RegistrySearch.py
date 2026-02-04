@@ -1,7 +1,9 @@
+from ahuora_compounds.CompoundRegistry import CompoundRegistry
 # Simplified wrapper for front-end integration
+
 class RegistrySearch:
 
-    def __init__(self, compound_registry):
+    def __init__(self, compound_registry: CompoundRegistry):
         self._registry = compound_registry
 
     def search_compounds(self, query, package_filters=None, filter_strict=False):

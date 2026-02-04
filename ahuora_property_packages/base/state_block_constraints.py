@@ -25,7 +25,7 @@ class StateBlockConstraints:
         """
         Constrain a component to a value
         """
-        if type(component) == ScalarExpression:
+        if isinstance(component, ScalarExpression):
             c = Constraint(expr=component == value)
             c.defining_state_var = True
             blk.constraints.add_component(component.local_name, c)
