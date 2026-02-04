@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ahuora-compounds"
-version = "0.0.29"
+dynamic = ["version"] # version is read from __version__.py see [tool.hatch.version]
 
 authors = [
   { name="Example Author", email="author@example.com" },
@@ -35,3 +35,11 @@ Homepage = "https://ahuora.org.nz"
 
 [tool.hatch.build.targets.wheel]
 packages = ["ahuora_compounds","ahuora_property_packages"]
+
+[tool.hatch.version]
+path = "__version__.py"
+
+[dependency-groups]
+dev = [
+    "hatch>=1.16.3",
+]
