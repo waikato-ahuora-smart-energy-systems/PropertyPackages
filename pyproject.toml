@@ -41,7 +41,6 @@ path = "__version__.py"
 
 [dependency-groups]
 dev = [
-    "flake8>=7.3.0",
     "hatch>=1.16.3",
     "pytest>=9.0.2",
 ]
