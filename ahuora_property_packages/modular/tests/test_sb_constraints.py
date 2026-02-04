@@ -54,7 +54,7 @@ def test_constrain():
 
     # constrain flow_mass by string
     c = sb.constrain("flow_mass", 10)
-    assert type(c) == ScalarConstraint
+    assert isinstance(c, ScalarConstraint)
     assert c in sb.component_data_objects(Constraint)
     assert getattr(sb.constraints, "flow_mass") == c
 
@@ -71,7 +71,7 @@ def test_constrain_component():
 
     # constrain flow_mass by component
     c = sb.constrain_component(sb.flow_mass, 10)
-    assert type(c) == ScalarConstraint
+    assert isinstance(c, ScalarConstraint)
     assert c in sb.component_data_objects(Constraint)
     assert getattr(sb.constraints, "flow_mass") == c
 

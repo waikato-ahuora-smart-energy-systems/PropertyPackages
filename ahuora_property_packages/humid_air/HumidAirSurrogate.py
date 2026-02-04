@@ -33,7 +33,7 @@ import idaes.logger as idaeslog
 
 from pyomo.environ import Block
 from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
-from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
+from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar
 
 
 # Some more information about this module
@@ -229,7 +229,7 @@ class HAirStateBlockData(StateBlockData):
         """
         Constrain a component to a value
         """
-        if type(component) == ScalarExpression:
+        if isinstance(component, ScalarExpression):
             c = Constraint(expr=component == value)
             c.defining_state_var = True
             blk.constraints.add_component(component.local_name, c)

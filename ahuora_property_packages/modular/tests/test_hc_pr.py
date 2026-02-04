@@ -10,14 +10,7 @@
 # All rights reserved.  Please see the files COPYRIGHT.md and LICENSE.md
 # for full copyright and license information.
 #################################################################################
-"""
-Author: Andrew Lee, Alejandro Garciadiego
-"""
-
-"""
-Modified to work with the Chem-Sep data within the following tolerances
-"""
-
+from ahuora_property_packages.build_package import build_package
 import pytest
 from pyomo.environ import (
     assert_optimal_termination,
@@ -29,7 +22,6 @@ from pyomo.environ import (
 )
 from pyomo.util.check_units import assert_units_consistent
 import pyomo.common.unittest as unittest
-
 from idaes.core import Component
 from idaes.core.util.model_statistics import (
     degrees_of_freedom,
@@ -37,12 +29,16 @@ from idaes.core.util.model_statistics import (
     activated_constraints_set,
 )
 from idaes.core.solvers import get_solver
-
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
-
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
-from ahuora_property_packages.build_package import build_package
+"""
+Author: Andrew Lee, Alejandro Garciadiego
+"""
+
+"""
+Modified to work with the Chem-Sep data within the following tolerances
+"""
 
 # -----------------------------------------------------------------------------
 # Get default solver for testing

@@ -14,9 +14,10 @@ from pyomo.util.check_units import assert_units_consistent
 from pyomo.environ import  check_optimal_termination, Objective
 import idaes.core.util.scaling as iscale
 from idaes.core.util.model_statistics import degrees_of_freedom
+import idaes.logger as idaeslog
+
 solver = get_solver(solver="ipopt")
 
-import idaes.logger as idaeslog
 SOUT = idaeslog.INFO
 
 """
