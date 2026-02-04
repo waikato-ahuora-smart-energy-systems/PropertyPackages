@@ -5,8 +5,6 @@ from idaes.core.solvers import get_solver
 from ahuora_property_packages.build_package import build_package
 
 def testInit(): ##not expected to do anything at this stage
-    vars = ["flow_mass","flow_vol","vol_mass","enth_mass","entr_mass","total_energy_flow","vapor_frac"]
-    indexedVars = ["flow_mol_comp","flow_mass_comp","enth_mol_comp","enth_mass_comp","mass_frac_comp","entr_mol_comp"]
     # haha = HAPropsSI("Hha", "T", 416, "P", 5325647, "psi_w", 0.03)
     # print(haha)
     m = ConcreteModel()
@@ -24,8 +22,6 @@ def testInit(): ##not expected to do anything at this stage
     solver.solve(m)
 
 def testConstraints(): ##not expected to do anything at this stage
-    vars = ["flow_mass","flow_vol","vol_mass","enth_mass","entr_mass","total_energy_flow","vapor_frac"]
-    indexedVars = ["flow_mol_comp","flow_mass_comp","enth_mol_comp","enth_mass_comp","mass_frac_comp","entr_mol_comp"]
     # haha = HAPropsSI("Hha", "T", 416, "P", 5325647, "psi_w", 0.03)
     # print(haha)
     m = ConcreteModel()

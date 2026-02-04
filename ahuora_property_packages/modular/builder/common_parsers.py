@@ -243,7 +243,7 @@ class state_bounds_parser(BuildBase):
     def serialise(compounds: List[Compound], valid_states: List[States]) -> Dict[str, Any]:
 
         min_melting_point = min([compound["NormalMeltingPointTemperature"].value for compound in compounds])
-        min_critical_temperature = min([compound["CriticalTemperature"].value for compound in compounds])
+        min([compound["CriticalTemperature"].value for compound in compounds])
 
         # TODO: Refactor this logic, need a more versatile approach
         return {

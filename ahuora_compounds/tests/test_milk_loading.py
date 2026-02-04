@@ -4,4 +4,4 @@ def test_milk_compounds():
     assert "milk_solid" in db.get_compound_names()
     assert "water" in db.get_compound_names()
     milk_solid = db.get_compound("milk_solid")
-    assert milk_solid == None # no data related to milk_solid
+    assert milk_solid is None # no data related to milk_solid

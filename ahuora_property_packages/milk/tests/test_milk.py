@@ -42,7 +42,7 @@ def test_propane():
 
     # Solve the model
     solver = pe.SolverFactory('ipopt')
-    results = solver.solve(model, tee=True)
+    solver.solve(model, tee=True)
 
     # Display the results
     model.fs.heat_exchanger.report()
@@ -53,7 +53,7 @@ def test_propane():
     h2 = model.fs.properties.htpx(T=(50+273)*pe.units.K, p=101325*pe.units.Pa)
     model.fs.heat_exchanger.tube_outlet.enth_mol.fix(h2)
 
-    results = solver.solve(model, tee=True)
+    solver.solve(model, tee=True)
     model.fs.heat_exchanger.report()
     model.fs.heat_exchanger.cold_side.properties_out[0].display()
 

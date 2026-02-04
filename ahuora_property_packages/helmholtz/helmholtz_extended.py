@@ -78,7 +78,7 @@ def set_vapor_frac_guesses(blk: Block) -> None:
     This is because the initial guess has to be within the vapor fraction region
     otherwise the solver has a hard time converging.
     """
-    helmholtz_blk = blk[blk.index_set().first()].config.parameters
+    blk[blk.index_set().first()].config.parameters
     
     for sb in blk.values():
         if not hasattr(sb.constraints, "vapor_frac"):

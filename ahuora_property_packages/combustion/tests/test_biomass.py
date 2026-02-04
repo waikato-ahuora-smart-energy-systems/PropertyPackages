@@ -178,8 +178,8 @@ def test_biomass():
     seq.options.iterLim = 3
 
     G = seq.create_graph(m)
-    heuristic_tear_set = seq.tear_set_arcs(G, method="heuristic")
-    order = seq.calculation_order(G)
+    seq.tear_set_arcs(G, method="heuristic")
+    seq.calculation_order(G)
 
     #for identifying tear stream:
     """ for o in heuristic_tear_set: #fs.s03
@@ -214,7 +214,7 @@ def test_biomass():
     m.fs.boiler_hx.shell_outlet.temperature.fix(500)
 
     solver=SolverFactory("ipopt")
-    status=solver.solve(m,tee=True)
+    solver.solve(m,tee=True)
 
     assert degrees_of_freedom(m) == 0
 

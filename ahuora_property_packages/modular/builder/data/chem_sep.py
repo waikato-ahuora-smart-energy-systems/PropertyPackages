@@ -247,7 +247,8 @@ class ChemSep(object):
 
             units = b.params.get_metadata().derived_units
 
-            integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
+            def integrand(T):
+                return ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
 
             h = (
                 pyunits.convert(
@@ -280,7 +281,8 @@ class ChemSep(object):
 
             units = b.params.get_metadata().derived_units
 
-            integrand = lambda T: ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
+            def integrand(T):
+                return ChemSep.cp_mol_liq_comp.return_expression(b, cobj, T)
 
             s = (
                 pyunits.convert(
