@@ -6,8 +6,6 @@ name: Python application
 on:
   push:
     branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
 
 permissions:
   contents: read
@@ -29,7 +27,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install liblapack3 liblapack-dev libgfortran5 libgomp1  # shared libraries for ipopt
-        uv sync --locked
+        uv sync --all-extras
         uv run idaes get-extensions --distro ubuntu2204
     - name: Lint with flake8
       run: |
