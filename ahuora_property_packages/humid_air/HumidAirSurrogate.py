@@ -4,7 +4,6 @@ import os
 
 # Import Pyomo libraries
 from pyomo.environ import (
-    Reference,
     Expression,
     Constraint,
     Param,
@@ -32,7 +31,7 @@ from idaes.core.surrogate.surrogate_block import SurrogateBlock
 from idaes.core.surrogate.pysmo_surrogate import PysmoSurrogate
 import idaes.logger as idaeslog
 
-from pyomo.environ import Block, Constraint
+from pyomo.environ import Block
 from pyomo.core.base.expression import ScalarExpression, Expression, _GeneralExpressionData, ExpressionData
 from pyomo.core.base.var import ScalarVar, _GeneralVarData, VarData, IndexedVar, Var
 

@@ -3,18 +3,15 @@ from ahuora_property_packages.build_package import build_package
 from pytest import approx
 
 # Import objects from pyomo package 
-from pyomo.environ import ConcreteModel, SolverFactory, value, units
-
-# Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
-from idaes.core import FlowsheetBlock
-from idaes.core.util.model_statistics import degrees_of_freedom
-from idaes.models.unit_models.heater import Heater
-
-# Import objects from pyomo package 
 from pyomo.environ import ConcreteModel, SolverFactory, value
 
 # Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
 from idaes.core import FlowsheetBlock
+from idaes.core.util.model_statistics import degrees_of_freedom
+
+# Import objects from pyomo package 
+
+# Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
 
 # Import the mixer unit model
 from idaes.models.unit_models import Mixer, MomentumMixingType
@@ -23,11 +20,9 @@ from idaes.models.unit_models import Mixer, MomentumMixingType
 import idaes.logger as idaeslog
 
 # Import the BTX_ideal property package to create a properties block for the flowsheet
-from idaes.models.properties.activity_coeff_models import BTX_activity_coeff_VLE
 
 # Import the degrees_of_freedom function from the idaes.core.util.model_statistics package
 # DOF = Number of Model Variables - Number of Model Constraints
-from idaes.core.util.model_statistics import degrees_of_freedom
 
 def assert_approx(value, expected_value, error_margin):
     percent_error = error_margin / 100

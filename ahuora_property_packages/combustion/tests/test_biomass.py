@@ -5,7 +5,6 @@ from pyomo.environ import (
     ConcreteModel,
     Expression,
     Param,
-    Objective,
     SolverFactory,
     TransformationFactory,
     value,
@@ -15,37 +14,25 @@ from pyomo.network import Arc, SequentialDecomposition
 
 #Todo add the four other unit operations
 from idaes.models.unit_models import (
-Mixer,
 StoichiometricReactor,
-Heater,
 HeatExchanger,
-Separator,
-Flash
+Separator
 )
 from idaes.models_extra.power_generation.unit_models.helm.phase_separator import HelmPhaseSeparator
 
-from idaes.models.unit_models.pressure_changer import ThermodynamicAssumption
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.core import FlowsheetBlock
 # Import idaes logger to set output levels
 import idaes.logger as idaeslog
-from idaes.models.properties.modular_properties import GenericParameterBlock
-from ahuora_property_packages.combustion.biomass_comb_pp import configuration 
-from ahuora_property_packages.combustion.biomass_combustion_rp import BMCombReactionParameterBlock
 
 #helmholtz import for water
 from idaes.models.properties.general_helmholtz import (
         HelmholtzParameterBlock,
-        HelmholtzThermoExpressions,
         AmountBasis,
-        PhaseType,
-        StateVars
+        PhaseType
     )
-from idaes.models.unit_models.heat_exchanger import delta_temperature_amtd_callback, HX0DInitializer
-from idaes.models.unit_models.separator import SplittingType, EnergySplittingType
-from idaes.core.util.model_diagnostics import (
-    DiagnosticsToolbox,
-)
+from idaes.models.unit_models.heat_exchanger import delta_temperature_amtd_callback
+from idaes.models.unit_models.separator import SplittingType
 from pytest import approx
 from ahuora_property_packages.build_package import build_package
 

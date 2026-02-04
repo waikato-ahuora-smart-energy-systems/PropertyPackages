@@ -1,9 +1,8 @@
 import pyomo.environ as pe# Pyomo environment
 from pyomo.environ import value
-from idaes.core import FlowsheetBlock, StateBlock
+from idaes.core import FlowsheetBlock
 from idaes.models.unit_models import HeatExchanger
-from idaes.models.unit_models.heat_exchanger import HX0DInitializer
-from idaes.models.unit_models.heat_exchanger import delta_temperature_lmtd_callback,delta_temperature_amtd_callback
+from idaes.models.unit_models.heat_exchanger import delta_temperature_lmtd_callback
 from idaes.models.properties import iapws95
 from ahuora_property_packages.build_package import build_package   
 import idaes.logger as idaeslog

@@ -1,5 +1,5 @@
 from .HumidAirSurrogate import HAirParameterBlock
-from typing import List, Literal
+from typing import List
 
 def build_humid_air_package(compound_list: List[str]):
     if len(compound_list) != 2:

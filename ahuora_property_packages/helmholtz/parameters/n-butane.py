@@ -13,11 +13,7 @@
 # .nl files (as explained in the documentation.)
 
 import os
-import math
-import pyomo.environ as pyo
 from pyomo.common.fileutils import this_file_dir
-from pyomo.common.fileutils import find_library
-from idaes.core.util.math import smooth_max
 from idaes.models.properties.general_helmholtz.helmholtz_parameters import (
     WriteParameters,
 )

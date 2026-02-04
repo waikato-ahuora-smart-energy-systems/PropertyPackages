@@ -2,7 +2,6 @@ from ahuora_compounds import deprecated
 from ahuora_compounds.CompoundRegistry import CompoundRegistry
 from ahuora_compounds.Compound import Compound
 from ahuora_compounds.RegistrySearch import RegistrySearch
-from ahuora_compounds.RegistryLoader import RegistryLoader
 
 __author__ = "Mahaki Leach"
 

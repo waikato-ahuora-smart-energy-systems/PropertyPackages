@@ -11,8 +11,7 @@ from idaes.core.solvers import get_solver
 
 from pyomo.util.check_units import assert_units_consistent
 
-from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
-from pyomo.environ import  check_optimal_termination, ConcreteModel, Objective
+from pyomo.environ import  check_optimal_termination, Objective
 import idaes.core.util.scaling as iscale
 from idaes.core.util.model_statistics import degrees_of_freedom
 solver = get_solver(solver="ipopt")

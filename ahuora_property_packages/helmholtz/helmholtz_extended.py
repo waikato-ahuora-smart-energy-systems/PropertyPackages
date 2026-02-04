@@ -4,12 +4,10 @@ from pyomo.environ import (
     check_optimal_termination,
     units,
     Block,
-    Constraint,
-    value
+    Constraint
 )
 from idaes.models.properties.general_helmholtz.helmholtz_state import HelmholtzStateBlockData, _StateBlock
 from idaes.models.properties.general_helmholtz.helmholtz_functions import HelmholtzParameterBlockData
-from idaes.models.properties.general_helmholtz import HelmholtzThermoExpressions
 from idaes.core import declare_process_block_class
 from idaes.core.util.initialization import solve_indexed_blocks, revert_state_vars
 from idaes.core.util.model_statistics import degrees_of_freedom

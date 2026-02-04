@@ -3,7 +3,7 @@ from ahuora_property_packages.build_package import build_package
 from pytest import approx
 
 # Import objects from pyomo package 
-from pyomo.environ import ConcreteModel, SolverFactory, value, units
+from pyomo.environ import ConcreteModel, SolverFactory, value
 
 # Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
 from idaes.core import FlowsheetBlock

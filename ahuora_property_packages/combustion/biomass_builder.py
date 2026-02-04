@@ -1,6 +1,5 @@
 from .biomass_combustion_rp import BMCombReactionParameterBlock
 from .biomass_comb_pp import configuration
-from ahuora_property_packages.modular.modular_extended import GenericExtendedParameterBlock
 from idaes.models.properties.modular_properties import GenericParameterBlock
 from typing import List
 

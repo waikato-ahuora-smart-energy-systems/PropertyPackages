@@ -1,7 +1,6 @@
-from typing import List, Literal
+from typing import List
 from idaes.models.properties.general_helmholtz import (
     registered_components,
-    HelmholtzParameterBlock,
     PhaseType,
     StateVars,
     AmountBasis

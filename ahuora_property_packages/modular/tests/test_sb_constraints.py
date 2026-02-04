@@ -8,7 +8,6 @@ from pyomo.environ import (
     ConcreteModel,
     SolverFactory,
     value,
-    units,
     assert_optimal_termination,
 )
 from pyomo.core.base.constraint import Constraint, ScalarConstraint

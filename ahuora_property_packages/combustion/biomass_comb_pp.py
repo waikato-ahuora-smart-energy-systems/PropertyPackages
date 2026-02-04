@@ -5,19 +5,12 @@ Property package for the combustion of biomass in air
 from pyomo.environ import units as pyunits
 
 # Import IDAES cores
-from idaes.core import LiquidPhase, VaporPhase, Component, SolidPhase
+from idaes.core import VaporPhase, Component, SolidPhase
 import idaes.logger as idaeslog
 
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.eos.ideal import Ideal
 from idaes.models.properties.modular_properties.pure import ConstantProperties
-from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
-from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (
-    IdealBubbleDew,
-)
-from idaes.models.properties.modular_properties.phase_equil.forms import fugacity
-from idaes.models.properties.modular_properties.pure import Perrys
-from idaes.models.properties.modular_properties.pure import RPP4
 from idaes.models.properties.modular_properties.pure import NIST
 from idaes.core import PhaseType as PT
 

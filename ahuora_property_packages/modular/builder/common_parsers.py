@@ -3,13 +3,13 @@ from typing import Any, Dict, List
 from .base_parser import BuildBase
 from ahuora_compounds.Compound import Compound
 from pyomo.environ import units as pyunits
-from idaes.models.properties.modular_properties.state_definitions import FTPx, FPhx
+from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (LogBubbleDew)
 from idaes.core import LiquidPhase, VaporPhase, Component, PhaseType as PT
 from idaes.models.properties.modular_properties.phase_equil import (SmoothVLE)
 from idaes.models.properties.modular_properties.phase_equil.forms import log_fugacity
 from idaes.models.properties.modular_properties.eos.ceos import Cubic, CubicType
-from idaes.models.properties.modular_properties.pure import RPP4, RPP3, Perrys
+from idaes.models.properties.modular_properties.pure import RPP4, Perrys
 from ahuora_property_packages.modular.builder.data.chem_sep import ChemSep
 from pyomo.common.fileutils import this_file_dir
 from ahuora_property_packages.types import States

@@ -1,7 +1,6 @@
 from pyomo.environ import Expression
 
 from idaes.core import declare_process_block_class
-from idaes.core.util.exceptions import ConfigurationError
 from idaes.models.properties.modular_properties.base.generic_property import (
     _GenericStateBlock,
     GenericParameterData,
@@ -15,41 +14,16 @@ from ahuora_property_packages.utils.fix_state_vars import fix_state_vars
 
 # TODO: remove these imports once https://github.com/IDAES/idaes-pse/pull/1554 is resolved
 from pyomo.environ import (
-    Block,
     check_optimal_termination,
     Constraint,
-    exp,
-    Expression,
     log,
-    Set,
-    Param,
     value,
     Var,
-    units as pyunits,
-    Reference,
 )
-from pyomo.common.config import ConfigBlock, ConfigDict, ConfigValue, In, Bool
 from pyomo.util.calc_var_value import calculate_variable_from_constraint
 
 # Import IDAES cores
-from idaes.core import (
-    declare_process_block_class,
-    PhysicalParameterBlock,
-    StateBlockData,
-    StateBlock,
-    MaterialFlowBasis,
-    ElectrolytePropertySet,
-)
-from idaes.core.base.components import Component, __all_components__
-from idaes.core.base.phases import (
-    Phase,
-    AqueousPhase,
-    LiquidPhase,
-    VaporPhase,
-    __all_phases__,
-)
 from idaes.core.util.initialization import (
-    revert_state_vars,
     solve_indexed_blocks,
 )
 from idaes.core.util.model_statistics import (
@@ -58,35 +32,14 @@ from idaes.core.util.model_statistics import (
 )
 from idaes.core.util.exceptions import (
     BurntToast,
-    ConfigurationError,
-    PropertyPackageError,
-    PropertyNotSupportedError,
     InitializationError,
 )
-from idaes.core.util.misc import add_object_reference
 from idaes.core.solvers import get_solver
 import idaes.logger as idaeslog
-import idaes.core.util.scaling as iscale
-from idaes.core.initialization.initializer_base import InitializerBase
 
-from idaes.models.properties.modular_properties.base.generic_reaction import (
-    equil_rxn_config,
-)
 from idaes.models.properties.modular_properties.base.utility import (
-    get_method,
-    get_phase_method,
-    GenericPropertyPackageError,
     StateIndex,
-    identify_VL_component_list,
-    estimate_Tbub,
-    estimate_Tdew,
-    estimate_Pbub,
-    estimate_Pdew,
 )
-from idaes.models.properties.modular_properties.phase_equil.bubble_dew import (
-    LogBubbleDew,
-)
-from idaes.models.properties.modular_properties.phase_equil.henry import HenryType
 from idaes.models.properties.modular_properties.base.generic_property import (
     _initialize_critical_props,
     _init_Tbub,

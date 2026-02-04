@@ -20,9 +20,7 @@ from idaes.core.solvers import get_solver
 
 from idaes.models.properties.modular_properties.state_definitions import FTPx
 from idaes.models.properties.modular_properties.phase_equil import SmoothVLE
-from idaes.models.properties.modular_properties.examples.ASU_PR import configuration
 from idaes.models.properties.modular_properties.eos.ceos import cubic_roots_available
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from ahuora_property_packages.build_package import build_package
 
 solver = get_solver("ipopt")

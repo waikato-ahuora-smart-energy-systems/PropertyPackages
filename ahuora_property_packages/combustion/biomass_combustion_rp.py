@@ -7,9 +7,7 @@ from pyomo.environ import Expression
 import logging
 
 # Import Pyomo libraries
-from pyomo.environ import (Constraint,
-                           exp,
-                           Set,
+from pyomo.environ import (Set,
                            Var,
                            Param,
                            units as pyunits)
@@ -20,7 +18,6 @@ from idaes.core import (declare_process_block_class,
                         ReactionParameterBlock,
                         ReactionBlockDataBase,
                         ReactionBlockBase)
-from idaes.core.util.constants import Constants as const
 from idaes.core.util.misc import add_object_reference
 
 # Set up logger

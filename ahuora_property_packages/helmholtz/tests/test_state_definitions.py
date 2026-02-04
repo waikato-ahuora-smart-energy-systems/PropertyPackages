@@ -1,6 +1,6 @@
 from ..helmholtz_builder import build_helmholtz_package
 from pytest import approx
-from pyomo.environ import ConcreteModel, SolverFactory, value, units, assert_optimal_termination
+from pyomo.environ import ConcreteModel, SolverFactory, value, assert_optimal_termination
 from pyomo.core.base.constraint import Constraint, ScalarConstraint
 from idaes.core import FlowsheetBlock
 from idaes.models.unit_models import Compressor

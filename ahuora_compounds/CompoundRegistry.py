@@ -1,6 +1,7 @@
 from typing import Dict, Set
 import ahuora_compounds.loaders as loaders
-import pkgutil, importlib
+import pkgutil
+import importlib
 from ahuora_compounds.Compound import Compound
 from ahuora_compounds.PropertyPackage import PropertyPackage
 from ahuora_compounds.RegistryLoader import RegistryLoader
@@ -135,7 +136,7 @@ class CompoundRegistry:
             data (dict): Data associated with the compound from the source.
         """
 
-        if not compound in self.compounds:
+        if compound not in self.compounds:
 
             # Create a new compound if it doesn't exist
             self.__compounds[compound] = Compound(compound)

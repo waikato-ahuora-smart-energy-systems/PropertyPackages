@@ -8,8 +8,7 @@ IDAES naming conventions followed for compatibility with modular property packag
 
 from pyomo.environ import log, exp, units as pyunits
 from idaes.core.util.misc import set_param_from_config
-from pyomo.environ import units as u
-from pyomo.environ import Var, value
+from pyomo.environ import Var
 from scipy.integrate import quad
 
 class ChemSep(object):

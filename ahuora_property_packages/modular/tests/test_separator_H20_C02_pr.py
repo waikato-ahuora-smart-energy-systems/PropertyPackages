@@ -2,13 +2,11 @@
 from pyomo.environ import ConcreteModel, value
 
 # Import the solver
-from idaes.core.solvers import get_solver
 
 # Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
 from idaes.core import FlowsheetBlock
 
 # Import the option to set the type of material balance 
-from idaes.core import MaterialBalanceType
 
 # Import the separator unit model
 from idaes.models.unit_models import Separator
@@ -17,19 +15,16 @@ from idaes.models.unit_models import Separator
 from idaes.models.unit_models.separator import SplittingType
 
 # Import idaes logger to set output levels
-import idaes.logger as idaeslog
 
 # Import the modular property package to create a property block for the flowsheet
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 
 # Import the BT_Ideal property package to create a configuration file for the GenericParameterBlock
-from idaes.models.properties.modular_properties.examples.CO2_H2O_Ideal_VLE import configuration
 
 # Import the degrees_of_freedom function from the idaes.core.util.model_statistics package
 # DOF = Number of Model Variables - Number of Model Constraints
 from idaes.core.util.model_statistics import degrees_of_freedom
 
-from pyomo.environ import ConcreteModel, SolverFactory, value, units
+from pyomo.environ import SolverFactory
 
 # Import the build function to create a property package
 from ahuora_property_packages.build_package import build_package

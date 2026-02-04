@@ -7,9 +7,7 @@ from pyomo.environ import ConcreteModel, SolverFactory, value, units
 # Import the main FlowsheetBlock from IDAES. The flowsheet block will contain the unit model
 from idaes.core import FlowsheetBlock
 from idaes.core.util.model_statistics import degrees_of_freedom
-from idaes.models.unit_models.heat_exchanger_ntu import HeatExchangerNTU as HXNTU
 from idaes.models.unit_models.heat_exchanger import HeatExchanger, delta_temperature_amtd_callback
-from idaes.models.properties import iapws95
 from idaes.models.properties.iapws95 import htpx
 
 def assert_approx(value, expected_value, error_margin):

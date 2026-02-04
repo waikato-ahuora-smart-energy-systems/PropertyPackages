@@ -1,10 +1,8 @@
 
-from idaes.models.properties.modular_properties.base.generic_property import GenericParameterBlock
 from .modular_extended import GenericExtendedParameterBlock
 from ahuora_compounds.CompoundDB import get_compound
 from .templates.templates import PropertyPackage
 from ahuora_property_packages.types import States
-from pprint import pprint
 from typing import List
 
 """
