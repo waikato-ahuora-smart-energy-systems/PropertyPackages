@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ahuora-compounds"
-version = "0.0.31"
+version = "0.0.29"
 
 authors = [
   { name="Example Author", email="author@example.com" },
@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-property_packages = [
+ahuora_property_packages = [
     "idaes-pse",
 ]
 
@@ -34,4 +34,4 @@ property_packages = [
 Homepage = "https://ahuora.org.nz"
 
 [tool.hatch.build.targets.wheel]
-packages = ["compounds","property_packages"]
+packages = ["ahuora_compounds","ahuora_property_packages"]
