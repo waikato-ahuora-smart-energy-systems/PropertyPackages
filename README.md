@@ -7,7 +7,7 @@ This repository is split into two main tools: the compound database and property
 To install this:
 
 ```sh
-pip install git+https://github.com/waikato-ahuora-smart-energy-systems/PropertyPackages.git
+pip install ahuora-compounds
 ```
 
 To install the development version, after cloning this repo:
@@ -24,10 +24,18 @@ To use
 
 ### Usage
 
-```python
-# example usage
-from compounds.CompoundDB import db
+#### Property Packages
 
+```python
+from ahuora_property_packages.build_package import build_package
+build_package("helmholtz",["h2o"],["vap","liq"])
+```
+
+#### Compounds
+
+
+```python
+from ahuora_compounds.CompoundDB import db
 db.search_compounds("ane")
 > ["octane", "hexane", "..."]
 
@@ -155,25 +163,16 @@ property_packages.build_package("helmholtz",["h2o"])
 
 Implement something to translate between apis, e.g for if the user specifies in Temperature and mass flow but the property package uses flow_mol and enthalpy
 
-```py
-property_package.build_state(
-    "helmholtz",
-    "h2o",
-    {
-        "temperature",
-        "pressure",
-        "mass_flow",
-    }
-) -> {
-    "enthalpy":
-    "pressure":
-    "quality":
-    "flow_mol":
-}
+# Publishing
+
+When a commit to `main` is merged, the `publish.yml` action will automatically bump the patch version, commit the bumped version to `main`, build the package, and submit to pypi. 
+
+If you want to create a minor or major version, run
+
+
+```
+uv run hatch version minor
+uv run hatch version major
 ```
 
-Support different phases:
-
-```py
-property_packages.build_package("helmholtz",["h2o"],["vap","liq"])
-```
+and that will bump the major or minor version and you can commit that.
