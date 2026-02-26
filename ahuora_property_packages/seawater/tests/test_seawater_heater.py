@@ -48,10 +48,10 @@ print("Flow Mass Phase Comp TDS",pe.value(sb.flow_mass_phase_comp["Liq","TDS"]))
 
 
 
-model.fs.heater.heat_duty.fix(1)
-model.fs.heater.heat_duty.unfix()
+model.fs.heater.heat_duty.fix(20e5)
+# model.fs.heater.heat_duty.unfix()
 
-model.fs.heater.outlet.temperature.fix(450)
+# model.fs.heater.outlet.temperature.fix(450)
 
 
 dt = DiagnosticsToolbox(model)
@@ -64,7 +64,8 @@ model.fs.heater.initialize()
 
 print("DOF After:" , degrees_of_freedom(model))
 
-# Touch the properties
+# Touch the properties to make sure they are calculated and added to the graph 
+# (since IDAES uses lazy evaluation for properties, they won't be added to the graph until they are accessed)
 sb.flow_mol_phase_comp
 sb.flow_mol
 sb.mole_frac_comp
