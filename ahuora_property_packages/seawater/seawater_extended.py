@@ -47,10 +47,10 @@ def _solve_block(self, solve_log, init_log, opt, step_name):
         )
     
     if (not skip_solve) and (not check_optimal_termination(results)):
-            raise InitializationError(
-                f"{self.name} {step_name} failed to initialize successfully. Please "
-                f"check the output logs for more information."
-            )
+        raise InitializationError(
+            f"{self.name} {step_name} failed to initialize successfully. Please "
+            f"check the output logs for more information."
+        )
 
 
 class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
@@ -63,45 +63,33 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
         solver=None,
         optarg=None,
     ):
-        """
-        Initialization routine for property package.
-        Keyword Arguments:
-            state_args : Dictionary with initial guesses for the state vars
-                         chosen. Note that if this method is triggered
-                         through the control volume, and if initial guesses
-                         were not provided at the unit model level, the
-                         control volume passes the inlet values as initial
-                         guess.The keys for the state_args dictionary are:
-                         flow_mass_phase_comp : value at which to initialize
-                                               phase component flows
-                         pressure : value at which to initialize pressure
-                         temperature : value at which to initialize temperature
-            outlvl : sets output level of initialization routine
-            optarg : solver options dictionary object (default={})
-            state_vars_fixed: Flag to denote if state vars have already been
-                              fixed.
-                              - True - states have already been fixed by the
-                                       control volume 1D. Control volume 0D
-                                       does not fix the state vars, so will
-                                       be False if this state block is used
-                                       with 0D blocks.
-                             - False - states have not been fixed. The state
-                                       block will deal with fixing/unfixing.
-            solver : Solver object to use during initialization if None is provided
-                     it will use the default solver for IDAES (default = None)
-            hold_state : flag indicating whether the initialization routine
-                         should unfix any state variables fixed during
-                         initialization (default=False).
-                         - True - states variables are not unfixed, and
-                                 a dict of returned containing flags for
-                                 which states were fixed during
-                                 initialization.
-                        - False - state variables are unfixed after
-                                 initialization by calling the
-                                 release_state method
+        """Initialization routine for the extended seawater property package.
+
+        The procedure is:
+          1. Deactivate platform constraints and fix state variables.
+          2. Verify zero degrees of freedom on every sub-block.
+          3. Solve with state variables fixed.
+          4. Release state variables and re-activate constraints.
+          5. If DOF == 0, solve again so constraints are satisfied.
+          6. Optionally re-fix state variables when ``hold_state=True``.
+
+        Args:
+            state_args (dict, optional): Initial guesses keyed by state
+                variable name (``flow_mass_phase_comp``, ``pressure``,
+                ``temperature``).  When called from a control volume the
+                inlet values are passed automatically.
+            state_vars_fixed (bool): ``True`` if the control volume has
+                already fixed state variables (e.g. CV1D).
+            hold_state (bool): If ``True``, state variables are left fixed
+                after initialization and a flags dict is returned so the
+                caller can later call ``release_state``.
+            outlvl: IDAES logging output level.
+            solver: Pyomo solver object (default: IDAES default solver).
+            optarg (dict, optional): Solver options.
+
         Returns:
-            If hold_states is True, returns a dict containing flags for
-            which states were fixed during initialization.
+            dict or None: Flags dict when ``hold_state=True`` and
+            ``state_vars_fixed=False``; otherwise ``None``.
         """
         # Get loggers
         init_log = idaeslog.getInitLogger(self.name, outlvl, tag="properties")
@@ -146,7 +134,6 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
                 return flags
             else:
                 self.release_state(flags)
-
         
 
     def release_state(self, flags, outlvl=idaeslog.NOTSET):
