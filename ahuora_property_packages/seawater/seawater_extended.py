@@ -9,6 +9,50 @@ from idaes.core.util.exceptions import InitializationError, PropertyPackageError
 import idaes.logger as idaeslog
 
 
+def _deactivate_additional_constraints(self):
+    # Temporarily deactivate platform constraints added with
+    # StateBlockConstraints.constrain()) so they don't interfere with
+    # initialization.
+    deactivated_constraints = {}
+    for k in self.keys():
+        blk = self[k]
+        if hasattr(blk, "constraints"):
+            deactivated = []
+            for c in blk.constraints.component_objects(
+                Constraint, active=True, descend_into=False
+            ):
+                c.deactivate()
+                deactivated.append(c)
+            if deactivated:
+                deactivated_constraints[k] = deactivated
+    return deactivated_constraints
+
+def _reactivate_additional_constraints(self, deactivated_constraints):
+    for k, cons_list in deactivated_constraints.items():
+        for c in cons_list:
+            c.activate()
+
+def _solve_block(self, solve_log, init_log, opt, step_name):
+    skip_solve = True  # skip solve if only state variables are present
+    for k in self.keys():
+        if number_unfixed_variables(self[k]) != 0:
+            skip_solve = False
+
+    if not skip_solve:
+        # Initialize properties
+        with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
+            results = solve_indexed_blocks(opt, [self], tee=slc.tee)
+        init_log.info_high(
+            f"Property initialization {step_name}: {idaeslog.condition(results)}"
+        )
+    
+    if (not skip_solve) and (not check_optimal_termination(results)):
+            raise InitializationError(
+                f"{self.name} {step_name} failed to initialize successfully. Please "
+                f"check the output logs for more information."
+            )
+
+
 class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
     def initialize(
         self,
@@ -66,25 +110,11 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
         # Set solver and options
         opt = get_solver(solver, optarg)
 
-        
-        # Temporarily deactivate platform constraints added with
-        # StateBlockConstraints.constrain()) so they don't interfere with
-        # initialization.
-        deactivated_constraints = {}
-        for k in self.keys():
-            blk = self[k]
-            if hasattr(blk, "constraints"):
-                deactivated = []
-                for c in blk.constraints.component_objects(
-                    Constraint, active=True, descend_into=False
-                ):
-                    c.deactivate()
-                    deactivated.append(c)
-                if deactivated:
-                    deactivated_constraints[k] = deactivated
-
         # Fix state variables
+        deactivated_constraints = _deactivate_additional_constraints(self)
+        self._deactivated_platform_constraints = deactivated_constraints
         flags = fix_state_vars(self, state_args)
+        
         # Check when the state vars are fixed already result in dof 0
         for k in self.keys():
             dof = degrees_of_freedom(self[k])
@@ -95,31 +125,21 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
                     "zero during initialization."
                 )
 
-        # ---------------------------------------------------------------------
-        skip_solve = True  # skip solve if only state variables are present
-        for k in self.keys():
-            if number_unfixed_variables(self[k]) != 0:
-                skip_solve = False
+        _solve_block(self, solve_log, init_log, opt, step_name="Initial solve with state vars fixed")
 
-        if not skip_solve:
-            # Initialize properties
-            with idaeslog.solver_log(solve_log, idaeslog.DEBUG) as slc:
-                results = solve_indexed_blocks(opt, [self], tee=slc.tee)
-            init_log.info_high(
-                "Property initialization: {}.".format(idaeslog.condition(results))
-            )
+        self.release_state(flags)
+        if degrees_of_freedom(self) == 0:
+            # We want to solve again, with any constraints reactivated, to ensure that the state variables have the correct values.
+            
+            _solve_block(self, solve_log, init_log, opt, step_name="Second solve with constraints reactivated")
 
-        # Reactivate the platform constraints that were deactivated above.
-        # If hold_state is True, defer reactivation until release_state(),
-        # independent of state_vars_fixed. This avoids over-constraining
-        # unit-model initialization solves when state vars are held fixed.
-        if hold_state is True:
+        if hold_state:
+            # Switch back to state vars fixed
+            deactivated_constraints = _deactivate_additional_constraints(self)
             self._deactivated_platform_constraints = deactivated_constraints
-        else:
-            for k, cons_list in deactivated_constraints.items():
-                for c in cons_list:
-                    c.activate()
+            flags = fix_state_vars(self, state_args)
 
+            
         # If input block, return flags, else release state
         if state_vars_fixed is False:
             if hold_state is True:
@@ -127,18 +147,12 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
             else:
                 self.release_state(flags)
 
-        if (not skip_solve) and (not check_optimal_termination(results)):
-            raise InitializationError(
-                f"{self.name} failed to initialize successfully. Please "
-                f"check the output logs for more information."
-            )
+        
 
     def release_state(self, flags, outlvl=idaeslog.NOTSET):
         # Reactivate platform constraints that were deferred during initialize
         if hasattr(self, "_deactivated_platform_constraints"):
-            for k, cons_list in self._deactivated_platform_constraints.items():
-                for c in cons_list:
-                    c.activate()
+            _reactivate_additional_constraints(self, self._deactivated_platform_constraints)
             del self._deactivated_platform_constraints
         super().release_state(flags, outlvl)
 
