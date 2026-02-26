@@ -1,0 +1,444 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 600px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "lightblue", "id": 0, "label": 0, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_A1 (1.00e+03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 1, "label": 1, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_A2 (2.03e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 2, "label": 2, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_A3 (-6.16e-03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 3, "label": 3, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_A4 (2.26e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 4, "label": 4, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_A5 (-4.66e-08) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 5, "label": 5, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_B1 (8.02e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 6, "label": 6, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_B2 (-2.00e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 7, "label": 7, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_B3 (1.68e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 8, "label": 8, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_B4 (-3.06e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 9, "label": 9, "shape": "dot", "size": 10, "title": "fs.properties.dens_mass_param_B5 (-1.61e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 10, "label": 10, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_muw_A (4.28e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 11, "label": 11, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_muw_B (1.57e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 12, "label": 12, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_muw_C (6.50e+01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 13, "label": 13, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_muw_D (9.13e+01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 14, "label": 14, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_A_1 (1.54e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 15, "label": 15, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_A_2 (2.00e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 16, "label": 16, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_A_3 (-9.52e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 17, "label": 17, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_B_1 (7.97e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 18, "label": 18, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_B_2 (-7.56e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 19, "label": 19, "shape": "dot", "size": 10, "title": "fs.properties.visc_d_param_B_3 (4.72e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 20, "label": 20, "shape": "dot", "size": 10, "title": "fs.properties.diffus_param[\u00270\u0027] (1.51e-09) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 21, "label": 21, "shape": "dot", "size": 10, "title": "fs.properties.diffus_param[\u00271\u0027] (-2.00e-09) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 22, "label": 22, "shape": "dot", "size": 10, "title": "fs.properties.diffus_param[\u00272\u0027] (3.01e-08) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 23, "label": 23, "shape": "dot", "size": 10, "title": "fs.properties.diffus_param[\u00273\u0027] (-1.22e-07) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 24, "label": 24, "shape": "dot", "size": 10, "title": "fs.properties.diffus_param[\u00274\u0027] (1.53e-07) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 25, "label": 25, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_1 (8.95e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 26, "label": 26, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_2 (4.16e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 27, "label": 27, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_3 (-4.63e-06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 28, "label": 28, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_4 (2.22e-11) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 29, "label": 29, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_5 (-1.14e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 30, "label": 30, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_6 (-1.48e-03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 31, "label": 31, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_7 (-1.35e-08) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 32, "label": 32, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_8 (7.01e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 33, "label": 33, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_9 (5.70e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 34, "label": 34, "shape": "dot", "size": 10, "title": "fs.properties.osm_coeff_param_10 (-2.86e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 35, "label": 35, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A1 (9.97e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 36, "label": 36, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A2 (-3.24e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 37, "label": 37, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A3 (1.27e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 38, "label": 38, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A4 (-4.77e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 39, "label": 39, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A5 (-1.17e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 40, "label": 40, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A6 (1.17e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 41, "label": 41, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A7 (-2.62e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 42, "label": 42, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_A8 (7.07e-08) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 43, "label": 43, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B1 (-2.35e+04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 44, "label": 44, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B2 (3.15e+05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 45, "label": 45, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B3 (2.80e+06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 46, "label": 46, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B4 (-1.45e+07) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 47, "label": 47, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B5 (7.83e+03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 48, "label": 48, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B6 (-4.42e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 49, "label": 49, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B7 (2.14e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 50, "label": 50, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B8 (-1.99e+04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 51, "label": 51, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B9 (2.78e+04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 52, "label": 52, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_B10 (9.73e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 53, "label": 53, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_C1 (1.41e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 54, "label": 54, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_C2 (4.20e+03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 55, "label": 55, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_C3 (-5.35e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 56, "label": 56, "shape": "dot", "size": 10, "title": "fs.properties.enth_mass_param_C4 (4.00e-03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 57, "label": 57, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_psatw_A1 (-5.80e+03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 58, "label": 58, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_psatw_A2 (1.39e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 59, "label": 59, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_psatw_A3 (-4.86e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 60, "label": 60, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_psatw_A4 (4.18e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 61, "label": 61, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_psatw_A5 (-1.45e-08) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 62, "label": 62, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_psatw_A6 (6.55e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 63, "label": 63, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_B1 (-4.58e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 64, "label": 64, "shape": "dot", "size": 10, "title": "fs.properties.pressure_sat_param_B2 (-2.04e-06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 65, "label": 65, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_A1 (5.33e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 66, "label": 66, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_A2 (-9.76e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 67, "label": 67, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_A3 (4.04e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 68, "label": 68, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_B1 (-6.91e-03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 69, "label": 69, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_B2 (7.35e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 70, "label": 70, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_B3 (-3.15e-06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 71, "label": 71, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_C1 (9.60e-06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 72, "label": 72, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_C2 (-1.93e-06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 73, "label": 73, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_C3 (8.23e-09) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 74, "label": 74, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_D1 (2.50e-09) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 75, "label": 75, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_D2 (1.67e-09) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 76, "label": 76, "shape": "dot", "size": 10, "title": "fs.properties.cp_phase_param_D3 (-7.12e-12) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 77, "label": 77, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_1 (2.40e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 78, "label": 78, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_2 (2.00e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 79, "label": 79, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_3 (4.34e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 80, "label": 80, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_4 (2.30e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 81, "label": 81, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_5 (3.44e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 82, "label": 82, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_6 (3.70e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 83, "label": 83, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_7 (6.47e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 84, "label": 84, "shape": "dot", "size": 10, "title": "fs.properties.therm_cond_phase_param_8 (3.00e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 85, "label": 85, "shape": "dot", "size": 10, "title": "fs.properties.dh_vap_w_param_0 (2.50e+06) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 86, "label": 86, "shape": "dot", "size": 10, "title": "fs.properties.dh_vap_w_param_1 (-2.37e+03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 87, "label": 87, "shape": "dot", "size": 10, "title": "fs.properties.dh_vap_w_param_2 (2.68e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 88, "label": 88, "shape": "dot", "size": 10, "title": "fs.properties.dh_vap_w_param_3 (-8.10e-03) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 89, "label": 89, "shape": "dot", "size": 10, "title": "fs.properties.dh_vap_w_param_4 (-2.08e-05) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 90, "label": 90, "shape": "dot", "size": 10, "title": "fs.properties.bpe_A0 (1.79e+01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 91, "label": 91, "shape": "dot", "size": 10, "title": "fs.properties.bpe_A1 (2.82e-01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 92, "label": 92, "shape": "dot", "size": 10, "title": "fs.properties.bpe_A2 (-4.58e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 93, "label": 93, "shape": "dot", "size": 10, "title": "fs.properties.bpe_B0 (6.56e+00) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 94, "label": 94, "shape": "dot", "size": 10, "title": "fs.properties.bpe_B1 (5.27e-02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 95, "label": 95, "shape": "dot", "size": 10, "title": "fs.properties.bpe_B2 (1.54e-04) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 96, "label": 96, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].flow_mass_phase_comp[Liq,H2O] (9.65e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 97, "label": 97, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].flow_mass_phase_comp[Liq,TDS] (3.50e+01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 98, "label": 98, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].temperature (2.95e+02) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 99, "label": 99, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].pressure (1.01e+05) (SF: 1.00e+00)"}, {"color": "blue", "id": 100, "label": 100, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].flow_mass_phase_comp[Liq,H2O] (9.65e+02) (SF: 1.00e+00)"}, {"color": "blue", "id": 101, "label": 101, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].flow_mass_phase_comp[Liq,TDS] (3.50e+01) (SF: 1.00e+00)"}, {"color": "lightblue", "id": 102, "label": 102, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].temperature (4.50e+02) (SF: 1.00e+00)"}, {"color": "blue", "id": 103, "label": 103, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].pressure (1.01e+05) (SF: 1.00e+00)"}, {"color": "blue", "id": 104, "label": 104, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.heat[0.0] (1.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 105, "label": 105, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.material_balances[0.0,H2O] (0.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 106, "label": 106, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.material_balances[0.0,TDS] (0.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 107, "label": 107, "shape": "dot", "size": 55.71924778433098, "title": "fs.heater.control_volume.enthalpy_balances[0.0] (5.81e+08) (SF: 1.00e+00)"}, {"color": "red", "id": 108, "label": 108, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.pressure_balance[0.0] (0.00e+00) (SF: 1.00e+00)"}, {"color": "blue", "id": 109, "label": 109, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].enth_mass_phase[Liq] (8.66e+04) (SF: 1.00e+00)"}, {"color": "red", "id": 110, "label": 110, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_enth_mass_phase[Liq] (0.00e+00) (SF: 1.00e+00)"}, {"color": "blue", "id": 111, "label": 111, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].mass_frac_phase_comp[Liq,H2O] (9.65e-01) (SF: 1.00e+00)"}, {"color": "blue", "id": 112, "label": 112, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].mass_frac_phase_comp[Liq,TDS] (3.50e-02) (SF: 1.00e+00)"}, {"color": "red", "id": 113, "label": 113, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_mass_frac_phase_comp[Liq,H2O] (0.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 114, "label": 114, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_mass_frac_phase_comp[Liq,TDS] (0.00e+00) (SF: 1.00e+00)"}, {"color": "blue", "id": 115, "label": 115, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].mole_frac_phase_comp[Liq,H2O] (9.80e-01) (SF: 1.00e+00)"}, {"color": "blue", "id": 116, "label": 116, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].mole_frac_phase_comp[Liq,TDS] (2.04e-02) (SF: 1.00e+00)"}, {"color": "red", "id": 117, "label": 117, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_mole_frac_phase_comp[Liq,H2O] (0.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 118, "label": 118, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_mole_frac_phase_comp[Liq,TDS] (0.00e+00) (SF: 1.00e+00)"}, {"color": "blue", "id": 119, "label": 119, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].flow_mol_phase_comp[Liq,H2O] (5.36e+04) (SF: 1.00e+00)"}, {"color": "blue", "id": 120, "label": 120, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_in[0.0].flow_mol_phase_comp[Liq,TDS] (1.11e+03) (SF: 1.00e+00)"}, {"color": "red", "id": 121, "label": 121, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_flow_mol_phase_comp[Liq,H2O] (0.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 122, "label": 122, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_in[0.0].eq_flow_mol_phase_comp[Liq,TDS] (0.00e+00) (SF: 1.00e+00)"}, {"color": "blue", "id": 123, "label": 123, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].enth_mass_phase[Liq] (6.68e+05) (SF: 1.00e+00)"}, {"color": "red", "id": 124, "label": 124, "shape": "dot", "size": 12.66492802633019, "title": "fs.heater.control_volume.properties_out[0.0].eq_enth_mass_phase[Liq] (1.16e-10) (SF: 1.00e+00)"}, {"color": "blue", "id": 125, "label": 125, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].mass_frac_phase_comp[Liq,H2O] (9.65e-01) (SF: 1.00e+00)"}, {"color": "blue", "id": 126, "label": 126, "shape": "dot", "size": 10, "title": "fs.heater.control_volume.properties_out[0.0].mass_frac_phase_comp[Liq,TDS] (3.50e-02) (SF: 1.00e+00)"}, {"color": "red", "id": 127, "label": 127, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_out[0.0].eq_mass_frac_phase_comp[Liq,H2O] (0.00e+00) (SF: 1.00e+00)"}, {"color": "red", "id": 128, "label": 128, "shape": "dot", "size": 1.0, "title": "fs.heater.control_volume.properties_out[0.0].eq_mass_frac_phase_comp[Liq,TDS] (0.00e+00) (SF: 1.00e+00)"}]);
+                  edges = new vis.DataSet([{"color": "gray", "from": 35, "to": 110}, {"color": "gray", "from": 35, "to": 124}, {"color": "gray", "from": 36, "to": 110}, {"color": "gray", "from": 36, "to": 124}, {"color": "gray", "from": 37, "to": 110}, {"color": "gray", "from": 37, "to": 124}, {"color": "gray", "from": 38, "to": 110}, {"color": "gray", "from": 38, "to": 124}, {"color": "gray", "from": 39, "to": 110}, {"color": "gray", "from": 39, "to": 124}, {"color": "gray", "from": 40, "to": 110}, {"color": "gray", "from": 40, "to": 124}, {"color": "gray", "from": 41, "to": 110}, {"color": "gray", "from": 41, "to": 124}, {"color": "gray", "from": 42, "to": 110}, {"color": "gray", "from": 42, "to": 124}, {"color": "gray", "from": 43, "to": 110}, {"color": "gray", "from": 43, "to": 124}, {"color": "gray", "from": 44, "to": 110}, {"color": "gray", "from": 44, "to": 124}, {"color": "gray", "from": 45, "to": 110}, {"color": "gray", "from": 45, "to": 124}, {"color": "gray", "from": 46, "to": 110}, {"color": "gray", "from": 46, "to": 124}, {"color": "gray", "from": 47, "to": 110}, {"color": "gray", "from": 47, "to": 124}, {"color": "gray", "from": 48, "to": 110}, {"color": "gray", "from": 48, "to": 124}, {"color": "gray", "from": 49, "to": 110}, {"color": "gray", "from": 49, "to": 124}, {"color": "gray", "from": 50, "to": 110}, {"color": "gray", "from": 50, "to": 124}, {"color": "gray", "from": 51, "to": 110}, {"color": "gray", "from": 51, "to": 124}, {"color": "gray", "from": 52, "to": 110}, {"color": "gray", "from": 52, "to": 124}, {"color": "gray", "from": 53, "to": 110}, {"color": "gray", "from": 53, "to": 124}, {"color": "gray", "from": 54, "to": 110}, {"color": "gray", "from": 54, "to": 124}, {"color": "gray", "from": 55, "to": 110}, {"color": "gray", "from": 55, "to": 124}, {"color": "gray", "from": 56, "to": 110}, {"color": "gray", "from": 56, "to": 124}, {"color": "gray", "from": 96, "to": 105}, {"color": "gray", "from": 96, "to": 107}, {"color": "gray", "from": 96, "to": 113}, {"color": "gray", "from": 96, "to": 114}, {"color": "gray", "from": 96, "to": 121}, {"color": "gray", "from": 97, "to": 106}, {"color": "gray", "from": 97, "to": 107}, {"color": "gray", "from": 97, "to": 113}, {"color": "gray", "from": 97, "to": 114}, {"color": "gray", "from": 97, "to": 122}, {"color": "gray", "from": 98, "to": 110}, {"color": "gray", "from": 99, "to": 108}, {"color": "gray", "from": 99, "to": 110}, {"color": "gray", "from": 100, "to": 105}, {"color": "gray", "from": 100, "to": 107}, {"color": "gray", "from": 100, "to": 127}, {"color": "gray", "from": 100, "to": 128}, {"color": "gray", "from": 101, "to": 106}, {"color": "gray", "from": 101, "to": 107}, {"color": "gray", "from": 101, "to": 127}, {"color": "gray", "from": 101, "to": 128}, {"color": "gray", "from": 102, "to": 124}, {"color": "gray", "from": 103, "to": 108}, {"color": "gray", "from": 103, "to": 124}, {"color": "gray", "from": 104, "to": 107}, {"color": "gray", "from": 107, "to": 109}, {"color": "gray", "from": 107, "to": 123}, {"color": "gray", "from": 109, "to": 110}, {"color": "gray", "from": 110, "to": 112}, {"color": "gray", "from": 111, "to": 113}, {"color": "gray", "from": 112, "to": 114}, {"color": "gray", "from": 115, "to": 117}, {"color": "gray", "from": 116, "to": 118}, {"color": "gray", "from": 117, "to": 119}, {"color": "gray", "from": 117, "to": 120}, {"color": "gray", "from": 118, "to": 119}, {"color": "gray", "from": 118, "to": 120}, {"color": "gray", "from": 119, "to": 121}, {"color": "gray", "from": 120, "to": 122}, {"color": "gray", "from": 123, "to": 124}, {"color": "gray", "from": 124, "to": 126}, {"color": "gray", "from": 125, "to": 127}, {"color": "gray", "from": 126, "to": 128}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
