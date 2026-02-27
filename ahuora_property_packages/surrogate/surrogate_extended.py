@@ -19,6 +19,9 @@ from idaes.core.util.initialization import get_solver, fix_state_vars, solve_ind
 from idaes.core.util.model_statistics import degrees_of_freedom, number_unfixed_variables
 from idaes.core.util.exceptions import InitializationError, PropertyPackageError
 import idaes.logger as idaeslog
+from idaes.core.surrogate.surrogate_block import SurrogateBlock
+from idaes.core.surrogate.pysmo_surrogate import PysmoRBFTrainer, PysmoSurrogate, PysmoPolyTrainer
+
 
 
 def _deactivate_additional_constraints(self):
@@ -157,6 +160,8 @@ class _ExtendedSurrogateStateBlock(_StateBlock):
 
 
 
+surrogate = PysmoSurrogate.load_from_file("coolprop_surrogate.json")
+
 @declare_process_block_class("SurrogateExtendedStateBlock", block_class=_ExtendedSurrogateStateBlock)
 class SurrogateExtendedStateBlockData(StateBlockData, StateBlockConstraints):
 
@@ -165,9 +170,24 @@ class SurrogateExtendedStateBlockData(StateBlockData, StateBlockConstraints):
         blk.temperature = Var()
         blk.pressure = Var()
         blk.flow_mol = Var()
+        blk.entropy = Var()
+        blk.enthalpy = Var()
+        blk.dynamic_viscosity = Var()
+        blk.kinematic_viscosity = Var()
+        blk.molar_mass = Var()
+        blk.specific_volume = Var()
 
         # Add the surrogate model block
         blk.surrogate = SurrogateBlock()
+        blk.surrogate.build_model(surrogate, input_vars=[blk.temperature, blk.pressure, blk.flow_mol], 
+                                  output_vars=[
+                                      blk.entropy,
+                                      blk.enthalpy,
+                                      blk.dynamic_viscosity,
+                                      blk.kinematic_viscosity,
+                                      blk.molar_mass,
+                                      blk.specific_volume
+        ])
 
         StateBlockConstraints.build(blk, *args)
 
