@@ -16,6 +16,7 @@ time_start = time.time()
 result = {}
 
 for [temp, press] in init_data.sample_points():
+    # Units and descriptions for properties are https://github.com/portyanikhin/PyFluids?tab=readme-ov-file#properties-of-fluid-and-mixture-instances
     water = Fluid(FluidsList.Water).with_state(
         Input.pressure(press), Input.temperature(temp)
     )

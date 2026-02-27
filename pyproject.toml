@@ -19,7 +19,6 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-
 dependencies = [
     "typing-validation",
     "pydantic",
@@ -45,3 +44,7 @@ dev = [
     "hatch>=1.16.3",
     "pytest>=9.0.2",
 ]
+
+
+[tool.pyfluids]
+units_system = "SI"

@@ -6,7 +6,6 @@ from pyomo.environ import (
     Constraint,
     Var,
 )
-from idaes.models.properties.general_helmholtz.helmholtz_state import _StateBlock
 from idaes.core import (
     PhysicalParameterBlock,
     StateBlock,
@@ -21,7 +20,9 @@ from idaes.core.util.exceptions import InitializationError, PropertyPackageError
 import idaes.logger as idaeslog
 from idaes.core.surrogate.surrogate_block import SurrogateBlock
 from idaes.core.surrogate.pysmo_surrogate import PysmoRBFTrainer, PysmoSurrogate, PysmoPolyTrainer
-
+from idaes.core.base.components import Solvent, Solute
+from idaes.core.base.phases import LiquidPhase
+from pyomo.environ import units as pyunits
 
 
 def _deactivate_additional_constraints(self):
@@ -68,7 +69,7 @@ def _solve_block(self, solve_log, init_log, opt, step_name):
         )
 
 
-class _ExtendedSurrogateStateBlock(_StateBlock):
+class _ExtendedSurrogateStateBlock(StateBlock):
     def initialize(
         self,
         state_args=None,
@@ -167,33 +168,113 @@ class SurrogateExtendedStateBlockData(StateBlockData, StateBlockConstraints):
 
     def build(blk, *args):
         StateBlockData.build(blk, *args)
-        blk.temperature = Var()
-        blk.pressure = Var()
-        blk.flow_mol = Var()
-        blk.entropy = Var()
-        blk.enthalpy = Var()
-        blk.dynamic_viscosity = Var()
-        blk.kinematic_viscosity = Var()
-        blk.molar_mass = Var()
-        blk.specific_volume = Var()
+        blk.temperature = Var( units = pyunits.K)
+        blk.pressure = Var( units = pyunits.Pa)
+        blk.flow_mol = Var( units = pyunits.mol/pyunits.s)
+        blk.flow_mass = Var( units = pyunits.kg/pyunits.s)
+        blk.enth_mass = Var( units = pyunits.J/pyunits.kg)
+        blk.enth_mol = Var( units = pyunits.J/pyunits.mol)
+        blk.entr_mass = Var( units = pyunits.J/pyunits.kg/pyunits.K)
+        blk.entr_mol = Var( units = pyunits.J/pyunits.mol/pyunits.K)
+        blk.dynamic_viscosity = Var( units= pyunits.Pa*pyunits.s)
+        blk.kinematic_viscosity = Var( units = pyunits.m**2/pyunits.s)
+        blk.specific_volume = Var( units = pyunits.m**3/pyunits.kg)
+        blk.mw = Var( units = pyunits.kg/pyunits.mol)
+        blk.mw.fix(0.01801528) # No need to calculate as this is a constant, and makes the problem poorly defined.
+        blk.unused_mw = Var( units = pyunits.kg/pyunits.mol)
+
+
+        @blk.Constraint()
+        def _rule_flow_mass(b, t):
+            return b.flow_mass == b.flow_mol * b.mw
+
+        @blk.Constraint()
+        def _rule_enth_mass(b, t):
+            return b.enth_mass == b.enth_mol / b.mw
+        
+        @blk.Constraint()
+        def _rule_entr_mass(b, t):
+            return b.entr_mass == b.entr_mol / b.mw
 
         # Add the surrogate model block
         blk.surrogate = SurrogateBlock()
-        blk.surrogate.build_model(surrogate, input_vars=[blk.temperature, blk.pressure, blk.flow_mol], 
+        blk.surrogate.build_model(surrogate, input_vars=[blk.temperature, blk.pressure], 
                                   output_vars=[
-                                      blk.entropy,
-                                      blk.enthalpy,
+                                      blk.entr_mass,
+                                      blk.enth_mass,
                                       blk.dynamic_viscosity,
                                       blk.kinematic_viscosity,
-                                      blk.molar_mass,
+                                      blk.unused_mw, # Molar mass
                                       blk.specific_volume
         ])
 
         StateBlockConstraints.build(blk, *args)
+    
+    def define_state_vars(self):
+        """Define state vars."""
+        return {
+            "flow_mol": self.flow_mol,
+            "temperature": self.temperature,
+            "pressure": self.pressure,
+        }
 
 
 @declare_process_block_class("SurrogateExtendedParameterBlock")
 class SurrogateExtendedParameterBlockData(PhysicalParameterBlock):
     def build(self):
         super().build()
+
+        # components
+        self.H2O = Solvent()
+
+        # phases
+        self.Liq = LiquidPhase()
         self._state_block_class = SurrogateExtendedStateBlock # noqa: F821
+    
+
+    @classmethod
+    def define_metadata(cls, pcm):
+        """Define properties supported and units."""
+        pcm.add_properties(
+            {
+                "flow_mass_phase_comp": {"method": None},
+                "flow_mass": {"method": None},
+                "flow_mol": {"method": None},
+                "enth_mol": {"method": None},
+                "temperature": {"method": None},
+                "pressure": {"method": None},
+                "mass_frac_phase_comp": {"method": "_mass_frac_phase_comp"},
+                "dens_mass_phase": {"method": "_dens_mass_phase"},
+                "flow_vol_phase": {"method": "_flow_vol_phase"},
+                "flow_vol": {"method": "_flow_vol"},
+                "conc_mass_phase_comp": {"method": "_conc_mass_phase_comp"},
+                "flow_mol_phase_comp": {"method": "_flow_mol_phase_comp"},
+                "mole_frac_phase_comp": {"method": "_mole_frac_phase_comp"},
+                "molality_phase_comp": {"method": "_molality_phase_comp"},
+                "visc_d_phase": {"method": "_visc_d_phase"},
+                "pressure_osm_phase": {"method": "_pressure_osm_phase"},
+                "energy_density_phase": {"method": "_energy_density_phase"},
+                "enth_mass_phase": {"method": "_enth_mass_phase"},
+                "pressure_sat": {"method": "_pressure_sat"},
+                "cp_mass_phase": {"method": "_cp_mass_phase"},
+                "therm_cond_phase": {"method": "_therm_cond_phase"},
+                "diffus_phase_comp": {"method": "_diffus_phase_comp"},
+            }
+        )
+
+        # pcm.define_custom_properties(
+        #     {
+        #         "dens_mass_solvent": {"method": "_dens_mass_solvent"},
+                
+        #     }
+        # )
+
+        pcm.add_default_units(
+            {
+                "time": pyunits.s,
+                "length": pyunits.m,
+                "mass": pyunits.kg,
+                "amount": pyunits.mol,
+                "temperature": pyunits.K,
+            }
+        )

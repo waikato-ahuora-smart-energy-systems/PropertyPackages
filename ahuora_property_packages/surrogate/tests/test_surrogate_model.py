@@ -1,8 +1,24 @@
 from ..surrogate_builder import build_surrogate_package
 from pyomo.environ import ConcreteModel
 from idaes.core import FlowsheetBlock
+from idaes.core.util.model_statistics import degrees_of_freedom
+from pyomo.environ import SolverFactory
 
 
-m = ConcreteModel()
-m.fs = FlowsheetBlock() 
+def test_surrogate_block():
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock() 
+    m.fs.pp = build_surrogate_package(["water"])
+    m.fs.sb = m.fs.pp.build_state_block(m.fs.time)
+    m.fs.sb[0].temperature.fix(300)
+    m.fs.sb[0].pressure.fix(101325)
+    m.fs.sb[0].flow_mol.fix(1)
+
+    assert degrees_of_freedom(m) == 0
+
+    solver = SolverFactory("ipopt")
+    results = solver.solve(m, tee=True)
+    assert results.solver.termination_condition == "optimal"
+
+
 
