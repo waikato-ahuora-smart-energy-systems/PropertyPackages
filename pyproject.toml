@@ -22,7 +22,9 @@ classifiers = [
 
 dependencies = [
     "typing-validation",
-    "pydantic"
+    "pydantic",
+    "watertap>=1.5.0",
+    "pyvis>=0.3.2",
 ]
 
 [project.optional-dependencies]

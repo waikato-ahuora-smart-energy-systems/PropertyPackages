@@ -3,6 +3,7 @@ from .helmholtz.helmholtz_builder import build_helmholtz_package
 from ahuora_property_packages.humid_air import build_humid_air_package
 from ahuora_property_packages.milk import build_milk_package
 from ahuora_property_packages.types import PackageName, States
+from ahuora_property_packages.seawater.seawater_builder import build_seawater_package
 from ahuora_property_packages.combustion.biomass_builder import (
     build_biomass_and_flue_package,
     build_biomass_combustion_reaction_package)
@@ -42,6 +43,8 @@ def build_package(package_name: PackageName, compound_list: List[str], valid_sta
             return build_biomass_and_flue_package(compound_list)
         case "biomass_combustion_reaction":
             return build_biomass_combustion_reaction_package(compound_list, pp=property_package)
+        case "seawater":
+            return build_seawater_package(compound_list)
         case "genericML":
             raise NotImplementedError("Generic ML package is not implemented yet.")
         case _:
