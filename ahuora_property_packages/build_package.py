@@ -6,6 +6,7 @@ from ahuora_property_packages.types import PackageName, States
 from ahuora_property_packages.combustion.biomass_builder import (
     build_biomass_and_flue_package,
     build_biomass_combustion_reaction_package)
+from ahuora_property_packages.surrogate.surrogate_builder import build_surrogate_package
 from typing import List
 
 def build_package(package_name: PackageName, compound_list: List[str], valid_states: List[States]=["Liq", "Vap"], property_package=None): # type: ignore
@@ -42,6 +43,8 @@ def build_package(package_name: PackageName, compound_list: List[str], valid_sta
             return build_biomass_and_flue_package(compound_list)
         case "biomass_combustion_reaction":
             return build_biomass_combustion_reaction_package(compound_list, pp=property_package)
+        case "surrogate":
+            return build_surrogate_package(compound_list)
         case "genericML":
             raise NotImplementedError("Generic ML package is not implemented yet.")
         case _:
