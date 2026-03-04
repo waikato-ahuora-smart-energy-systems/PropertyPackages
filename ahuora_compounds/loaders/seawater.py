@@ -9,5 +9,5 @@ def load(registry):
     registry.register_compound('H2O', "seawater", {})
     registry.register_compound('TDS', "seawater", {})
 
-    registry.bind("TDS", "seawater")
     registry.bind("H2O", "seawater")
+    registry.bind("TDS", "seawater")

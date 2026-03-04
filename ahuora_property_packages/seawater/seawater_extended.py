@@ -7,30 +7,74 @@ from idaes.core.util.initialization import fix_state_vars, solve_indexed_blocks
 from idaes.core.util.model_statistics import degrees_of_freedom, number_unfixed_variables
 from idaes.core.util.exceptions import InitializationError, PropertyPackageError
 import idaes.logger as idaeslog
+from pyomo.core.base.expression import ScalarExpression, IndexedExpression, Expression, _GeneralExpressionData, ExpressionData
+from pyomo.environ import Var, ScalarVar 
+from pyomo.core.base.var import IndexedVar
+import pyomo.environ as pyo
 
 
-def _deactivate_additional_constraints(self):
+class ExpressionConversionError(Exception):
+    pass
+
+
+class _SeawaterStateBlockConstraints(StateBlockConstraints):
+    
+    def constrain_component(blk, component: Var | Expression, value: float) -> Var | None:
+        """
+        Constrain a component to a value
+        """
+        try:
+            variable = _convert_expression_to_var(component)
+        except ExpressionConversionError as e:
+            variable = component # already a Var, just fix it directly
+        
+        variable.fix(value)
+
+        if isinstance(variable, IndexedVar):
+            for i in variable.index_set():
+                # direct dictionary access avoids intercepted attribute resolution
+                blk.__dict__["vars_to_deactivate"].append(variable[i])
+        else:
+            blk.__dict__["vars_to_deactivate"].append(variable)
+
+        return variable
+
+
+def _convert_expression_to_var(expr: ScalarExpression | IndexedExpression):
+    if isinstance(expr, ScalarExpression) or isinstance(expr, ExpressionData):
+        var = Var(units=pyo.units.get_units(expr))
+        constraint = Constraint(expr= var == expr)
+    elif isinstance(expr, IndexedExpression):
+        var = Var(expr.index_set(), units=pyo.units.get_units(expr.units))
+        def rule(b, i):
+            return var[i] == expr[i]
+        constraint = Constraint(expr= rule)
+    else:
+        raise ExpressionConversionError(f"Expression {expr} is not a ScalarExpression or IndexedExpression: {type(expr)}")
+    block = expr.parent_block()
+    block.add_component(f"{expr.local_name}_var", var)
+    block.add_component(f"{expr.local_name}_constraint", constraint)
+    return var
+
+def _deactivate_additional_constraints(self: _ExtendedSeawaterStateBlock):
     # Temporarily deactivate platform constraints added with
     # StateBlockConstraints.constrain()) so they don't interfere with
     # initialization.
-    deactivated_constraints = {}
+    deactivated_vars: list[tuple[ScalarVar,float]] = []
+
     for k in self.keys():
         blk = self[k]
-        if hasattr(blk, "constraints"):
-            deactivated = []
-            for c in blk.constraints.component_objects(
-                Constraint, active=True, descend_into=False
-            ):
-                c.deactivate()
-                deactivated.append(c)
-            if deactivated:
-                deactivated_constraints[k] = deactivated
-    return deactivated_constraints
 
-def _reactivate_additional_constraints(self, deactivated_constraints):
-    for k, cons_list in deactivated_constraints.items():
-        for c in cons_list:
-            c.activate()
+        for var in blk.__dict__["vars_to_deactivate"]:
+            var.unfix()
+            # Store the original value so we can reactivate and fix back to the original value later.
+            deactivated_vars.append((var, var.value))
+    
+    self.deactivated_vars = deactivated_vars
+
+def _reactivate_additional_constraints(self: _ExtendedSeawaterStateBlock):
+    for var, value in self.deactivated_vars:
+        var.fix(value)
 
 def _solve_block(self, solve_log, init_log, opt, step_name):
     skip_solve = True  # skip solve if only state variables are present
@@ -99,8 +143,7 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
         opt = get_solver(solver, optarg)
 
         # Fix state variables
-        deactivated_constraints = _deactivate_additional_constraints(self)
-        self._deactivated_platform_constraints = deactivated_constraints
+        _deactivate_additional_constraints(self)
         flags = fix_state_vars(self, state_args)
         
         # Check when the state vars are fixed already result in dof 0
@@ -123,8 +166,7 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
 
         if hold_state:
             # Switch back to state vars fixed
-            deactivated_constraints = _deactivate_additional_constraints(self)
-            self._deactivated_platform_constraints = deactivated_constraints
+            _deactivate_additional_constraints(self)
             flags = fix_state_vars(self, state_args)
 
             
@@ -137,19 +179,25 @@ class _ExtendedSeawaterStateBlock(_SeawaterStateBlock):
         
 
     def release_state(self, flags, outlvl=idaeslog.NOTSET):
-        # Reactivate platform constraints that were deferred during initialize
-        if hasattr(self, "_deactivated_platform_constraints"):
-            _reactivate_additional_constraints(self, self._deactivated_platform_constraints)
-            del self._deactivated_platform_constraints
         super().release_state(flags, outlvl)
+        # Reactivate platform constraints that were deferred during initialize
+        _reactivate_additional_constraints(self)
 
 
 @declare_process_block_class("SeawaterExtendedStateBlock", block_class=_ExtendedSeawaterStateBlock)
-class SeawaterExtendedStateBlockData(SeawaterStateBlockData, StateBlockConstraints):
+class SeawaterExtendedStateBlockData(SeawaterStateBlockData, _SeawaterStateBlockConstraints):
 
     def build(blk, *args):
         SeawaterStateBlockData.build(blk, *args)
         StateBlockConstraints.build(blk, *args)
+
+        # We initialise vars_to_deactivate here with __setattr__ instead of doing it 
+        # in the constructor of _SeawaterStateBlockConstraints as blk.vars_to_deactivate = [], 
+        # because on state blocks, missing attributes are not treated like normal Python objects.
+        # Why the below works is because it bypasses the custom __setattr__ logic (which makes it a metadata) 
+        # on the block and writes directly to the object.
+        # Also, initializing here guarantees every state block has its own list before constrain_component() runs.
+        object.__setattr__(blk, "vars_to_deactivate", [])
 
     def add_extra_expressions(blk):
         """
@@ -185,10 +233,10 @@ class SeawaterExtendedStateBlockData(SeawaterStateBlockData, StateBlockConstrain
         # enthalpy-based surrogate to satisfy platform property interface.
         # This mirrors prior extended-package behavior where extra aliases are
         # used for generic platform compatibility.
-        blk.entr_mass = Expression(expr=blk.enth_mass)
+        blk.entr_mass = Expression(expr=1 * pyo.units.J/pyo.units.kg / pyo.units.K)
 
     def _entr_mol(blk):
-        blk.entr_mol = Expression(expr=blk.enth_mol)
+        blk.entr_mol = Expression(expr=1 * pyo.units.J/pyo.units.mol / pyo.units.K)
 
     def _flow_mass(blk):
         blk.flow_mass = Expression(
@@ -201,10 +249,17 @@ class SeawaterExtendedStateBlockData(SeawaterStateBlockData, StateBlockConstrain
         )
 
     def _mole_frac_comp(blk):
-        blk.mole_frac_comp = Expression(
+        blk.mole_frac_comp = Var(
             blk.params.component_list,
-            rule=lambda b, j: b.mole_frac_phase_comp["Liq", j],
-        )
+        bounds=(0,1),initialize=0.5)
+
+        @blk.Constraint(blk.params.component_list)
+        def mole_frac_comp_rule(b, j):
+            return b.mole_frac_comp[j] == b.mole_frac_phase_comp["Liq", j]
+
+        if (blk.config.defined_state):
+            # We are fixing TDS seperately, so we will let them be separate.
+            blk.mole_frac_comp_rule["TDS"].deactivate()
 
     def _vapor_frac(blk):
         # Seawater package is liquid-only for this application.

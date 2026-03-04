@@ -65,6 +65,7 @@ from watertap.unit_models.zero_order import (
 )
 from watertap.costing.zero_order_costing import ZeroOrderCosting
 from watertap.costing import WaterTAPCosting
+from pyomo.opt.results.solver import assert_optimal_termination
 
 # Set up logger
 _log = idaeslog.getLogger(__name__)
@@ -106,7 +107,8 @@ def main(erd_type="pressure_exchanger"):
     initialize_costing(m)
     assert_degrees_of_freedom(m, 0)
 
-    solve(m, tee=True, checkpoint=f" solve {erd_type} flowsheet with costing")
+    result = solve(m, tee=True, checkpoint=f" solve {erd_type} flowsheet with costing")
+    assert_optimal_termination(result)
     display_costing(m)
 
     return m
@@ -123,7 +125,7 @@ def build(erd_type=None):
     density = 1023.5 * pyunits.kg / pyunits.m**3
     m.fs.prop_prtrt.dens_mass_default = density
     m.fs.prop_psttrt = prop_ZO.WaterParameterBlock(solute_list=["tds"])
-    m.fs.prop_desal = build_seawater_package(['water', 'tds'])
+    m.fs.prop_desal = build_seawater_package(['H2O', 'TDS'])
 
     # block structure
     prtrt = m.fs.pretreatment = Block()
@@ -796,5 +798,5 @@ def export_to_ui():
     )
 
 
-if __name__ == "__main__":
+def test_seawater_ro_pressure_exchanger():
     m = main(erd_type="pressure_exchanger")
